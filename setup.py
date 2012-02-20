@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''setup stuf'''
+'''setup twoq'''
 
 import os
 import sys
