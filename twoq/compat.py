@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-'''base compatibility layer'''
+'''python compatibility layer'''
 
 from stuf import six
+# pylint: disable-msg=f0401,w0611
+from stuf.six.moves import map, filterfalse, filter, zip, zip_longest  # @UnresolvedImport @UnusedImport @IgnorePep8
+# pylint: enable-msg=f0401
 
-__all__ = ['Port']
+__all__ = ['port']
 
 
-class Port(object):
+class port(object):
 
     '''python 2/3 helper'''
 
@@ -23,25 +26,25 @@ class Port(object):
     BytesIO = six.BytesIO
     StringIO = six.StringIO
     # character data
-    b = six.b
-    int2byte = six.int2byte
-    u = six.u
+    b = staticmethod(six.b)
+    int2byte = staticmethod(six.int2byte)
+    u = staticmethod(six.u)
     # dictionary
-    items = six.iteritems
-    keys = six.iterkeys
-    values = six.itervalues
+    items = staticmethod(six.iteritems)
+    keys = staticmethod(six.iterkeys)
+    values = staticmethod(six.itervalues)
     # iterables
-    iterator = six.advance_iterator
+    iterator = staticmethod(six.advance_iterator)
     # classes
-    metaclass = six.with_metaclass
+    metaclass = staticmethod(six.with_metaclass)
     # methods
-    code = six.get_function_code
-    defaults = six.get_function_defaults
-    method_function = six.get_method_function
-    method_self = six.get_method_self
-    unbound = six.get_unbound_function
+    code = staticmethod(six.get_function_code)
+    defaults = staticmethod(six.get_function_defaults)
+    method_function = staticmethod(six.get_method_function)
+    method_self = staticmethod(six.get_method_self)
+    unbound = staticmethod(six.get_unbound_function)
     # exception
-    reraise = six.reraise
+    reraise = staticmethod(six.reraise)
 
     @classmethod
     def isbinary(cls, value):

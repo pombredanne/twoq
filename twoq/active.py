@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 '''active twoq'''
 
+from collections import deque
 from bisect import bisect_right
-from collections import deque,  Iterable
-
-from stuf.six import string_types
 
 from twoq.core import coreq
 
-__all__ = ['twoq']
+__all__ = ['twoq', 'iterexcept']
 
 
-def iterexcept(func, exception, first=None):
+def iterexcept(func, exception):
     '''
     call a function repeatedly until an exception is raised
 
@@ -20,8 +18,6 @@ def iterexcept(func, exception, first=None):
     of a sentinel to end the loop.
     '''
     try:
-        if first is not None:
-            yield first()
         while 1:
             yield func()
     except exception:
@@ -30,7 +26,7 @@ def iterexcept(func, exception, first=None):
 
 class SyncContext(object):
 
-    '''sync context manager'''
+    '''_sync context manager'''
 
     def __init__(self, queue):
         '''
@@ -117,8 +113,8 @@ class baseq(coreq):
         return len(self.incoming)
 
     @property
-    def sync(self):
-        '''sync incoming things with outgoing things'''
+    def _sync(self):
+        '''_sync incoming things with outgoing things'''
         return SyncContext(self)
 
     def clear(self):
@@ -185,12 +181,36 @@ class baseq(coreq):
         incoming.rotate(index)
         return self
 
-    def shift(self):
+    def insync(self):
         '''sync incoming things with outgoing things'''
+        # extend incoming items with outgoing items
+        self._inextend(self.outgoing)
+        return self
+
+    def inshift(self):
+        '''
+        sync incoming things with outgoing things, clearing incoming things
+        '''
         # clear incoming items
         self._inclear()
         # extend incoming items with outgoing items
         self._inextend(self.outgoing)
+        return self
+
+    def outsync(self):
+        '''sync outgoing things with incoming things'''
+        # extend incoming items with outgoing items
+        self._outextend(self.incoming)
+        return self
+
+    def outshift(self):
+        '''
+        sync outgoing things with incoming things, clearing outgoing things
+        '''
+        # clear incoming items
+        self._outclear()
+        # extend incoming items with outgoing items
+        self._outextend(self.incoming)
         return self
 
     def index(self, thing):
@@ -199,16 +219,11 @@ class baseq(coreq):
 
         @param thing: some thing
         '''
-        return bisect_right(self.outgoing, thing) - 1
+        return bisect_right(self.incoming, thing) - 1
 
     def results(self):
-        '''iterate over outgoing things, clearing as it goes'''
-        for thing in iterexcept(self._outpop, IndexError):
-            yield thing
-
-    def reversed(self):
         '''iterate over reversed outgoing things, clearing as it goes'''
-        for thing in iterexcept(self._outpopleft, IndexError):
+        for thing in iterexcept(self.outgoing.popleft, IndexError):
             yield thing
 
 
@@ -221,13 +236,7 @@ class twoq(baseq):
         incoming = deque()
         # extend if just one argument
         if len(args) == 1:
-            args = args[0]
-            if all([
-                isinstance(args, Iterable), not isinstance(args, string_types)
-            ]):
-                incoming.extend(args)
-            else:
-                incoming.append(args)
+            incoming.extend(args[0])
         else:
             incoming.extend(args)
         super(twoq, self).__init__(incoming, deque())
