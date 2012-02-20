@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 '''test twoq'''
 
-import unittest
-
-from stuf import stuf
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 
 class TestTwoQ(unittest.TestCase):
@@ -17,6 +18,56 @@ class TestTwoQ(unittest.TestCase):
     ##########################################################################
     ## queue management & execution ##########################################
     ##########################################################################
+
+    def test_index(self):
+        self.assertEquals(self.qclass([1, 2, 3, 4, 5, 6]).index(3), 2)
+
+    def test_remove(self):
+        self.assertEquals(
+            self.qclass([1, 2, 3, 4, 5, 6]).remove(5).swap().value(),
+            [1, 2, 3, 4, 6]
+        )
+
+    def test_results(self):
+        self.assertEquals(
+            list(self.qclass([1, 2, 3, 4, 5, 6]).outshift().results()),
+            [1, 2, 3, 4, 5, 6]
+        )
+
+    def test_delitem(self):
+        q = self.qclass([1, 2, 3, 4, 5, 6])
+        del q[2]
+        self.assertEquals(q.swap().value(), [1, 2, 4, 5, 6])
+
+    def test_insync(self):
+        q = self.qclass([1, 2, 3, 4, 5, 6]).outsync().inclear().insync()
+        self.assertSequenceEqual(q.incoming, q.outgoing)
+
+    def test_inshift(self):
+        q = self.qclass([1, 2, 3, 4, 5, 6]).outsync().inshift()
+        self.assertSequenceEqual(q.incoming, q.outgoing)
+
+    def test_outsync(self):
+        q = self.qclass([1, 2, 3, 4, 5, 6]).outsync()
+        self.assertSequenceEqual(q.incoming, q.outgoing)
+
+    def test_outshift(self):
+        q = self.qclass([1, 2, 3, 4, 5, 6]).outshift()
+        self.assertSequenceEqual(q.incoming, q.outgoing)
+
+    def test_contains(self):
+        self.assertTrue(5 in self.qclass([1, 2, 3, 4, 5, 6]))
+
+    def test_inclear(self):
+        self.assertEqual(len(self.qclass([1, 2, 5, 6]).inclear()), 0)
+
+    def test_outclear(self):
+        self.assertEqual(len(self.qclass([1, 2, 5, 6]).outclear().outgoing), 0)
+
+    def test_insert(self):
+        q = self.qclass([1, 2, 3, 4, 5, 6])
+        q.insert(2, 10)
+        self.assertEquals(q.swap().value(), [1, 2, 10, 4, 5, 6])
 
     def test_extend(self):
         self.assertEquals(
@@ -89,6 +140,19 @@ class TestTwoQ(unittest.TestCase):
             self.qclass([5, 1, 7], [3, 2, 1]).invoke('index', 1).value(),
             [1, 2],
         )
+        self.assertEquals(
+            self.qclass([5, 1, 7], [3, 2, 1]).invoke('sort').value(),
+            [[1, 5, 7], [1, 2, 3]],
+        )
+
+    def test_wrap(self):
+        from stuf import stuf
+        self.assertDictEqual(
+            self.qclass(
+                [('a', 1), ('b', 2), ('c', 3)]
+            ).reup().wrap(stuf).map().value(),
+            stuf(a=1, b=2, c=3),
+        )
 
     ##########################################################################
     ## reduction #############################################################
@@ -101,6 +165,7 @@ class TestTwoQ(unittest.TestCase):
         )
 
     def test_max(self):
+        from stuf import stuf
         stooges = [
             stuf(name='moe', age=40),
             stuf(name='larry', age=50),
@@ -109,6 +174,9 @@ class TestTwoQ(unittest.TestCase):
         self.assertEquals(
             stuf(self.qclass(stooges).tap(lambda x: x.age).max().value()),
             stuf(name='curly', age=60),
+        )
+        self.assertEquals(
+            self.qclass([1, 2, 4]).max().value(), 4,
         )
 
     def test_merge(self):
@@ -120,6 +188,10 @@ class TestTwoQ(unittest.TestCase):
     def test_min(self):
         self.assertEquals(
             self.qclass([10, 5, 100, 2, 1000]).min().value(), 2,
+        )
+        self.assertEquals(
+            self.qclass([10, 5, 100, 2, 1000]).tap(lambda x: x).min().value(),
+            2,
         )
 
     def test_pairwise(self):
@@ -135,12 +207,21 @@ class TestTwoQ(unittest.TestCase):
         self.assertEquals(
             self.qclass([1, 2, 3]).tap(lambda x, y: x + y).reduce().value(), 6,
         )
+        self.assertEquals(
+            self.qclass([1, 2, 3]).tap(lambda x, y: x + y).reduce(1).value(),
+            7,
+        )
 
     def test_reduce_right(self):
         self.assertEquals(
             self.qclass([[0, 1], [2, 3], [4, 5]]).tap(
                 lambda x, y: x + y
             ).reduce_right().value(), [4, 5, 2, 3, 0, 1],
+        )
+        self.assertEquals(
+            self.qclass([[0, 1], [2, 3], [4, 5]]).tap(
+                lambda x, y: x + y
+            ).reduce_right([0, 0]).value(), [4, 5, 2, 3, 0, 1, 0, 0],
         )
 
     def test_roundrobin(self):
@@ -168,6 +249,10 @@ class TestTwoQ(unittest.TestCase):
         self.assertEquals(
         self.qclass([1.3, 2.1, 2.4]).tap(lambda x: floor(x)).group().value(),
             [[1.0, [1.3]], [2.0, [2.1, 2.4]]]
+        )
+        self.assertEquals(
+            self.qclass([1.3, 2.1, 2.4]).group().value(),
+            [[1.3, [1.3]], [2.1, [2.1]], [2.4, [2.4]]],
         )
 
     def test_grouper(self):
@@ -268,10 +353,10 @@ class TestTwoQ(unittest.TestCase):
         class stooges:
             name = 'moe'
             age = 40
-        class stoog2:
+        class stoog2: #@IgnorePep8
             name = 'larry'
             age = 50
-        class stoog3:
+        class stoog3: #@IgnorePep8
             name = 'curly'
             age = 60
         test = lambda x: not x.startswith('__')
@@ -284,6 +369,7 @@ class TestTwoQ(unittest.TestCase):
         )
 
     def test_pick(self):
+        from stuf import stuf
         stooges = [
             stuf(name='moe', age=40),
             stuf(name='larry', age=50),
@@ -297,8 +383,12 @@ class TestTwoQ(unittest.TestCase):
             self.qclass(stooges).pick('name', 'age').value(),
             [('moe', 40), ('larry', 50), ('curly', 60)],
         )
+        self.assertEqual(
+            self.qclass(stooges).pick('place').value(), [],
+        )
 
     def test_pluck(self):
+        from stuf import stuf
         stooges = [
             stuf(name='moe', age=40),
             stuf(name='larry', age=50),
@@ -320,6 +410,9 @@ class TestTwoQ(unittest.TestCase):
         self.assertEqual(
             self.qclass(stooges).pluck(1).value(),
             [40, 50, 60],
+        )
+        self.assertEqual(
+            self.qclass(stooges).pluck('place').value(), [],
         )
 
     ##########################################################################
@@ -411,6 +504,10 @@ class TestTwoQ(unittest.TestCase):
     def test_unique(self):
         self.assertEqual(
             self.qclass([1, 2, 1, 3, 1, 4]).unique().value(),
+            [1, 2, 3, 4],
+        )
+        self.assertEqual(
+            self.qclass([1, 2, 1, 3, 1, 4]).tap(round).unique().value(),
             [1, 2, 3, 4],
         )
 
