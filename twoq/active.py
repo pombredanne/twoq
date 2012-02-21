@@ -13,9 +13,9 @@ def iterexcept(func, exception):
     '''
     call a function repeatedly until an exception is raised
 
-    Converts a call-until-exception interface to an iterator interface.
-    Like __builtin__.iter(func, sentinel) but uses an exception instead
-    of a sentinel to end the loop.
+    Converts a call-until-exception interface to an iterator interface. Like
+    `__builtin__.iter(func, sentinel)` but uses an exception instead of a
+    sentinel to end the loop.
     '''
     try:
         while 1:
@@ -26,7 +26,7 @@ def iterexcept(func, exception):
 
 class SyncContext(object):
 
-    '''_sync context manager'''
+    '''sync context manager'''
 
     def __init__(self, queue):
         '''
@@ -119,7 +119,7 @@ class baseq(coreq):
 
     def clear(self):
         '''clear all queues'''
-        self.call = None
+        self._call = None
         self._outclear()
         self._inclear()
         return self
@@ -154,14 +154,14 @@ class baseq(coreq):
         self._inextendleft(things)
         return self
 
-    def remove(self, thing):
+    def remove(self, thing, _bisect_right=bisect_right):
         '''
         remove thing from incoming things
 
         @param thing: some thing
         '''
         incoming = self.incoming
-        position = bisect_right(incoming, thing) - 1
+        position = _bisect_right(incoming, thing) - 1
         incoming.rotate(-position)
         incoming.popleft()
         incoming.rotate(position)
@@ -213,23 +213,23 @@ class baseq(coreq):
         self._outextend(self.incoming)
         return self
 
-    def index(self, thing):
+    def index(self, thing, _bisect_right=bisect_right):
         '''
         insert thing into incoming things
 
         @param thing: some thing
         '''
-        return bisect_right(self.incoming, thing) - 1
+        return _bisect_right(self.incoming, thing) - 1
 
-    def results(self):
+    def results(self, _iterexcept=iterexcept):
         '''iterate over reversed outgoing things, clearing as it goes'''
-        for thing in iterexcept(self.outgoing.popleft, IndexError):
+        for thing in _iterexcept(self.outgoing.popleft, IndexError):
             yield thing
 
 
 class twoq(baseq):
 
-    '''processing queue'''
+    '''manipulation queue'''
 
     def __init__(self, *args):
         '''init'''

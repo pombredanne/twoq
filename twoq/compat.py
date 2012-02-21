@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''python compatibility layer'''
+'''python 2 <-> 3 compatibility layer'''
 
 from stuf import six
 # pylint: disable-msg=f0401,w0611
