@@ -137,7 +137,7 @@ class TestTwoQ(unittest.TestCase):
 
     def test_invoke(self):
         self.assertEquals(
-            self.qclass([5, 1, 7], [3, 2, 1]).invoke('index', 1).value(),
+            self.qclass([5, 1, 7], [3, 2, 1]).args(1).invoke('index').value(),
             [1, 2],
         )
         self.assertEquals(
@@ -513,4 +513,5 @@ class TestTwoQ(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    import cProfile
+    cProfile.run('unittest.main()')
