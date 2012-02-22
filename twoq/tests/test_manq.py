@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''test twoq'''
+'''test manq'''
 
 try:
     import unittest2 as unittest
@@ -12,26 +12,20 @@ class TestTwoQ(unittest.TestCase):
     '''test twoq'''
 
     def setUp(self):
-        from twoq import twoq
-        self.qclass = twoq
+        from twoq import manq
+        self.qclass = manq
 
-    ##########################################################################
-    ## queue management & execution ##########################################
-    ##########################################################################
+    ###########################################################################
+    ## queue manipulation #####################################################
+    ###########################################################################
 
-    def test_index(self):
-        self.assertEquals(self.qclass([1, 2, 3, 4, 5, 6]).index(3), 2)
-
-    def test_remove(self):
-        self.assertEquals(
-            self.qclass([1, 2, 3, 4, 5, 6]).remove(5).swap().value(),
-            [1, 2, 3, 4, 6]
-        )
-
-    def test_results(self):
-        self.assertEquals(
-            list(self.qclass([1, 2, 3, 4, 5, 6]).outshift().results()),
-            [1, 2, 3, 4, 5, 6]
+    def test_wrap(self):
+        from stuf import stuf
+        self.assertDictEqual(
+            self.qclass(
+                [('a', 1), ('b', 2), ('c', 3)]
+            ).reup().wrap(stuf).map().value(),
+            stuf(a=1, b=2, c=3),
         )
 
     def test_delitem(self):
@@ -39,30 +33,11 @@ class TestTwoQ(unittest.TestCase):
         del q[2]
         self.assertEquals(q.swap().value(), [1, 2, 4, 5, 6])
 
-    def test_insync(self):
-        q = self.qclass([1, 2, 3, 4, 5, 6]).outsync().inclear().insync()
-        self.assertSequenceEqual(q.incoming, q.outgoing)
-
-    def test_inshift(self):
-        q = self.qclass([1, 2, 3, 4, 5, 6]).outsync().inshift()
-        self.assertSequenceEqual(q.incoming, q.outgoing)
-
-    def test_outsync(self):
-        q = self.qclass([1, 2, 3, 4, 5, 6]).outsync()
-        self.assertSequenceEqual(q.incoming, q.outgoing)
-
-    def test_outshift(self):
-        q = self.qclass([1, 2, 3, 4, 5, 6]).outshift()
-        self.assertSequenceEqual(q.incoming, q.outgoing)
-
-    def test_contains(self):
-        self.assertTrue(5 in self.qclass([1, 2, 3, 4, 5, 6]))
-
-    def test_inclear(self):
-        self.assertEqual(len(self.qclass([1, 2, 5, 6]).inclear()), 0)
-
-    def test_outclear(self):
-        self.assertEqual(len(self.qclass([1, 2, 5, 6]).outclear().outgoing), 0)
+    def test_remove(self):
+        self.assertEquals(
+            self.qclass([1, 2, 3, 4, 5, 6]).remove(5).swap().value(),
+            [1, 2, 3, 4, 6],
+        )
 
     def test_insert(self):
         q = self.qclass([1, 2, 3, 4, 5, 6])
@@ -72,7 +47,7 @@ class TestTwoQ(unittest.TestCase):
     def test_extend(self):
         self.assertEquals(
             self.qclass().extend([1, 2, 3, 4, 5, 6]).swap().value(),
-            [1, 2, 3, 4, 5, 6]
+            [1, 2, 3, 4, 5, 6],
         )
 
     def test_extendleft(self):
@@ -90,6 +65,48 @@ class TestTwoQ(unittest.TestCase):
         self.assertEquals(
             self.qclass().appendleft('foo').swap().value(), 'foo'
         )
+
+    def test_inclear(self):
+        self.assertEqual(len(self.qclass([1, 2, 5, 6]).inclear()), 0)
+
+    def test_outclear(self):
+        self.assertEqual(len(self.qclass([1, 2, 5, 6]).outclear().outgoing), 0)
+
+    ###########################################################################
+    ## queue balancing ########################################################
+    ###########################################################################
+
+    def test_insync(self):
+        q = self.qclass([1, 2, 3, 4, 5, 6]).outshift().inclear().shift()
+        self.assertSequenceEqual(q.incoming, q.outgoing)
+
+    def test_inshift(self):
+        q = self.qclass([1, 2, 3, 4, 5, 6]).outshift().sync()
+        self.assertSequenceEqual(q.incoming, q.outgoing)
+
+    def test_outsync(self):
+        q = self.qclass([1, 2, 3, 4, 5, 6]).outshift()
+        self.assertSequenceEqual(q.incoming, q.outgoing)
+
+    def test_outshift(self):
+        q = self.qclass([1, 2, 3, 4, 5, 6]).outsync()
+        self.assertSequenceEqual(q.incoming, q.outgoing)
+
+    ###########################################################################
+    ## queue information ######################################################
+    ###########################################################################
+
+    def test_index(self):
+        self.assertEquals(self.qclass([1, 2, 3, 4, 5, 6]).index(3), 2)
+
+    def test_results(self):
+        self.assertEquals(
+            list(self.qclass([1, 2, 3, 4, 5, 6]).outsync().results()),
+            [1, 2, 3, 4, 5, 6]
+        )
+
+    def test_contains(self):
+        self.assertTrue(5 in self.qclass([1, 2, 3, 4, 5, 6]))
 
     ##########################################################################
     ## filter ################################################################
@@ -116,8 +133,15 @@ class TestTwoQ(unittest.TestCase):
             ).reject().value(), [1, 3, 5]
         )
 
+    def test_partition(self):
+        self.assertEquals(
+            self.qclass([1, 2, 3, 4, 5, 6]).tap(
+                lambda x: x % 2 == 0
+            ).partition().value(), [[1, 3, 5], [2, 4, 6]]
+        )
+
     ##########################################################################
-    ## map ###################################################################
+    ## execution #############################################################
     ##########################################################################
 
     def test_each(self):
@@ -145,13 +169,40 @@ class TestTwoQ(unittest.TestCase):
             [[1, 5, 7], [1, 2, 3]],
         )
 
-    def test_wrap(self):
-        from stuf import stuf
-        self.assertDictEqual(
+    ##########################################################################
+    ## delayed execution #####################################################
+    ##########################################################################
+
+    def test_delay_each(self):
+        def test(*args, **kw):
+            return sum(args) * kw['a']
+        self.assertEquals(
             self.qclass(
-                [('a', 1), ('b', 2), ('c', 3)]
-            ).reup().wrap(stuf).map().value(),
-            stuf(a=1, b=2, c=3),
+                [((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})]
+            )
+            .tap(test)
+            .delay_each(1)
+            .value(),
+            [6, 10, 14],
+        )
+
+    def test_delay_map(self):
+        self.assertEquals(
+            list(self.qclass([1, 2, 3]).tap(lambda x: x * 3).delay_map(1)),
+            [3, 6, 9],
+        )
+
+    def test_delay_invoke(self):
+        self.assertEquals(
+            self.qclass([5, 1, 7], [3, 2, 1])
+            .args(1)
+            .delay_invoke('index', 1)
+            .value(),
+            [1, 2],
+        )
+        self.assertEquals(
+            self.qclass([5, 1, 7], [3, 2, 1]).invoke('sort').value(),
+            [[1, 5, 7], [1, 2, 3]],
         )
 
     ##########################################################################
@@ -164,34 +215,15 @@ class TestTwoQ(unittest.TestCase):
             [1, 2, 3, [[4]]],
         )
 
-    def test_max(self):
-        from stuf import stuf
-        stooges = [
-            stuf(name='moe', age=40),
-            stuf(name='larry', age=50),
-            stuf(name='curly', age=60)
-        ]
+    def test_smash(self):
         self.assertEquals(
-            stuf(self.qclass(stooges).tap(lambda x: x.age).max().value()),
-            stuf(name='curly', age=60),
-        )
-        self.assertEquals(
-            self.qclass([1, 2, 4]).max().value(), 4,
+            self.qclass([[1, [2], [3, [[4]]]]]).smash().value(), [1, 2, 3, 4],
         )
 
     def test_merge(self):
         self.assertEquals(
-            self.qclass([[1, [2], [3, [[4]]]]]).smash().value(),
-            [1, 2, 3, 4],
-        )
-
-    def test_min(self):
-        self.assertEquals(
-            self.qclass([10, 5, 100, 2, 1000]).min().value(), 2,
-        )
-        self.assertEquals(
-            self.qclass([10, 5, 100, 2, 1000]).tap(lambda x: x).min().value(),
-            2,
+            self.qclass([4, 5, 6], [1, 2, 3]).merge().value(),
+            [1, 2, 3, 4, 5, 6],
         )
 
     def test_pairwise(self):
@@ -238,6 +270,49 @@ class TestTwoQ(unittest.TestCase):
                 [['moe', 'larry', 'curly'], [30, 40, 50], [True, False, False]]
             ).zip().value(),
             [('moe', 30, True), ('larry', 40, False), ('curly', 50, False)],
+        )
+
+    ##########################################################################
+    ## math ##################################################################
+    ##########################################################################
+
+    def test_max(self):
+        from stuf import stuf
+        stooges = [
+            stuf(name='moe', age=40),
+            stuf(name='larry', age=50),
+            stuf(name='curly', age=60)
+        ]
+        self.assertEquals(
+            stuf(self.qclass(stooges).tap(lambda x: x.age).max().value()),
+            stuf(name='curly', age=60),
+        )
+        self.assertEquals(self.qclass([1, 2, 4]).max().value(), 4)
+
+    def test_min(self):
+        self.assertEquals(
+            self.qclass([10, 5, 100, 2, 1000]).min().value(), 2,
+        )
+        self.assertEquals(
+            self.qclass([10, 5, 100, 2, 1000]).tap(lambda x: x).min().value(),
+            2,
+        )
+
+    def test_sum(self):
+        self.assertEquals(self.qclass([1, 2, 3]).sum().value(), 6)
+        self.assertEquals(self.qclass([1, 2, 3]).sum(1).value(), 7)
+
+    def test_fsum(self):
+        self.assertEquals(
+            self.qclass(
+                [.1, .1, .1, .1, .1, .1, .1, .1, .1, .1]
+            ).fsum().value(),
+            1.0,
+        )
+
+    def test_average(self):
+        self.assertEquals(
+            self.qclass([10, 40, 45]).average().value(), 31.666666666666668
         )
 
     ##########################################################################
@@ -419,9 +494,14 @@ class TestTwoQ(unittest.TestCase):
     ## repetition ############################################################
     ##########################################################################
 
-    def test_ncycles(self):
+    def test_range(self):
+        self.assertEqual(self.qclass().range(3).value(), [0, 1, 2])
+        self.assertEqual(self.qclass().range(1, 3).value(), [1, 2])
+        self.assertEqual(self.qclass().range(1, 3, 2).value(), 1)
+
+    def test_repeat(self):
         self.assertEqual(
-            self.qclass([40, 50, 60]).ncycles(3).value(),
+            self.qclass([40, 50, 60]).repeat(3).value(),
             [(40, 50, 60), (40, 50, 60), (40, 50, 60)],
         )
 

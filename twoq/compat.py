@@ -3,7 +3,8 @@
 
 from stuf import six
 # pylint: disable-msg=f0401,w0611
-from stuf.six.moves import map, filterfalse, filter, zip, zip_longest  # @UnresolvedImport @UnusedImport @IgnorePep8
+from stuf.six.moves import (
+    map, filterfalse, filter, zip, zip_longest, xrange)  # @UnresolvedImport @UnusedImport @IgnorePep8
 # pylint: enable-msg=f0401
 
 __all__ = ['port']

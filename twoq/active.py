@@ -5,61 +5,10 @@ from collections import deque
 from bisect import bisect_right
 
 from twoq.core import coreq
+from twoq.utils import iterexcept
+from twoq.contexts import ManContext, ShiftContext, SyncContext
 
-__all__ = ['twoq', 'iterexcept']
-
-
-def iterexcept(func, exception):
-    '''
-    call a function repeatedly until an exception is raised
-
-    Converts a call-until-exception interface to an iterator interface. Like
-    `__builtin__.iter(func, sentinel)` but uses an exception instead of a
-    sentinel to end the loop.
-    '''
-    try:
-        while 1:
-            yield func()
-    except exception:
-        pass
-
-
-class SyncContext(object):
-
-    '''sync context manager'''
-
-    def __init__(self, queue):
-        '''
-        init
-
-        @param queue: queue
-        '''
-        super(SyncContext, self).__init__()
-        self._outextend = queue._outextend
-        self._inextend = queue._inextend
-        self._outappend = queue._outappend
-        self._inclear = queue._inclear
-        self._outclear = queue._outclear
-        self._outgoing = queue.outgoing
-
-    def __enter__(self):
-        self._outclear()
-        return self
-
-    def __exit__(self, t, v, e):
-        # clear incoming items
-        self._inclear()
-        # extend incoming items with outgoing items
-        self._inextend(self._outgoing)
-
-    def __call__(self, args):
-        self._outextend(args)
-
-    def iter(self, args):
-        self._outextend(iter(args))
-
-    def append(self, args):
-        self._outappend(args)
+__all__ = ['twoq', 'manq', 'shiftq', 'syncq']
 
 
 class baseq(coreq):
@@ -100,11 +49,9 @@ class baseq(coreq):
         # outgoing things left pop
         self.popleft = self.outgoing.popleft
 
-    def __delitem__(self, index):
-        incoming = self.incoming
-        incoming.rotate(-index)
-        incoming.popleft()
-        incoming.rotate(index)
+    ###########################################################################
+    ## queue information ######################################################
+    ###########################################################################
 
     def __contains__(self, value):
         return value in self.incoming
@@ -112,47 +59,38 @@ class baseq(coreq):
     def __len__(self):
         return len(self.incoming)
 
-    @property
-    def _sync(self):
-        '''_sync incoming things with outgoing things'''
-        return SyncContext(self)
+    count = __len__
 
-    def clear(self):
-        '''clear all queues'''
-        self._call = None
-        self._outclear()
-        self._inclear()
-        return self
+    def index(self, thing, _bisect_right=bisect_right):
+        '''
+        insert thing into incoming things
 
-    def append(self, thing):
-        '''incoming things right append'''
-        self._inappend(thing)
-        return self
+        @param thing: some thing
+        '''
+        return _bisect_right(self.incoming, thing) - 1
 
-    def appendleft(self, thing):
-        '''incoming things left append'''
-        self._inappendleft(thing)
-        return self
+    def results(self, _iterexcept=iterexcept):
+        '''iterate over reversed outgoing things, clearing as it goes'''
+        for thing in _iterexcept(self.outgoing.popleft, IndexError):
+            yield thing
 
-    def inclear(self):
-        '''incoming things clear'''
-        self._inclear()
-        return self
+    def value(self, _list=list, _len=len):
+        '''return outgoing things and clear'''
+        if _len(self.outgoing) == 1:
+            return self.outgoing.pop()
+        results = _list(self.outgoing)
+        self.clear()
+        return results
 
-    def outclear(self):
-        '''incoming things clear'''
-        self._inclear()
-        return self
+    ###########################################################################
+    ## clear queues ###########################################################
+    ###########################################################################
 
-    def extend(self, things):
-        '''incoming things right extend'''
-        self._inextend(things)
-        return self
-
-    def extendleft(self, things):
-        '''incoming things left extend'''
-        self._inextendleft(things)
-        return self
+    def __delitem__(self, index):
+        incoming = self.incoming
+        incoming.rotate(-index)
+        incoming.popleft()
+        incoming.rotate(index)
 
     def remove(self, thing, _bisect_right=bisect_right):
         '''
@@ -165,6 +103,37 @@ class baseq(coreq):
         incoming.rotate(-position)
         incoming.popleft()
         incoming.rotate(position)
+        return self
+
+    def clear(self):
+        '''clear all queues'''
+        self._call = None
+        self._outclear()
+        self._inclear()
+        return self
+
+    def inclear(self):
+        '''incoming things clear'''
+        self._inclear()
+        return self
+
+    def outclear(self):
+        '''incoming things clear'''
+        self._inclear()
+        return self
+
+    ###########################################################################
+    ## manipulate queues ######################################################
+    ###########################################################################
+
+    def append(self, thing):
+        '''incoming things right append'''
+        self._inappend(thing)
+        return self
+
+    def appendleft(self, thing):
+        '''incoming things left append'''
+        self._inappendleft(thing)
         return self
 
     def insert(self, index, value):
@@ -181,15 +150,42 @@ class baseq(coreq):
         incoming.rotate(index)
         return self
 
-    def insync(self):
-        '''sync incoming things with outgoing things'''
+    def extend(self, things):
+        '''incoming things right extend'''
+        self._inextend(things)
+        return self
+
+    def extendleft(self, things):
+        '''incoming things left extend'''
+        self._inextendleft(things)
+        return self
+
+    def reverse(self, _reversed=None):
+        '''iterate over reversed incoming things, clearing as it goes'''
+        self.outgoing.extendleft(self.incoming)
+        self._inclear()
+        self._inextend(self.outgoing)
+        return self
+
+    ###########################################################################
+    ## balance queues #########################################################
+    ###########################################################################
+
+    def reup(self, _list=list):
+        '''put incoming things in incoming things as one incoming thing'''
+        with self._sync as _sync:
+            _sync.append(_list(self.incoming))
+        return self
+
+    def shift(self):
+        '''shift incoming things with outgoing things'''
         # extend incoming items with outgoing items
         self._inextend(self.outgoing)
         return self
 
-    def inshift(self):
+    def sync(self):
         '''
-        sync incoming things with outgoing things, clearing incoming things
+        shift incoming things with outgoing things, clearing incoming things
         '''
         # clear incoming items
         self._inclear()
@@ -197,15 +193,15 @@ class baseq(coreq):
         self._inextend(self.outgoing)
         return self
 
-    def outsync(self):
-        '''sync outgoing things with incoming things'''
+    def outshift(self):
+        '''shift outgoing things with incoming things'''
         # extend incoming items with outgoing items
         self._outextend(self.incoming)
         return self
 
-    def outshift(self):
+    def outsync(self):
         '''
-        sync outgoing things with incoming things, clearing outgoing things
+        shift outgoing things with incoming things, clearing outgoing things
         '''
         # clear incoming items
         self._outclear()
@@ -213,23 +209,10 @@ class baseq(coreq):
         self._outextend(self.incoming)
         return self
 
-    def index(self, thing, _bisect_right=bisect_right):
-        '''
-        insert thing into incoming things
 
-        @param thing: some thing
-        '''
-        return _bisect_right(self.incoming, thing) - 1
+class manq(baseq):
 
-    def results(self, _iterexcept=iterexcept):
-        '''iterate over reversed outgoing things, clearing as it goes'''
-        for thing in _iterexcept(self.outgoing.popleft, IndexError):
-            yield thing
-
-
-class twoq(baseq):
-
-    '''manipulation queue'''
+    '''maunual balancing manipulation queue'''
 
     def __init__(self, *args):
         '''init'''
@@ -239,4 +222,32 @@ class twoq(baseq):
             incoming.extend(args[0])
         else:
             incoming.extend(args)
-        super(twoq, self).__init__(incoming, deque())
+        super(manq, self).__init__(incoming, deque())
+
+    @property
+    def _sync(self):
+        '''_sync incoming things with outgoing things'''
+        return ManContext(self)
+
+
+class shiftq(manq):
+
+    '''autoshifting manipulation queue'''
+
+    @property
+    def _sync(self):
+        '''auto-shift outgoing things to incoming things'''
+        return SyncContext(self)
+
+
+class syncq(manq):
+
+    '''autosyncing manipulation queue'''
+
+    @property
+    def _sync(self):
+        '''autosync outgoing things with incoming things'''
+        return ShiftContext(self)
+
+
+twoq = syncq
