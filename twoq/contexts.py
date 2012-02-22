@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 '''twoq contexts'''
 
-__all__ = ('SyncContext', 'ShiftContext', 'ManContext')
+__all__ = ('SyncContext', 'ManContext')
 
 
 class Context(object):
 
-    '''manual sync context manager'''
+    '''base context manager'''
 
     def __init__(self, queue):
         '''
@@ -22,6 +22,15 @@ class Context(object):
 
     def __exit__(self, t, v, e):
         pass
+
+    def __call__(self, args):
+        self._outextend(args)
+
+    def iter(self, args):
+        self._outextend(iter(args))
+
+    def append(self, args):
+        self._outappend(args)
 
 
 class ManContext(Context):
@@ -41,63 +50,26 @@ class ManContext(Context):
         self._scratch = queue._scratch
 
     def __enter__(self):
+        # clear scratch queue
         self._sclear()
+        # clear outgoing queue
         self._outclear()
+        # extend scratch queue with incoming things
         self._sextend(self._incoming)
         return self
 
     def __exit__(self, t, v, e):
+        # clear scratch queue
         self._sclear()
 
     @property
     def iterable(self):
         return self._scratch
 
-    def __call__(self, args):
-        self._outextend(args)
 
-    def iter(self, args):
-        self._outextend(iter(args))
+class SyncContext(Context):
 
-    def append(self, args):
-        self._outappend(args)
-
-
-class ShiftContext(ManContext):
-
-    '''shift context manager'''
-
-    def __init__(self, queue):
-        '''
-        init
-
-        @param queue: queue
-        '''
-        super(ShiftContext, self).__init__(queue)
-        self._inextend = queue._inextend
-        self._outgoing = queue.outgoing
-
-    def __exit__(self, t, v, e):
-        # extend incoming items with outgoing items
-        self._inextend(self._outgoing)
-
-    @property
-    def iterable(self):
-        return self._incoming
-
-    def __call__(self, args):
-        self._outextend(args)
-
-    def iter(self, args):
-        self._outextend(iter(args))
-
-    def append(self, args):
-        self._outappend(args)
-
-
-class SyncContext(ShiftContext):
-
-    '''sync context manager'''
+    '''auto sync context manager'''
 
     def __init__(self, queue):
         '''
@@ -107,6 +79,13 @@ class SyncContext(ShiftContext):
         '''
         super(SyncContext, self).__init__(queue)
         self._inclear = queue._inclear
+        self._inextend = queue._inextend
+        self._outgoing = queue.outgoing
+
+    def __enter__(self):
+        # clear outgoing queue
+        self._outclear()
+        return self
 
     def __exit__(self, t, v, e):
         # clear incoming items
@@ -117,12 +96,3 @@ class SyncContext(ShiftContext):
     @property
     def iterable(self):
         return self._incoming
-
-    def __call__(self, args):
-        self._outextend(args)
-
-    def iter(self, args):
-        self._outextend(iter(args))
-
-    def append(self, args):
-        self._outappend(args)

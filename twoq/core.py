@@ -2,24 +2,20 @@
 '''twoq core'''
 
 import time
+
+import math as mt
+import copy as cp
+import heapq as hq
+import random as rm
+import operator as op
+import itertools as it
+import functools as ft
 from threading import local
 from functools import partial
-from math import fsum as ifsum
 
-from heapq import merge as imerge
-from functools import reduce as ireduce
-from itertools import (
-    groupby, islice, repeat as irepeat, starmap, tee, chain)
-from operator import methodcaller, contains as icontains, truth, truediv
-from random import shuffle as ishuffle, sample as isample, choice as ichoice
-
-from twoq.utils import (
-    find as xfind, smash as xsmash, roundrobin as xroundrobin,
-    members as xmembers, pick as xpick, pluck as xpluck, unique as xunique)
-from twoq.compat import (
-    filter as ifilter, filterfalse, map as imap, zip_longest, zip as izip,
-    xrange as irange,
-)
+from twoq import compat as ct
+from twoq import support as ut
+from twoq.support import pick as xpick, pluck as xpluck
 
 __all__ = ['coreq']
 isum = sum
@@ -42,9 +38,9 @@ class coreq(local):
         # outgoing things iterator
         return iter(self.outgoing)
 
-    ##########################################################################
-    ## queue management ######################################################
-    ##########################################################################
+    ###########################################################################
+    ## queue management #######################################################
+    ###########################################################################
 
     def tap(self, call):
         '''
@@ -58,7 +54,7 @@ class coreq(local):
         return self
 
     def args(self, *args, **kw):
-        '''pass arguments to current callable in call chain'''
+        '''pass arguments to current callable in call it.chain'''
         self._args = args
         self._kw = kw
         return self
@@ -80,36 +76,45 @@ class coreq(local):
     # alias
     clear = unwrap = detap
 
-    def swap(self):
-        '''swap queues'''
-        incoming = self.incoming
-        self.incoming = self.outgoing
-        self.outgoing = incoming
+    ###########################################################################
+    ## duplication ############################################################
+    ###########################################################################
+
+    def copy(self, _map=ct.map, _copy=cp.copy):
+        '''copy each incoming thing'''
+        with self._sync as sync:
+            sync(_map(_copy, sync.iterable))
         return self
 
-    ##########################################################################
-    ## filter ################################################################
-    ##########################################################################
+    def deepcopy(self, _map=ct.map, _deepcopy=cp.deepcopy):
+        '''copy each incoming thing deeply'''
+        with self._sync as sync:
+            sync(_map(_deepcopy, sync.iterable))
+        return self
 
-    def compact(self, _filter=ifilter, _truth=truth):
+    ###########################################################################
+    ## filter #################################################################
+    ###########################################################################
+
+    def compact(self, _filter=ct.filter, _truth=op.truth):
         '''strip "untrue" things from incoming things'''
         with self._sync as sync:
             sync.iter(_filter(_truth, sync.iterable))
         return self
 
-    def filter(self, _filter=ifilter):
+    def filter(self, _filter=ct.filter):
         '''incoming things for which call is `True`'''
         with self._sync as sync:
             sync(_filter(self._call, sync.iterable))
         return self
 
-    def find(self, _find=xfind):
+    def find(self, _find=ut.find):
         '''first incoming thing for which call is `True`'''
         with self._sync as sync:
             sync(_find(self._call, self.incoming))
         return self
 
-    def partition(self, _tee=tee, _filterfalse=filterfalse, _filter=ifilter):
+    def partition(self, _t=it.tee, _ff=ct.filterfalse, _filter=ct.filter):
         '''
         split incoming things into `True` and `False` things based on results
         of callable
@@ -118,12 +123,12 @@ class coreq(local):
         '''
         with self._sync as sync:
             call = self._call
-            falsy, truey = _tee(sync.iterable)
-            sync.append(list(_filterfalse(call, falsy)))
+            falsy, truey = _t(sync.iterable)
+            sync.append(list(_ff(call, falsy)))
             sync.append(list(_filter(call, truey)))
         return self
 
-    def reject(self, _filterfalse=filterfalse):
+    def reject(self, _filterfalse=ct.filterfalse):
         '''incoming things for which call is `False`'''
         with self._sync as sync:
             sync(_filterfalse(self._call, sync.iterable))
@@ -132,27 +137,27 @@ class coreq(local):
     def without(self, *things):
         '''strip things from incoming things'''
         with self._sync as sync:
-            sync(filterfalse(lambda x: x in things, sync.iterable))
+            sync(ct.filterfalse(lambda x: x in things, sync.iterable))
         return self
 
-    ##########################################################################
-    ## execution #############################################################
-    ##########################################################################
+    ###########################################################################
+    ## execution ##############################################################
+    ###########################################################################
 
-    def each(self, _map=starmap):
+    def each(self, _map=it.starmap):
         '''invoke call with passed arguments, keywords in incoming things'''
         with self._sync as sync:
             sync(_map(lambda x, y: self._call(*x, **y), sync.iterable))
         return self
 
-    def invoke(self, name, _methodcaller=methodcaller, _map=imap):
+    def invoke(self, name, _methodcaller=op.methodcaller, _map=ct.map):
         '''
         invoke call on each incoming thing with passed arguments, keywords
         but return incoming thing instead if call returns None
 
         @param name: name of method
         '''
-        _caller = methodcaller(name, *self._args, **self._kw)
+        _caller = op.methodcaller(name, *self._args, **self._kw)
         def _call(thing, _caller=_caller): #@IgnorePep8
             results = _caller(thing)
             return thing if results is None else results
@@ -160,17 +165,17 @@ class coreq(local):
             sync(_map(_call, sync.iterable))
         return self
 
-    def map(self, _map=imap):
+    def map(self, _map=ct.map):
         '''invoke call on each incoming thing'''
         with self._sync as sync:
             sync(_map(self._call, sync.iterable))
         return self
 
-    ##########################################################################
-    ## delayed execution #####################################################
-    ##########################################################################
+    ###########################################################################
+    ## delayed execution ######################################################
+    ###########################################################################
 
-    def delay_each(self, wait, _sleep=time.sleep, _map=starmap):
+    def delay_each(self, wait, _sleep=time.sleep, _map=it.starmap):
         '''
         invoke call with passed arguments, keywords in incoming things after a
         delay
@@ -184,7 +189,7 @@ class coreq(local):
             sync(_map(_delay, sync.iterable))
         return self
 
-    def delay_invoke(self, name, wait, _sleep=time.sleep, _map=imap):
+    def delay_invoke(self, name, wait, _sleep=time.sleep, _map=ct.map):
         '''
         invoke call on each incoming thing with passed arguments, keywords
         after a delay but return incoming thing instead if call returns None
@@ -192,7 +197,7 @@ class coreq(local):
         @param name: name of method
         @param wait: time in seconds
         '''
-        _caller = methodcaller(name, *self._args, **self._kw)
+        _caller = op.methodcaller(name, *self._args, **self._kw)
         def _call(x, _caller=_caller, _sleep=_sleep): #@IgnorePep8
             _sleep(wait)
             results = _caller(x)
@@ -201,7 +206,7 @@ class coreq(local):
             sync(_map(_call, sync.iterable))
         return self
 
-    def delay_map(self, wait, _sleep=time.sleep, _map=imap):
+    def delay_map(self, wait, _sleep=time.sleep, _map=ct.map):
         '''
         invoke call on each incoming thing after a delay
 
@@ -214,29 +219,29 @@ class coreq(local):
             sync(_map(_delay, sync.iterable))
         return self
 
-    ##########################################################################
-    ## reduce ################################################################
-    ##########################################################################
+    ###########################################################################
+    ## reduce #################################################################
+    ###########################################################################
 
-    def flatten(self, _chain=chain.from_iterable):
+    def flatten(self, _chain=it.chain.from_iterable):
         '''flatten nested incoming things'''
         with self._sync as sync:
             sync(_chain(sync.iterable))
         return self
 
-    def merge(self, _merge=imerge):
+    def merge(self, _merge=hq.merge):
         '''flatten nested and ordered incoming things'''
         with self._sync as sync:
             sync(_merge(*sync.iterable))
         return self
 
-    def smash(self, _smash=xsmash):
+    def smash(self, _smash=ut.smash):
         '''flatten deeply nested incoming things'''
         with self._sync as sync:
             sync(_smash(sync.iterable))
         return self
 
-    def pairwise(self, _tee=tee, _next=next, _zip=izip):
+    def pairwise(self, _tee=it.tee, _next=next, _zip=ct.zip):
         '''
         every two incoming things as a tuple
 
@@ -248,7 +253,7 @@ class coreq(local):
             sync(_zip(a, b))
         return self
 
-    def reduce(self, initial=None, _reduce=ireduce):
+    def reduce(self, initial=None, _reduce=ft.reduce):
         '''
         reduce incoming things to one thing using call
 
@@ -261,7 +266,7 @@ class coreq(local):
                 sync.append(_reduce(self._call, sync.iterable))
         return self
 
-    def reduce_right(self, initial=None, _reduce=ireduce):
+    def reduce_right(self, initial=None, _reduce=ft.reduce):
         '''
         reduce incoming things to one thing from right side using call
 
@@ -276,7 +281,7 @@ class coreq(local):
                 sync(_reduce(lambda x, y: self._call(y, x), sync.iterable))
         return self
 
-    def roundrobin(self, _roundrobin=xroundrobin):
+    def roundrobin(self, _roundrobin=ut.roundrobin):
         '''
         interleave incoming things into one thing e.g.
 
@@ -286,7 +291,7 @@ class coreq(local):
             sync(_roundrobin(sync.iterable))
         return self
 
-    def zip(self, _zip=izip):
+    def zip(self, _zip=ct.zip):
         '''
         smash incoming things into single thing, pairing things by iterable
         position
@@ -295,18 +300,18 @@ class coreq(local):
             sync(_zip(*sync.iterable))
         return self
 
-    ##########################################################################
-    ## math reduction ########################################################
-    ##########################################################################
+    ###########################################################################
+    ## math reduction #########################################################
+    ###########################################################################
 
-    def average(self, _sum=isum, _truediv=truediv, _len=len):
+    def average(self, _sum=isum, _truediv=op.truediv, _len=len):
         '''average of all incoming things'''
         with self._sync as sync:
             iterable = sync.iterable
             sync.append(_truediv(_sum(iterable, 0.0), _len(iterable)))
         return self
 
-    def fsum(self, _fsum=ifsum):
+    def fsum(self, _fsum=mt.fsum):
         '''
         add incoming things together
 
@@ -348,11 +353,11 @@ class coreq(local):
             sync.append(_sum(sync.iterable, start))
         return self
 
-    ##########################################################################
-    ## order #################################################################
-    ##########################################################################
+    ###########################################################################
+    ## order ##################################################################
+    ###########################################################################
 
-    def group(self, _map=imap, _groupby=groupby):
+    def group(self, _map=ct.map, _groupby=it.groupby):
         '''group incoming things using _call for key function'''
         with self._sync as sync:
             if self._call is None:
@@ -366,7 +371,7 @@ class coreq(local):
                 ))
         return self
 
-    def grouper(self, n, fill=None, _zipl=zip_longest, _iter=iter):
+    def grouper(self, n, fill=None, _zipl=ct.zip_longest, _iter=iter):
         '''
         split incoming things into sequences of length `n`, using fill thing to
         pad out incomplete sequences
@@ -395,17 +400,17 @@ class coreq(local):
                 sync(_sorted(sync.iterable, key=self._call))
         return self
 
-    ##########################################################################
-    ## random ################################################################
-    ##########################################################################
+    ###########################################################################
+    ## random #################################################################
+    ###########################################################################
 
-    def choice(self, _choice=ichoice):
+    def choice(self, _choice=rm.choice):
         '''random choice from incoming things'''
         with self._sync as sync:
             sync.append(_choice(sync.iterable))
         return self
 
-    def sample(self, n, _sample=isample, _list=list):
+    def sample(self, n, _sample=rm.sample, _list=list):
         '''
         random sampling drawn from `n` incoming things
 
@@ -415,7 +420,7 @@ class coreq(local):
             sync(_sample(_list(sync.iterable), n))
         return self
 
-    def shuffle(self, _shuffle=ishuffle):
+    def shuffle(self, _shuffle=rm.shuffle):
         '''shuffle incoming things'''
         with self._sync as sync:
             iterable = sync.iterable
@@ -427,7 +432,7 @@ class coreq(local):
     ## large slice ###########################################################
     ##########################################################################
 
-    def nth(self, n, default=None, _next=next, _islice=islice):
+    def nth(self, n, default=None, _next=next, _islice=it.islice):
         '''
         nth incoming thing or default thing
 
@@ -438,20 +443,20 @@ class coreq(local):
             sync.append(_next(_islice(sync.iterable, n, None), default))
         return self
 
-    def initial(self, _islice=islice, _len=len):
+    def initial(self, _islice=it.islice, _len=len):
         '''all incoming things except the last thing'''
         with self._sync as sync:
             iterable = sync.iterable
             sync(_islice(iterable, _len(iterable) - 1))
         return self
 
-    def rest(self, _islice=islice):
+    def rest(self, _islice=it.islice):
         '''all incoming things except the first thing'''
         with self._sync as sync:
             sync(_islice(sync.iterable, 1, None))
         return self
 
-    def snatch(self, n, _islice=islice, _len=len):
+    def snatch(self, n, _islice=it.islice, _len=len):
         '''
         last `n` things of incoming things
 
@@ -462,7 +467,7 @@ class coreq(local):
             sync(_islice(iterable, _len(iterable) - n, None))
         return self
 
-    def take(self, n, _islice=islice):
+    def take(self, n, _islice=it.islice):
         '''
         first `n` things of incoming things
 
@@ -476,11 +481,11 @@ class coreq(local):
     ## collection #############################################################
     ###########################################################################
 
-    def members(self, _members=xmembers, _map=imap, _fitr=chain.from_iterable):
+    def members(self, _mz=ut.members, _map=ct.map, _ci=it.chain.from_iterable):
         '''collect members of incoming things'''
-        _members = partial(_members, call=self._call)
+        _members = partial(_mz, call=self._call)
         with self._sync as sync:
-            sync.iter(_fitr(_map(_members, sync.iterable)))
+            sync(_ci(_map(_members, sync.iterable)))
         return self
 
     def pick(self, *names):
@@ -495,11 +500,11 @@ class coreq(local):
             sync(xpluck(keys, sync.iterable))
         return self
 
-    ##########################################################################
-    ## repetition ############################################################
-    ##########################################################################
+    ###########################################################################
+    ## repetition #############################################################
+    ###########################################################################
 
-    def padnone(self, _chain=chain, _repeat=irepeat):
+    def padnone(self, _chain=it.chain, _repeat=it.repeat):
         '''
         incoming things and then `None` indefinitely
 
@@ -509,7 +514,7 @@ class coreq(local):
             sync.iter(_chain(sync.iterable, _repeat(None)))
         return self
 
-    def range(self, start, stop=0, step=1, _range=irange):
+    def range(self, start, stop=0, step=1, _range=ct.xrange):
         '''
         repeat incoming things `n` times
 
@@ -522,7 +527,7 @@ class coreq(local):
                 sync(_range(start))
         return self
 
-    def repeat(self, n, _repeat=irepeat, _tuple=tuple):
+    def repeat(self, n, _repeat=it.repeat, _tuple=tuple):
         '''
         repeat incoming things `n` times
 
@@ -532,7 +537,7 @@ class coreq(local):
             sync(_repeat(_tuple(sync.iterable), n))
         return self
 
-    def times(self, n=None, _starmap=starmap, _repeat=irepeat):
+    def times(self, n=None, _starmap=it.starmap, _repeat=it.repeat):
         '''
         repeat call with passed arguments
 
@@ -545,23 +550,23 @@ class coreq(local):
                 sync(_starmap(self._call, _repeat(sync.iterable, n)))
         return self
 
-    ##########################################################################
-    ## truth #################################################################
-    ##########################################################################
+    ###########################################################################
+    ## truth ##################################################################
+    ###########################################################################
 
-    def all(self, _all=all, _map=imap):
+    def all(self, _all=all, _map=ct.map):
         '''if `all` incoming things are `True`'''
         with self._sync as sync:
             sync.append(_all(_map(self._call, sync.iterable)))
         return self
 
-    def any(self, _any=any, _map=imap):
+    def any(self, _any=any, _map=ct.map):
         '''if `any` incoming things are `True`'''
         with self._sync as sync:
             sync.append(_any(_map(self._call, sync.iterable)))
         return self
 
-    def contains(self, thing, _contains=icontains):
+    def contains(self, thing, _contains=op.contains):
         '''
         if `thing` is in incoming things
 
@@ -571,17 +576,17 @@ class coreq(local):
             sync.append(_contains(sync.iterable, thing))
         return self
 
-    def quantify(self, _sum=isum, _map=imap):
+    def quantify(self, _sum=isum, _map=ct.map):
         '''how many times call is True for incoming things'''
         with self._sync as sync:
             sync.append(_sum(_map(self._call, sync.iterable)))
         return self
 
-    ##########################################################################
-    ## unique slice ##########################################################
-    ##########################################################################
+    ###########################################################################
+    ## unique slice ###########################################################
+    ###########################################################################
 
-    def difference(self, _reduce=ireduce, _set=set):
+    def difference(self, _reduce=ft.reduce, _set=set):
         '''difference between incoming things'''
         with self._sync as sync:
             sync(_reduce(
@@ -589,7 +594,7 @@ class coreq(local):
             ))
         return self
 
-    def intersection(self, _reduce=ireduce, _set=set):
+    def intersection(self, _reduce=ft.reduce, _set=set):
         '''intersection between incoming things'''
         with self._sync as sync:
             sync(_reduce(
@@ -597,7 +602,7 @@ class coreq(local):
             ))
         return self
 
-    def union(self, _reduce=ireduce, _set=set):
+    def union(self, _reduce=ft.reduce, _set=set):
         '''union between incoming things'''
         with self._sync as sync:
             sync(_reduce(
@@ -605,7 +610,7 @@ class coreq(local):
             ))
         return self
 
-    def unique(self, _unique=xunique):
+    def unique(self, _unique=ut.unique):
         '''
         list unique incoming things, preserving order and remember all incoming
         things ever seen

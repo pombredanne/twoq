@@ -5,10 +5,10 @@ from collections import deque
 from bisect import bisect_right
 
 from twoq.core import coreq
-from twoq.utils import iterexcept
-from twoq.contexts import ManContext, ShiftContext, SyncContext
+from twoq.support import iterexcept
+from twoq.contexts import ManContext, SyncContext
 
-__all__ = ['twoq', 'manq', 'shiftq', 'syncq']
+__all__ = ['twoq', 'manq', 'autoq']
 
 
 class baseq(coreq):
@@ -63,10 +63,12 @@ class baseq(coreq):
     count = __len__
 
     def outcount(self):
+        '''count of outgoing items'''
         return len(self.outgoing)
 
     @property
     def balanced(self):
+        '''if queues are balanced'''
         return len(self.outgoing) == len(self.incoming)
 
     def index(self, thing, _bisect_right=bisect_right):
@@ -77,16 +79,20 @@ class baseq(coreq):
         '''
         return _bisect_right(self.incoming, thing) - 1
 
+    def final(self, _l=list, _ln=len):
+        '''return outgoing things and clear'''
+        results = self.pop() if _ln(self.outgoing) == 1 else _l(self.outgoing)
+        self.clear()
+        return results
+
     def results(self, _iterexcept=iterexcept):
         '''iterate over reversed outgoing things, clearing as it goes'''
         for thing in _iterexcept(self.outgoing.popleft, IndexError):
             yield thing
 
-    def value(self, _list=list, _len=len):
+    def value(self, _l=list, _ln=len):
         '''return outgoing things and clear'''
-        if _len(self.outgoing) == 1:
-            return self.outgoing.pop()
-        results = _list(self.outgoing)
+        results = self.pop() if _ln(self.outgoing) == 1 else _l(self.outgoing)
         self._outclear()
         return results
 
@@ -229,27 +235,35 @@ class baseq(coreq):
         return self
 
 
-class dq(baseq):
+class _dq(baseq):
 
     def __init__(self, *args):
         incoming = deque()
         # extend if just one argument
         if len(args) == 1:
-            incoming.extend(args[0])
+            incoming.append(args[0])
         else:
             incoming.extend(args)
-        super(dq, self).__init__(incoming, deque())
+        super(_dq, self).__init__(incoming, deque())
 
 
-class manq(dq):
+class autoq(_dq):
+
+    '''autosyncing manipulation queue'''
+
+    @property
+    def _sync(self):
+        '''autosync outgoing things with incoming things'''
+        return SyncContext(self)
+
+
+class manq(_dq):
 
     '''maunual balancing manipulation queue'''
 
     def __init__(self, *args):
         super(manq, self).__init__(*args)
-        #######################################################################
         ## scratch queue ######################################################
-        #######################################################################
         self._scratch = deque()
         # outgoing things right append
         self._sappend = self._scratch.append
@@ -262,24 +276,4 @@ class manq(dq):
         return ManContext(self)
 
 
-class shiftq(dq):
-
-    '''autoshifting manipulation queue'''
-
-    @property
-    def _sync(self):
-        '''auto-shift outgoing things to incoming things'''
-        return ShiftContext(self)
-
-
-class syncq(dq):
-
-    '''autosyncing manipulation queue'''
-
-    @property
-    def _sync(self):
-        '''autosync outgoing things with incoming things'''
-        return SyncContext(self)
-
-
-twoq = syncq
+twoq = autoq
