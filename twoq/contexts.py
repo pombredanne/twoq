@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 '''twoq contexts'''
 
-__all__ = ('ShiftContext', 'ManContext')
+__all__ = ('SyncContext', 'ShiftContext', 'ManContext')
 
 
-class ManContext(object):
+class Context(object):
 
     '''manual sync context manager'''
 
@@ -14,18 +14,44 @@ class ManContext(object):
 
         @param queue: queue
         '''
-        super(ManContext, self).__init__()
+        super(Context, self).__init__()
         self._outextend = queue._outextend
         self._outappend = queue._outappend
         self._outclear = queue._outclear
         self._incoming = queue.incoming
 
+    def __exit__(self, t, v, e):
+        pass
+
+
+class ManContext(Context):
+
+    '''manual sync context manager'''
+
+    def __init__(self, queue):
+        '''
+        init
+
+        @param queue: queue
+        '''
+        super(ManContext, self).__init__(queue)
+        self._sextend = queue._sextend
+        self._sappend = queue._sappend
+        self._sclear = queue._sclear
+        self._scratch = queue._scratch
+
     def __enter__(self):
+        self._sclear()
         self._outclear()
+        self._sextend(self._incoming)
         return self
 
     def __exit__(self, t, v, e):
-        pass
+        self._sclear()
+
+    @property
+    def iterable(self):
+        return self._scratch
 
     def __call__(self, args):
         self._outextend(args)
@@ -55,6 +81,19 @@ class ShiftContext(ManContext):
         # extend incoming items with outgoing items
         self._inextend(self._outgoing)
 
+    @property
+    def iterable(self):
+        return self._incoming
+
+    def __call__(self, args):
+        self._outextend(args)
+
+    def iter(self, args):
+        self._outextend(iter(args))
+
+    def append(self, args):
+        self._outappend(args)
+
 
 class SyncContext(ShiftContext):
 
@@ -74,3 +113,16 @@ class SyncContext(ShiftContext):
         self._inclear()
         # extend incoming items with outgoing items
         self._inextend(self._outgoing)
+
+    @property
+    def iterable(self):
+        return self._incoming
+
+    def __call__(self, args):
+        self._outextend(args)
+
+    def iter(self, args):
+        self._outextend(iter(args))
+
+    def append(self, args):
+        self._outappend(args)

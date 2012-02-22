@@ -30,7 +30,7 @@ class baseq(coreq):
         self._inappend = self.incoming.append
         # incoming things left append
         self._inappendleft = self.incoming.appendleft
-        # incoming things incomng clear
+        # incoming things clear
         self._inclear = self.incoming.clear
         # incoming things right extend
         self._inextend = self.incoming.extend
@@ -43,6 +43,7 @@ class baseq(coreq):
         self._outappend = self.outgoing.append
         # outgoing things right extend
         self._outextend = self.outgoing.extend
+        # outgoing things clear
         self._outclear = self.outgoing.clear
         # outgoing things right pop
         self.pop = self.outgoing.pop
@@ -86,8 +87,20 @@ class baseq(coreq):
         if _len(self.outgoing) == 1:
             return self.outgoing.pop()
         results = _list(self.outgoing)
-        self.clear()
+        self._outclear()
         return results
+
+    def first(self):
+        '''first thing among incoming things'''
+        with self._sync as sync:
+            sync.append(sync.iterable.popleft())
+        return self
+
+    def last(self):
+        '''last thing among incoming things'''
+        with self._sync as sync:
+            sync.append(sync.iterable.pop())
+        return self
 
     ###########################################################################
     ## clear queues ###########################################################
@@ -185,14 +198,13 @@ class baseq(coreq):
         return self
 
     def shift(self):
-        '''shift incoming things with outgoing things'''
-        # extend incoming items with outgoing items
+        '''shift incoming things to outgoing things'''
         self._inextend(self.outgoing)
         return self
 
     def sync(self):
         '''
-        shift incoming things with outgoing things, clearing incoming things
+        shift incoming things to outgoing things, clearing incoming things
         '''
         # clear incoming items
         self._inclear()
@@ -201,14 +213,14 @@ class baseq(coreq):
         return self
 
     def outshift(self):
-        '''shift outgoing things with incoming things'''
+        '''shift outgoing things to incoming things'''
         # extend incoming items with outgoing items
         self._outextend(self.incoming)
         return self
 
     def outsync(self):
         '''
-        shift outgoing things with incoming things, clearing outgoing things
+        shift outgoing things to incoming things, clearing outgoing things
         '''
         # clear incoming items
         self._outclear()
@@ -217,27 +229,40 @@ class baseq(coreq):
         return self
 
 
-class manq(baseq):
-
-    '''maunual balancing manipulation queue'''
+class dq(baseq):
 
     def __init__(self, *args):
-        '''init'''
         incoming = deque()
         # extend if just one argument
         if len(args) == 1:
             incoming.extend(args[0])
         else:
             incoming.extend(args)
-        super(manq, self).__init__(incoming, deque())
+        super(dq, self).__init__(incoming, deque())
+
+
+class manq(dq):
+
+    '''maunual balancing manipulation queue'''
+
+    def __init__(self, *args):
+        super(manq, self).__init__(*args)
+        #######################################################################
+        ## scratch queue ######################################################
+        #######################################################################
+        self._scratch = deque()
+        # outgoing things right append
+        self._sappend = self._scratch.append
+        # outgoing things right extend
+        self._sextend = self._scratch.extend
+        self._sclear = self._scratch.clear
 
     @property
     def _sync(self):
-        '''_sync incoming things with outgoing things'''
         return ManContext(self)
 
 
-class shiftq(manq):
+class shiftq(dq):
 
     '''autoshifting manipulation queue'''
 
@@ -247,7 +272,7 @@ class shiftq(manq):
         return ShiftContext(self)
 
 
-class syncq(manq):
+class syncq(dq):
 
     '''autosyncing manipulation queue'''
 
