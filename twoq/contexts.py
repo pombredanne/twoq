@@ -17,8 +17,11 @@ class ManContext(object):
         super(ManContext, self).__init__()
         self._outextend = queue._outextend
         self._outappend = queue._outappend
+        self._outclear = queue._outclear
+        self._incoming = queue.incoming
 
     def __enter__(self):
+        self._outclear()
         return self
 
     def __exit__(self, t, v, e):
@@ -34,7 +37,26 @@ class ManContext(object):
         self._outappend(args)
 
 
-class SyncContext(ManContext):
+class ShiftContext(ManContext):
+
+    '''shift context manager'''
+
+    def __init__(self, queue):
+        '''
+        init
+
+        @param queue: queue
+        '''
+        super(ShiftContext, self).__init__(queue)
+        self._inextend = queue._inextend
+        self._outgoing = queue.outgoing
+
+    def __exit__(self, t, v, e):
+        # extend incoming items with outgoing items
+        self._inextend(self._outgoing)
+
+
+class SyncContext(ShiftContext):
 
     '''sync context manager'''
 
@@ -45,23 +67,7 @@ class SyncContext(ManContext):
         @param queue: queue
         '''
         super(SyncContext, self).__init__(queue)
-        self._inextend = queue._inextend
         self._inclear = queue._inclear
-        self._outclear = queue._outclear
-        self._outgoing = queue.outgoing
-
-    def __enter__(self):
-        self._outclear()
-        return self
-
-    def __exit__(self, t, v, e):
-        # extend incoming items with outgoing items
-        self._inextend(self._outgoing)
-
-
-class ShiftContext(SyncContext):
-
-    '''shift context manager'''
 
     def __exit__(self, t, v, e):
         # clear incoming items

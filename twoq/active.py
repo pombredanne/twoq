@@ -61,6 +61,13 @@ class baseq(coreq):
 
     count = __len__
 
+    def outcount(self):
+        return len(self.outgoing)
+
+    @property
+    def balanced(self):
+        return len(self.outgoing) == len(self.incoming)
+
     def index(self, thing, _bisect_right=bisect_right):
         '''
         insert thing into incoming things
@@ -237,7 +244,7 @@ class shiftq(manq):
     @property
     def _sync(self):
         '''auto-shift outgoing things to incoming things'''
-        return SyncContext(self)
+        return ShiftContext(self)
 
 
 class syncq(manq):
@@ -247,7 +254,7 @@ class syncq(manq):
     @property
     def _sync(self):
         '''autosync outgoing things with incoming things'''
-        return ShiftContext(self)
+        return SyncContext(self)
 
 
 twoq = syncq
