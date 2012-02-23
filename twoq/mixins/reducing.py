@@ -26,8 +26,8 @@ def roundrobin(iterable, s=it.islice, c=it.cycle, p=partial, _i=iter, n=next):
     nexts = c(p(n, _i(i)) for i in iterable)
     while pending:
         try:
-            for n in nexts:
-                yield n()
+            for nextz in nexts:
+                yield nextz()
         except StopIteration:
             pending -= 1
             nexts = c(s(nexts, pending))

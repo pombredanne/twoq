@@ -795,7 +795,7 @@ class TestManQ(unittest.TestCase):
             return sum(args) * kw['a']
         manq = self.qclass(
             ((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})
-        ).tap(test).delay_each(0.5)
+        ).tap(test).delay_each(0.1)
         self.assertTrue(manq.balanced)
         manq.sync()
         self.assertTrue(manq.balanced)
@@ -803,7 +803,7 @@ class TestManQ(unittest.TestCase):
         self.assertFalse(manq.balanced)
 
     def test_delay_map(self):
-        manq = self.qclass(1, 2, 3).tap(lambda x: x * 3).delay_map(0.5)
+        manq = self.qclass(1, 2, 3).tap(lambda x: x * 3).delay_map(0.1)
         self.assertTrue(manq.balanced)
         manq.sync()
         self.assertTrue(manq.balanced)
@@ -813,13 +813,13 @@ class TestManQ(unittest.TestCase):
     def test_delay_invoke(self):
         manq = self.qclass(
             [5, 1, 7], [3, 2, 1]
-        ).args(1).delay_invoke('index', 0.5)
+        ).args(1).delay_invoke('index', 0.1)
         self.assertTrue(manq.balanced)
         manq.sync()
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), [1, 2])
         self.assertFalse(manq.balanced)
-        manq = self.qclass([5, 1, 7], [3, 2, 1]).invoke('sort')
+        manq = self.qclass([5, 1, 7], [3, 2, 1]).delay_invoke('sort', 0.1)
         self.assertTrue(manq.balanced)
         manq.sync()
         self.assertTrue(manq.balanced)

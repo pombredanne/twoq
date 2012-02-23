@@ -587,14 +587,14 @@ class TestSyncQ(unittest.TestCase):
                 ((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})
             )
             .tap(test)
-            .delay_each(0.5)
+            .delay_each(0.1)
             .value(),
             [6, 10, 14],
         )
 
     def test_delay_map(self):
         self.assertEquals(
-            self.qclass(1, 2, 3).tap(lambda x: x * 3).delay_map(0.5).value(),
+            self.qclass(1, 2, 3).tap(lambda x: x * 3).delay_map(0.1).value(),
             [3, 6, 9],
         )
 
@@ -602,13 +602,13 @@ class TestSyncQ(unittest.TestCase):
         self.assertEquals(
             self.qclass([5, 1, 7], [3, 2, 1])
             .args(1)
-            .delay_invoke('index', 0.5)
+            .delay_invoke('index', 0.1)
             .value(),
             [1, 2],
         )
         self.assertEquals(
             self.qclass([5, 1, 7], [3, 2, 1])
-            .delay_invoke('sort', 0.5).value(),
+            .delay_invoke('sort', 0.1).value(),
             [[1, 5, 7], [1, 2, 3]],
         )
 
