@@ -1,12 +1,28 @@
 # -*- coding: utf-8 -*-
-'''python 2 <-> 3 compatibility layer'''
+'''twoq support'''
 
 from stuf import six
 # pylint: disable-msg=f0401,w0611
-from stuf.six.moves import map, filterfalse, filter, zip, zip_longest  # @UnresolvedImport @UnusedImport @IgnorePep8
+from stuf.six.moves import (
+    map, filterfalse, filter, zip, zip_longest, xrange)  # @UnresolvedImport @UnusedImport @IgnorePep8
 # pylint: enable-msg=f0401
 
-__all__ = ['port']
+__all__ = ['port', 'iterexcerpt']
+
+
+def iterexcept(func, exception):
+    '''
+    call a function repeatedly until an exception is raised
+
+    Converts a call-until-exception interface to an iterator interface. Like
+    `__builtin__.iter(func, sentinel)` but uses an exception instead of a
+    sentinel to end the loop.
+    '''
+    try:
+        while 1:
+            yield func()
+    except exception:
+        pass
 
 
 class port(object):

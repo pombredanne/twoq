@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 '''twoq iterator utilities'''
 
-from twoq.compat import port
-from twoq.active import twoq, iterexcept
+from twoq.support import port, iterexcept
+from twoq.active.queuing import twoq, manq, autoq
 
-__all__ = ('twoq', 'port', 'iterexcept')
+__all__ = ('twoq', 'manq', 'autoq', 'port', 'iterexcept')
 
 __version__ = (0, 1, 1)

@@ -15,14 +15,14 @@ if sys.version_info[0] == 2 and sys.version_info[1] < 7:
 
 setup(
     name='twoq',
-    version='0.1.2',
+    version='0.1.3',
     description='''iterator manipulation, underscored by two queues''',
     long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'r').read(),
     author='L. C. Rees',
     url='https://bitbucket.org/lcrees/twoq/',
     author_email='lcrees@gmail.com',
     license='MIT',
-    packages=['twoq'],
+    packages=['twoq', 'twoq.mixins', 'twoq.active'],
     test_suite='twoq.test',
     zip_safe=False,
     keywords='queue generator utility iterator',
