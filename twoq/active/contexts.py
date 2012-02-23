@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''twoq contexts'''
+'''twoq active contexts'''
 
 __all__ = ('SyncContext', 'ManContext')
 

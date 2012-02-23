@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''active twoq'''
+'''active twoq mixins'''
 
 from collections import deque
 from bisect import bisect_right

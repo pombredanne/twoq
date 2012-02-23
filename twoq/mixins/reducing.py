@@ -13,12 +13,11 @@ from collections import Counter, Iterable
 from twoq import support as ct
 
 __all__ = ('MathMixin', 'ReduceMixin', 'TruthMixin', 'ReducingMixin')
+isum = sum
 
 ###############################################################################
 ## reducing subroutines #######################################################
 ###############################################################################
-
-isum = sum
 
 
 def roundrobin(iterable, s=it.islice, c=it.cycle, p=partial, _i=iter, n=next):
@@ -68,9 +67,7 @@ class MathMixin(local):
         return self
 
     def max(self, _max=max):
-        '''
-        find maximum value in incoming things using call for key function
-        '''
+        '''find maximum value in incoming things using call for key function'''
         with self._sync as sync:
             if self._call is None:
                 sync.append(_max(sync.iterable))
@@ -78,19 +75,17 @@ class MathMixin(local):
                 sync.append(_max(sync.iterable, key=self._call))
         return self
 
-    def median(self, _div=op.truediv, _len=len, _sort=sorted):
+    def median(self, _div=op.truediv, _len=len, _srt=sorted, _l=list, _i=int):
         '''mean of incoming things'''
         with self._sync as sync:
-            i = list(_sort(sync.iterable))
+            i = list(_srt(sync.iterable))
             e = _div(_len(i) - 1, 2)
-            p = int(e)
+            p = _i(e)
             sync.append(i[p] if e % 2 == 0 else _div(i[p] + i[p + 1], 2))
         return self
 
     def min(self, _min=min):
-        '''
-        find minimum value in incoming things using call for key function
-        '''
+        '''find minimum value in incoming things using call for key function'''
         with self._sync as sync:
             if self._call is None:
                 sync.append(_min(sync.iterable))
