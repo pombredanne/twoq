@@ -381,6 +381,13 @@ class TestManQ(unittest.TestCase):
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 4.5)
         self.assertFalse(manq.balanced)
+        
+    def test_mode(self):
+        manq = self.qclass(11, 3, 5, 11, 7, 3, 11).mode()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertEquals(manq.value(), 11)
+        self.assertFalse(manq.balanced)
 
     def test_fsum(self):
         manq = self.qclass(.1, .1, .1, .1, .1, .1, .1, .1, .1, .1).fsum()
@@ -396,6 +403,30 @@ class TestManQ(unittest.TestCase):
         manq.sync()
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 31.666666666666668)
+        self.assertFalse(manq.balanced)
+        
+    def test_uncommon(self):
+        manq = self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), 7)
+        self.assertFalse(manq.balanced)
+        
+    def test_frequency(self):
+        manq = self.qclass(11, 3, 5, 11, 7, 3, 11).frequency()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), [(11, 3), (3, 2), (5, 1), (7, 1)])
+        self.assertFalse(manq.balanced)
+
+    def test_statrange(self):
+        manq = self.qclass(3, 5, 7, 3, 11).statrange()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), 8)
         self.assertFalse(manq.balanced)
 
     ##########################################################################

@@ -109,16 +109,35 @@ class TestAutoReducingQ(unittest.TestCase):
         self.assertEquals(self.qclass(4, 5, 7, 2, 1).median().value(), 4)
         self.assertEquals(self.qclass(4, 5, 7, 2, 1, 8).median().value(), 4.5)
 
+    def test_mode(self):
+        self.assertEquals(
+            self.qclass(11, 3, 5, 11, 7, 3, 11).mode().value(), 11,
+        )
+
     def test_sum(self):
         self.assertEquals(self.qclass(1, 2, 3).sum().value(), 6)
         self.assertEquals(self.qclass(1, 2, 3).sum(1).value(), 7)
 
     def test_fsum(self):
         self.assertEquals(
-            self.qclass(
-                .1, .1, .1, .1, .1, .1, .1, .1, .1, .1
-            ).fsum().value(),
+            self.qclass(.1, .1, .1, .1, .1, .1, .1, .1, .1, .1).fsum().value(),
             1.0,
+        )
+        
+    def test_uncommon(self):
+        self.assertEquals(
+            self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon().value(), 7,
+        )
+        
+    def test_frequency(self):
+        self.assertEquals(
+            self.qclass(11, 3, 5, 11, 7, 3, 11).frequency().value(),
+            [(11, 3), (3, 2), (5, 1), (7, 1)]
+        )
+
+    def test_statrange(self):
+        self.assertEquals(
+            self.qclass(3, 5, 7, 3, 11).statrange().value(), 8,
         )
 
     def test_average(self):
@@ -263,6 +282,27 @@ class TestAutoMathQ(unittest.TestCase):
     def test_median(self):
         self.assertEquals(self.qclass(4, 5, 7, 2, 1).median().value(), 4)
         self.assertEquals(self.qclass(4, 5, 7, 2, 1, 8).median().value(), 4.5)
+
+    def test_mode(self):
+        self.assertEquals(
+            self.qclass(11, 3, 5, 11, 7, 3, 11).mode().value(), 11,
+        )
+        
+    def test_uncommon(self):
+        self.assertEquals(
+            self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon().value(), 7,
+        )
+        
+    def test_frequency(self):
+        self.assertEquals(
+            self.qclass(11, 3, 5, 11, 7, 3, 11).frequency().value(),
+            [(11, 3), (3, 2), (5, 1), (7, 1)]
+        )
+
+    def test_statrange(self):
+        self.assertEquals(
+            self.qclass(3, 5, 7, 3, 11).statrange().value(), 8,
+        )
 
     def test_sum(self):
         self.assertEquals(self.qclass(1, 2, 3).sum().value(), 6)
@@ -490,6 +530,13 @@ class TestManReducingQ(unittest.TestCase):
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 4.5)
         self.assertFalse(manq.balanced)
+        
+    def test_mode(self):
+        manq = self.qclass(11, 3, 5, 11, 7, 3, 11).mode()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertEquals(manq.value(), 11)
+        self.assertFalse(manq.balanced)
 
     def test_fsum(self):
         manq = self.qclass(.1, .1, .1, .1, .1, .1, .1, .1, .1, .1).fsum()
@@ -505,6 +552,30 @@ class TestManReducingQ(unittest.TestCase):
         manq.sync()
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 31.666666666666668)
+        self.assertFalse(manq.balanced)
+        
+    def test_uncommon(self):
+        manq = self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), 7)
+        self.assertFalse(manq.balanced)
+        
+    def test_frequency(self):
+        manq = self.qclass(11, 3, 5, 11, 7, 3, 11).frequency()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), [(11, 3), (3, 2), (5, 1), (7, 1)])
+        self.assertFalse(manq.balanced)
+
+    def test_statrange(self):
+        manq = self.qclass(3, 5, 7, 3, 11).statrange()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), 8)
         self.assertFalse(manq.balanced)
 
     ##########################################################################
@@ -718,6 +789,13 @@ class TestManMathQ(unittest.TestCase):
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 7)
         self.assertFalse(manq.balanced)
+        
+    def test_mode(self):
+        manq = self.qclass(11, 3, 5, 11, 7, 3, 11).mode()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertEquals(manq.value(), 11)
+        self.assertFalse(manq.balanced)
 
     def test_median(self):
         manq = self.qclass(4, 5, 7, 2, 1).median()
@@ -746,6 +824,30 @@ class TestManMathQ(unittest.TestCase):
         manq.sync()
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 31.666666666666668)
+        self.assertFalse(manq.balanced)
+        
+    def test_uncommon(self):
+        manq = self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), 7)
+        self.assertFalse(manq.balanced)
+        
+    def test_frequency(self):
+        manq = self.qclass(11, 3, 5, 11, 7, 3, 11).frequency()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), [(11, 3), (3, 2), (5, 1), (7, 1)])
+        self.assertFalse(manq.balanced)
+
+    def test_statrange(self):
+        manq = self.qclass(3, 5, 7, 3, 11).statrange()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), 8)
         self.assertFalse(manq.balanced)
 
 

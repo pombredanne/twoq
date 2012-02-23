@@ -282,6 +282,27 @@ class TestSyncQ(unittest.TestCase):
     def test_median(self):
         self.assertEquals(self.qclass(4, 5, 7, 2, 1).median().value(), 4)
         self.assertEquals(self.qclass(4, 5, 7, 2, 1, 8).median().value(), 4.5)
+        
+    def test_mode(self):
+        self.assertEquals(
+            self.qclass(11, 3, 5, 11, 7, 3, 11).mode().value(), 11,
+        )
+        
+    def test_uncommon(self):
+        self.assertEquals(
+            self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon().value(), 7,
+        )
+        
+    def test_frequency(self):
+        self.assertEquals(
+            self.qclass(11, 3, 5, 11, 7, 3, 11).frequency().value(),
+            [(11, 3), (3, 2), (5, 1), (7, 1)]
+        )
+
+    def test_statrange(self):
+        self.assertEquals(
+            self.qclass(3, 5, 7, 3, 11).statrange().value(), 8,
+        )
 
     def test_sum(self):
         self.assertEquals(self.qclass(1, 2, 3).sum().value(), 6)
