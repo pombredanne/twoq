@@ -2,6 +2,7 @@
 parts of Python's functional programming support in one place and chains it to
 incoming and outgoing queues.
 
-Includes Python 2 <-> 3 compatibility aids.
+Includes Python 2 <-> 3 compatibility aids. And some useful patterns buried in
+the standard library.
 
 Mirrored on https://github.com/kwarterthieves/twoq/
