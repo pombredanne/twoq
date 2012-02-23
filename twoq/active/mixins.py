@@ -4,14 +4,15 @@
 from collections import deque
 from bisect import bisect_right
 
-from twoq.core import coreq
 from twoq.support import iterexcept
-from twoq.contexts import ManContext, SyncContext
+from twoq.mixins.queuing import QueueMixin
 
-__all__ = ['twoq', 'manq', 'autoq']
+from twoq.active.contexts import ManContext, SyncContext
+
+__all__ = ['twoq', 'ManQMixin', 'AutoQMixin']
 
 
-class baseq(coreq):
+class baseq(QueueMixin):
 
     '''base active queue'''
 
@@ -247,7 +248,7 @@ class _dq(baseq):
         super(_dq, self).__init__(incoming, deque())
 
 
-class autoq(_dq):
+class AutoQMixin(_dq):
 
     '''autosyncing manipulation queue'''
 
@@ -257,12 +258,12 @@ class autoq(_dq):
         return SyncContext(self)
 
 
-class manq(_dq):
+class ManQMixin(_dq):
 
-    '''maunual balancing manipulation queue'''
+    '''manual balancing manipulation queue'''
 
     def __init__(self, *args):
-        super(manq, self).__init__(*args)
+        super(ManQMixin, self).__init__(*args)
         ## scratch queue ######################################################
         self._scratch = deque()
         # outgoing things right append
@@ -274,6 +275,3 @@ class manq(_dq):
     @property
     def _sync(self):
         return ManContext(self)
-
-
-twoq = autoq

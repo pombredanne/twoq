@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''test autoq'''
+'''test AutoQMixin'''
 
 try:
     import unittest2 as unittest
@@ -9,11 +9,11 @@ except ImportError:
 
 class TestSyncQ(unittest.TestCase):
 
-    '''test autoq'''
+    '''test AutoQMixin'''
 
     def setUp(self):
-        from twoq import autoq
-        self.qclass = autoq
+        from twoq import twoq
+        self.qclass = twoq
 
     ###########################################################################
     ## queue manipulation #####################################################
@@ -57,12 +57,12 @@ class TestSyncQ(unittest.TestCase):
         )
 
     def test_append(self):
-        autoq = self.qclass().append('foo').outsync()
-        self.assertEquals(autoq.value(), 'foo')
+        AutoQMixin = self.qclass().append('foo').outsync()
+        self.assertEquals(AutoQMixin.value(), 'foo')
 
     def test_appendleft(self):
-        autoq = self.qclass().appendleft('foo').outsync()
-        self.assertEquals(autoq.value(), 'foo')
+        AutoQMixin = self.qclass().appendleft('foo').outsync()
+        self.assertEquals(AutoQMixin.value(), 'foo')
 
     def test_inclear(self):
         self.assertEqual(len(self.qclass([1, 2, 5, 6]).inclear()), 0)
