@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-'''test AutoQMixin'''
 
 try:
     import unittest2 as unittest
@@ -8,8 +7,6 @@ except ImportError:
 
 
 class TestSyncQ(unittest.TestCase):
-
-    '''test AutoQMixin'''
 
     def setUp(self):
         from twoq import twoq
@@ -71,7 +68,7 @@ class TestSyncQ(unittest.TestCase):
         self.assertEqual(len(self.qclass([1, 2, 5, 6]).outclear().outgoing), 0)
 
     ###########################################################################
-    ## queue balancing ########################################################
+    ## copy ###################################################################
     ###########################################################################
 
     def test_copy(self):
@@ -163,7 +160,7 @@ class TestSyncQ(unittest.TestCase):
         )
 
     ##########################################################################
-    ## execution #############################################################
+    ## map ###################################################################
     ##########################################################################
 
     def test_each(self):
@@ -276,13 +273,15 @@ class TestSyncQ(unittest.TestCase):
         self.assertEquals(self.qclass(1, 2, 4).max().value(), 4)
 
     def test_min(self):
-        self.assertEquals(
-            self.qclass(10, 5, 100, 2, 1000).min().value(), 2,
-        )
+        self.assertEquals(self.qclass(10, 5, 100, 2, 1000).min().value(), 2)
         self.assertEquals(
             self.qclass(10, 5, 100, 2, 1000).tap(lambda x: x).min().value(),
             2,
         )
+        
+    def test_median(self):
+        self.assertEquals(self.qclass(4, 5, 7, 2, 1).median().value(), 4)
+        self.assertEquals(self.qclass(4, 5, 7, 2, 1, 8).median().value(), 4.5)
 
     def test_sum(self):
         self.assertEquals(self.qclass(1, 2, 3).sum().value(), 6)
@@ -576,7 +575,7 @@ class TestSyncQ(unittest.TestCase):
         )
 
     ##########################################################################
-    ## delayed execution #####################################################
+    ## delayed map ###########################################################
     ##########################################################################
 
     def test_delay_each(self):

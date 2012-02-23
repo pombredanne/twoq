@@ -104,6 +104,10 @@ class TestAutoReducingQ(unittest.TestCase):
             self.qclass(10, 5, 100, 2, 1000).tap(lambda x: x).min().value(),
             2,
         )
+        
+    def test_median(self):
+        self.assertEquals(self.qclass(4, 5, 7, 2, 1).median().value(), 4)
+        self.assertEquals(self.qclass(4, 5, 7, 2, 1, 8).median().value(), 4.5)
 
     def test_sum(self):
         self.assertEquals(self.qclass(1, 2, 3).sum().value(), 6)
@@ -250,13 +254,15 @@ class TestAutoMathQ(unittest.TestCase):
         self.assertEquals(self.qclass(1, 2, 4).max().value(), 4)
 
     def test_min(self):
-        self.assertEquals(
-            self.qclass(10, 5, 100, 2, 1000).min().value(), 2,
-        )
+        self.assertEquals(self.qclass(10, 5, 100, 2, 1000).min().value(), 2)
         self.assertEquals(
             self.qclass(10, 5, 100, 2, 1000).tap(lambda x: x).min().value(),
             2,
         )
+        
+    def test_median(self):
+        self.assertEquals(self.qclass(4, 5, 7, 2, 1).median().value(), 4)
+        self.assertEquals(self.qclass(4, 5, 7, 2, 1, 8).median().value(), 4.5)
 
     def test_sum(self):
         self.assertEquals(self.qclass(1, 2, 3).sum().value(), 6)
@@ -264,15 +270,13 @@ class TestAutoMathQ(unittest.TestCase):
 
     def test_fsum(self):
         self.assertEquals(
-            self.qclass(
-                .1, .1, .1, .1, .1, .1, .1, .1, .1, .1
-            ).fsum().value(),
+            self.qclass(.1, .1, .1, .1, .1, .1, .1, .1, .1, .1).fsum().value(),
             1.0,
         )
 
     def test_average(self):
         self.assertEquals(
-            self.qclass(10, 40, 45).average().value(), 31.666666666666668
+            self.qclass(10, 40, 45).average().value(), 31.666666666666668,
         )
 
 
@@ -472,6 +476,19 @@ class TestManReducingQ(unittest.TestCase):
         manq.sync()
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 7)
+        self.assertFalse(manq.balanced)
+        
+    def test_median(self):
+        manq = self.qclass(4, 5, 7, 2, 1).median()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertEquals(manq.value(), 4)
+        self.assertFalse(manq.balanced)
+        manq = self.qclass(4, 5, 7, 2, 1, 8).median()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), 4.5)
         self.assertFalse(manq.balanced)
 
     def test_fsum(self):
@@ -700,6 +717,19 @@ class TestManMathQ(unittest.TestCase):
         manq.sync()
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 7)
+        self.assertFalse(manq.balanced)
+
+    def test_median(self):
+        manq = self.qclass(4, 5, 7, 2, 1).median()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertEquals(manq.value(), 4)
+        self.assertFalse(manq.balanced)
+        manq = self.qclass(4, 5, 7, 2, 1, 8).median()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), 4.5)
         self.assertFalse(manq.balanced)
 
     def test_fsum(self):

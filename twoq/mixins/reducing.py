@@ -78,6 +78,15 @@ class MathMixin(local):
                 sync.append(_max(sync.iterable, key=self._call))
         return self
 
+    def median(self, _div=op.truediv, _len=len, _sort=sorted):
+        '''mean of incoming things'''
+        with self._sync as sync:
+            i = list(_sort(sync.iterable))
+            e = _div(_len(i) - 1, 2)
+            p = int(e)
+            sync.append(i[p] if e % 2 == 0 else _div(i[p] + i[p + 1], 2))
+        return self
+
     def min(self, _min=min):
         '''
         find minimum value in incoming things using call for key function
