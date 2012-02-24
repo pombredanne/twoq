@@ -13,7 +13,7 @@ from twoq.tests.active.man.mixins.reducing import MReduceQMixin
 from twoq.tests.active.man.mixins.filtering import MFilterQMixin
 
 
-class TestManQ(unittest.TestCase,
+class TestManQ(
     unittest.TestCase, MQMixin, MFilterQMixin, MMapQMixin, MReduceQMixin,
     MOrderQMixin,
 ):

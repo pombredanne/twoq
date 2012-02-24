@@ -34,8 +34,8 @@ class TestManMathQ(unittest.TestCase, MQMixin, MMathQMixin):
 class TestManTruthQ(unittest.TestCase, MQMixin, MTruthQMixin):
 
     def setUp(self):
-        from twoq.active.reducing import struthq
-        self.qclass = struthq
+        from twoq.active.reducing import mtruthq
+        self.qclass = mtruthq
 
 
 if __name__ == '__main__':

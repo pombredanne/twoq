@@ -13,15 +13,15 @@ from twoq.tests.active.man.mixins.queuing import MQMixin
 class TestManMap(unittest.TestCase, MQMixin, MMapQMixin):
 
     def setUp(self):
-        from twoq.active.mapping import amapq
-        self.qclass = amapq
+        from twoq.active.mapping import mmapq
+        self.qclass = mmapq
 
 
 class TestManMappingQ(unittest.TestCase, MQMixin, MMappingQMixin):
 
     def setUp(self):
-        from twoq.active.mapping import amappingq
-        self.qclass = amappingq
+        from twoq.active.mapping import mmappingq
+        self.qclass = mmappingq
 
 
 class TestManRepeatQ(
@@ -29,15 +29,15 @@ class TestManRepeatQ(
 ):
 
     def setUp(self):
-        from twoq.active.mapping import arepeatq
-        self.qclass = arepeatq
+        from twoq.active.mapping import mrepeatq
+        self.qclass = mrepeatq
 
 
 class TestManDelayQ(unittest.TestCase, MQMixin, MDelayQMixin):
 
     def setUp(self):
-        from twoq.active.mapping import adelayq
-        self.qclass = adelayq
+        from twoq.active.mapping import mdelayq
+        self.qclass = mdelayq
 
 
 if __name__ == '__main__':
