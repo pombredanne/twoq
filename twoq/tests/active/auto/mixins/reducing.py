@@ -94,6 +94,12 @@ class AMathQMixin(object):
             2,
         )
         
+    def test_minmax(self):
+        self.assertEquals(self.qclass(1, 2, 4).minmax().value(), [1, 4])
+        self.assertEquals(
+            self.qclass(10, 5, 100, 2, 1000).minmax().value(), [2, 1000],
+        )
+        
     def test_median(self):
         self.assertEquals(self.qclass(4, 5, 7, 2, 1).median().value(), 4)
         self.assertEquals(self.qclass(4, 5, 7, 2, 1, 8).median().value(), 4.5)
