@@ -45,6 +45,8 @@ class QueueingMixin(local):
         self._kw = kw
         return self
 
+    _oargs = args
+
     def tap(self, call):
         '''
         add call
@@ -59,6 +61,8 @@ class QueueingMixin(local):
         self._call = call
         return self
 
+    _otap = tap
+
     def detap(self):
         '''clear call'''
         # reset postitional arguments
@@ -69,12 +73,16 @@ class QueueingMixin(local):
         self._call = None
         return self
 
+    _odetap = detap
+
     def wrap(self, call):
         '''build factory callable and make call'''
         def factory(*args, **kw):
             return call(*args, **kw)
         self._call = factory
         return self
+
+    _owrap = wrap
 
     # aliases
     clear = unwrap = detap

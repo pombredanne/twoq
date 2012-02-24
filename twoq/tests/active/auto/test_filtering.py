@@ -13,6 +13,7 @@ from twoq.tests.active.auto.mixins.queuing import AQMixin
 class TestAutoFilterQ(unittest.TestCase, AQMixin, AFilterQMixin):
 
     def setUp(self):
+        self.maxDiff = None
         from twoq.active.filtering import afilterq
         self.qclass = afilterq
 
@@ -34,6 +35,7 @@ class TestAutoSliceQ(unittest.TestCase, AQMixin, ASliceQMixin):
 class TestAutoCollectQ(unittest.TestCase, AQMixin, ACollectQMixin):
 
     def setUp(self):
+        self.maxDiff = None
         from twoq.active.filtering import acollectq
         self.qclass = acollectq
 
@@ -50,6 +52,7 @@ class TestAutoSetQ(unittest.TestCase, AQMixin, ASetQMixin):
 class TestSyncFilterQ(unittest.TestCase, AQMixin, AFilterQMixin):
 
     def setUp(self):
+        self.maxDiff = None
         from twoq.active.filtering import sfilterq
         self.qclass = sfilterq
 
@@ -71,6 +74,7 @@ class TestSyncSliceQ(unittest.TestCase, AQMixin, ASliceQMixin):
 class TestSyncCollectQ(unittest.TestCase, AQMixin, ACollectQMixin):
 
     def setUp(self):
+        self.maxDiff = None
         from twoq.active.filtering import scollectq
         self.qclass = scollectq
 
