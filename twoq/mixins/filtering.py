@@ -10,7 +10,7 @@ from functools import partial
 from twoq import support as ct
 
 __all__ = (
-    'FilterMixin', 'FilteringMixin', 'CollectMixin', 'SetMixin', 'SliceMixin'
+    'FilteringMixin', 'FilterMixin', 'CollectMixin', 'SetMixin', 'SliceMixin'
 )
 
 ###############################################################################
@@ -73,7 +73,7 @@ def unique(iterable, key=None, _ff=ct.filterfalse, _set=set):
 ###############################################################################
 
 
-class FilterMixin(local):
+class FilteringMixin(local):
 
     '''filter mixin'''
 
@@ -237,6 +237,6 @@ class SliceMixin(local):
         return self
 
 
-class FilteringMixin(FilterMixin, CollectMixin, SetMixin, SliceMixin):
+class FilterMixin(FilteringMixin, CollectMixin, SetMixin, SliceMixin):
 
     '''filters mixin'''

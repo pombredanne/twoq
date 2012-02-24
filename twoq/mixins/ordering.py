@@ -7,10 +7,10 @@ from threading import local
 
 from twoq import support as ct
 
-__all__ = ('OrderMixin', 'OrderingMixin', 'RandomMixin')
+__all__ = ('OrderingMixin', 'OrderMixin', 'RandomMixin')
 
 
-class OrderMixin(local):
+class OrderingMixin(local):
 
     '''order mixin'''
 
@@ -87,6 +87,6 @@ class RandomMixin(local):
         return self
 
 
-class OrderingMixin(OrderMixin, RandomMixin):
+class OrderMixin(OrderingMixin, RandomMixin):
 
     '''ordering mixin'''

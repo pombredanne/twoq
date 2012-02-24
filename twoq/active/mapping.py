@@ -5,79 +5,114 @@ from inspect import ismodule
 
 from twoq.support import port
 from twoq.mixins.mapping import (
-    DelayMixin, CopyMixin, MapMixin, RepeatMixin, MappingMixin)
+    DelayMixin, CopyMixin, MappingMixin, RepeatMixin, MapMixin)
 
-from twoq.active.mixins import AutoQMixin, ManQMixin
+from twoq.active.mixins import AutoQMixin, ManQMixin, SyncQMixin
 
 ###############################################################################
 ## active delayed map queues ##################################################
 ###############################################################################
 
 
-class delayq(AutoQMixin, DelayMixin):
+class adelayq(AutoQMixin, DelayMixin):
 
-    '''auto synchronizing delayed map queue'''
+    '''auto-balanced delayed map queue'''
+
+delayq = adelayq
 
 
-class mandelayq(ManQMixin, DelayMixin):
+class mdelayq(ManQMixin, DelayMixin):
 
-    '''manually synchronized delayed map queue'''
+    '''manually balanced delayed map queue'''
+
+
+class sdelayq(SyncQMixin, DelayMixin):
+
+    '''autosynchronized  delayed map queue'''
 
 ###############################################################################
 ## active copy queues #########################################################
 ###############################################################################
 
 
-class copyq(AutoQMixin, CopyMixin):
+class acopyq(AutoQMixin, CopyMixin):
 
-    '''auto synchronizing delayed copy queue'''
+    '''auto-balanced copy queue'''
+
+copyq = acopyq
 
 
-class mancopyq(ManQMixin, CopyMixin):
+class mcopyq(ManQMixin, CopyMixin):
 
-    '''manually synchronized delayed copy queue'''
+    '''manually balanced copy queue'''
+
+
+class scopyq(SyncQMixin, CopyMixin):
+
+    '''autosynchronized copy queue'''
 
 ###############################################################################
 ## active map queues ##########################################################
 ###############################################################################
 
 
-class mapq(AutoQMixin, MapMixin):
+class amappingq(AutoQMixin, MappingMixin):
 
-    '''auto synchronizing map queue'''
+    '''auto-balanced mapping queue'''
+
+mappingq = amappingq
 
 
-class manmapq(ManQMixin, MapMixin):
+class mmappingq(ManQMixin, MappingMixin):
 
-    '''manually synchronized map queue'''
+    '''manually balanced mapping queue'''
+
+
+class smappingq(SyncQMixin, MappingMixin):
+
+    '''autosynchronized mapping queue'''
 
 ###############################################################################
 ## active repeat queues #######################################################
 ###############################################################################
 
 
-class repeatq(AutoQMixin, RepeatMixin):
+class arepeatq(AutoQMixin, RepeatMixin):
 
-    '''auto synchronizing repeat queue'''
+    '''auto-balanced repeat queue'''
+
+repeatq = arepeatq
 
 
-class manrepeatq(ManQMixin, RepeatMixin):
+class mrepeatq(ManQMixin, RepeatMixin):
 
-    '''manually synchronized repeat queue'''
+    '''manually balanced repeat queue'''
+
+
+class srepeatq(SyncQMixin, RepeatMixin):
+
+    '''autosynchronized repeat queue'''
 
 ###############################################################################
 ## active mapping queues ######################################################
 ###############################################################################
 
 
-class mappingq(AutoQMixin, MappingMixin):
+class amapq(AutoQMixin, MapMixin):
 
-    '''auto synchronizing mapping queue'''
+    '''auto-balanced map queue'''
+
+mapq = amapq
 
 
-class manmappingq(ManQMixin, MappingMixin):
+class mmapq(ManQMixin, MapMixin):
 
-    '''manually synchronized mapping queue'''
+    '''manually balanced map queue'''
+
+
+class smapq(SyncQMixin, MapMixin):
+
+    '''autosynchronized map queue'''
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
     name.startswith('_'), ismodule(obj),

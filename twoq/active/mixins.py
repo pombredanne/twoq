@@ -5,14 +5,14 @@ from collections import deque
 from bisect import bisect_right
 
 from twoq.support import iterexcept
-from twoq.mixins.queuing import QueueMixin
+from twoq.mixins.queuing import QueueingMixin
 
-from twoq.active.contexts import ManContext, SyncContext
+from twoq.active.contexts import AutoContext, ManContext, SyncContext
 
-__all__ = ['twoq', 'ManQMixin', 'AutoQMixin']
+__all__ = ['AutoQMixin', 'ManQMixin', 'SyncContext']
 
 
-class baseq(QueueMixin):
+class baseq(QueueingMixin):
 
     '''base active queue'''
 
@@ -248,30 +248,46 @@ class _dq(baseq):
         super(_dq, self).__init__(incoming, deque())
 
 
-class AutoQMixin(_dq):
-
-    '''autosyncing manipulation queue'''
-
-    @property
-    def _sync(self):
-        '''autosync outgoing things with incoming things'''
-        return SyncContext(self)
-
-
-class ManQMixin(_dq):
-
-    '''manual balancing manipulation queue'''
+class scratchq(_dq):
 
     def __init__(self, *args):
-        super(ManQMixin, self).__init__(*args)
+        super(scratchq, self).__init__(*args)
+        #######################################################################
         ## scratch queue ######################################################
+        #######################################################################
         self._scratch = deque()
         # outgoing things right append
         self._sappend = self._scratch.append
         # outgoing things right extend
-        self._sextend = self._scratch.extend
+        self._sxtend = self._scratch.extend
+        # scratch clear
         self._sclear = self._scratch.clear
+        # scratch pop left
+        self._spopleft = self._scratch.popleft
+
+
+class AutoQMixin(scratchq):
+
+    '''auto balancing manipulation queue mixin'''
+
+    @property
+    def _sync(self):
+        return AutoContext(self)
+
+
+class ManQMixin(scratchq):
+
+    '''manually balanced manipulation queue mixin'''
 
     @property
     def _sync(self):
         return ManContext(self)
+
+
+class SyncQMixin(_dq):
+
+    '''synchronized manipulation queue'''
+
+    @property
+    def _sync(self):
+        return SyncContext(self)

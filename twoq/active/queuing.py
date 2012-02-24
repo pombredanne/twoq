@@ -1,26 +1,34 @@
 # -*- coding: utf-8 -*-
 '''twoq active queues'''
 
-from twoq.mixins.filtering import FilteringMixin
-from twoq.active.mixins import AutoQMixin, ManQMixin
-from twoq.mixins.mapping import MappingMixin
-from twoq.mixins.reducing import ReducingMixin
-from twoq.mixins.ordering import OrderingMixin
+from twoq.mixins.mapping import MapMixin
+from twoq.mixins.reducing import ReduceMixin
+from twoq.mixins.ordering import OrderMixin
+from twoq.mixins.filtering import FilterMixin
 
-__all__ = ['twoq', 'manq', 'autoq']
+from twoq.active.mixins import AutoQMixin, ManQMixin, SyncQMixin
+
+__all__ = ['twoq', 'manq', 'autoq', 'syncq']
 
 
 class autoq(
-    AutoQMixin, FilteringMixin, MappingMixin, ReducingMixin, OrderingMixin
+    AutoQMixin, FilterMixin, MapMixin, ReduceMixin, OrderMixin
 ):
 
-    '''autosyncing manipulation queue'''
+    '''auto-balancing manipulation queue'''
 
 
 class manq(
-    ManQMixin, FilteringMixin, MappingMixin, ReducingMixin, OrderingMixin
+    ManQMixin, FilterMixin, MapMixin, ReduceMixin, OrderMixin
 ):
 
-    '''maunual balancing manipulation queue'''
+    '''manually balanced manipulation queue'''
+
+
+class syncq(
+    SyncQMixin, FilterMixin, MapMixin, ReduceMixin, OrderMixin
+):
+
+    '''autosyncing manipulation queue'''
 
 twoq = autoq
