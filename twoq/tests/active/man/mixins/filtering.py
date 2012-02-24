@@ -136,7 +136,7 @@ class MCollectQMixin(object):
         class stoog3: #@IgnorePep8
             name = 'curly'
             age = 60
-        test = lambda x: not x.startswith('__')
+        test = lambda x: not x[0].startswith('__')
         manq = self.qclass(
             stooges, stoog2, stoog3
         ).tap(test).members().detap().sync()
@@ -147,6 +147,54 @@ class MCollectQMixin(object):
             manq.value(),
             [('age', 40), ('name', 'moe'), ('age', 50), ('name', 'larry'),
             ('age', 60), ('name', 'curly')],
+        )
+        self.assertFalse(manq.balanced)
+        
+    def test_deepmembers(self):
+        class stooges:
+            name = 'moe'
+            age = 40
+            def boo(self):
+                return 'boo'
+            def foo(self):
+                return 'foo'
+        class stoog2: #@IgnorePep8
+            name = 'larry'
+            age = 50
+            def boo(self):
+                return 'boo'
+            def foo(self):
+                return 'foo'
+        class stoog3: #@IgnorePep8
+            name = 'curly'
+            age = 60
+            def boo(self):
+                return 'boo'
+            def foo(self):
+                return 'foo'
+        test = lambda x: not x[0].startswith('__')
+        manq = self.qclass(stooges, stoog2, stoog3).tap(test).deepmembers()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEqual(
+            manq.value(),
+            [('age', 40), ('boo', stooges.boo), ('foo', stooges.foo),
+            ('name', 'moe'), ('age', 50), ('boo', stoog2.boo),
+            ('foo', stoog2.foo), ('name', 'larry'), ('age', 60), 
+            ('boo', stoog3.boo), ('foo', stoog3.foo), ('name', 'curly')],
+        )
+        self.assertFalse(manq.balanced)
+        import inspect
+        test = lambda x: not x[0].startswith('__') and inspect.ismethod(x[1])
+        manq = self.qclass(stooges, stoog2, stoog3).tap(test).deepmembers()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEqual(
+            manq.value(),
+            [('boo', stooges.boo), ('foo', stooges.foo), ('boo', stoog2.boo),
+            ('foo', stoog2.foo), ('boo', stoog3.boo), ('foo', stoog3.foo)],
         )
         self.assertFalse(manq.balanced)
 

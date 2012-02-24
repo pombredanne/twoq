@@ -102,13 +102,55 @@ class ACollectQMixin(object):
         class stoog3: #@IgnorePep8
             name = 'curly'
             age = 60
-        test = lambda x: not x.startswith('__')
+        test = lambda x: not x[0].startswith('__')
         self.assertEqual(
             self.qclass(
                 stooges, stoog2, stoog3
             ).tap(test).members().detap().value(),
             [('age', 40), ('name', 'moe'), ('age', 50), ('name', 'larry'),
             ('age', 60), ('name', 'curly')],
+        )
+
+    def test_deepmembers(self):
+        class stooges:
+            name = 'moe'
+            age = 40
+            def boo(self):
+                return 'boo'
+            def foo(self):
+                return 'foo'
+        class stoog2: #@IgnorePep8
+            name = 'larry'
+            age = 50
+            def boo(self):
+                return 'boo'
+            def foo(self):
+                return 'foo'
+        class stoog3: #@IgnorePep8
+            name = 'curly'
+            age = 60
+            def boo(self):
+                return 'boo'
+            def foo(self):
+                return 'foo'
+        test = lambda x: not x[0].startswith('__')
+        self.assertSequenceEqual(
+            self.qclass(
+                stooges, stoog2, stoog3
+            ).tap(test).deepmembers().sync().value(),
+            [('age', 40), ('boo', stooges.boo), ('foo', stooges.foo),
+            ('name', 'moe'), ('age', 50), ('boo', stoog2.boo),
+            ('foo', stoog2.foo), ('name', 'larry'), ('age', 60), 
+            ('boo', stoog3.boo), ('foo', stoog3.foo), ('name', 'curly')],
+        )
+        import inspect
+        test = lambda x: not x[0].startswith('__') and inspect.ismethod(x[1])
+        self.assertSequenceEqual(
+            self.qclass(
+                stooges, stoog2, stoog3
+            ).tap(test).deepmembers().sync().value(),
+            [('boo', stooges.boo), ('foo', stooges.foo), ('boo', stoog2.boo),
+            ('foo', stoog2.foo), ('boo', stoog3.boo), ('foo', stoog3.foo)],
         )
 
     def test_pick(self):
