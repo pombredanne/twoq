@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+
 #pylint: disable-msg=w0614,w0401
 from twoq.tests.active.auto.mixins.mapping import *  # @UnusedWildImport
 from twoq.tests.active.auto.mixins.queuing import AQMixin
@@ -12,21 +17,21 @@ class TestAutoMap(AQMixin, AMapQMixin):
         self.qclass = amapq
 
 
-class TestAutoMappingQ(AQMixin, AMappingQMixin):
+class TestAutoMappingQ(unittest.TestCase, AQMixin, AMappingQMixin):
 
     def setUp(self):
         from twoq.active.mapping import amappingq
         self.qclass = amappingq
 
 
-class TestAutoRepeatQ(AQMixin, ARepeatQMixin):
+class TestAutoRepeatQ(unittest.TestCase, AQMixin, ARepeatQMixin):
 
     def setUp(self):
         from twoq.active.mapping import arepeatq
         self.qclass = arepeatq
 
 
-class TestAutoDelayQ(AQMixin, ADelayQMixin):
+class TestAutoDelayQ(unittest.TestCase, AQMixin, ADelayQMixin):
 
     def setUp(self):
         from twoq.active.mapping import adelayq
@@ -40,26 +45,25 @@ class TestSyncMap(AQMixin, AMapQMixin):
         self.qclass = smapq
 
 
-class TestSyncMappingQ(AQMixin, AMappingQMixin):
+class TestSyncMappingQ(unittest.TestCase, AQMixin, AMappingQMixin):
 
     def setUp(self):
         from twoq.active.mapping import smappingq
         self.qclass = smappingq
 
 
-class TestSyncRepeatQ(AQMixin, ARepeatQMixin):
+class TestSyncRepeatQ(unittest.TestCase, AQMixin, ARepeatQMixin):
 
     def setUp(self):
         from twoq.active.mapping import srepeatq
         self.qclass = srepeatq
 
 
-class TestSyncDelayQ(AQMixin, ADelayQMixin):
+class TestSyncDelayQ(unittest.TestCase, AQMixin, ADelayQMixin):
 
     def setUp(self):
         from twoq.active.mapping import sdelayq
         self.qclass = sdelayq
 
 if __name__ == '__main__':
-    import cProfile
-    cProfile.run('unittest.main()')
+    unittest.main()

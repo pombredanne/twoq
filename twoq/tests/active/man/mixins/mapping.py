@@ -8,6 +8,13 @@ from twoq.support import port
 
 class MMappingQMixin(object):
 
+    def test_wrap(self):
+        from stuf import stuf
+        thing = self.qclass(
+                [('a', 1), ('b', 2), ('c', 3)]
+            ).reup().wrap(stuf).map().shift().value()
+        self.assertDictEqual(thing, stuf(a=1, b=2, c=3))
+
     def test_each(self):
         def test(*args, **kw):
             return sum(args) * kw['a']
@@ -165,6 +172,6 @@ class MMapQMixin(MCopyQMixin, MDelayQMixin, MMappingQMixin, MRepeatQMixin):
     '''combination mixin'''
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
-    name.startswith('_'), ismodule(obj),
+    name.startswith('_'), ismodule(obj), name in ['ismodule', 'port']
 ]))
 del ismodule

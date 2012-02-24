@@ -266,6 +266,6 @@ class MReduceQMixin(MMathQMixin, MReducingQMixin, MTruthQMixin):
     '''combination mixin'''
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
-    name.startswith('_'), ismodule(obj),
+    name.startswith('_'), ismodule(obj), name in ['ismodule', 'port']
 ]))
 del ismodule

@@ -1,26 +1,12 @@
 # -*- coding: utf-8 -*-
 '''auto queuing test mixins'''
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
 
-
-class AQMixin(unittest.TestCase):
+class AQMixin(object):
 
     ###########################################################################
     ## queue manipulation #####################################################
     ###########################################################################
-
-    def test_wrap(self):
-        from stuf import stuf
-        self.assertDictEqual(
-            self.qclass(
-                ('a', 1), ('b', 2), ('c', 3)
-            ).reup().wrap(stuf).map().value(),
-            stuf(a=1, b=2, c=3),
-        )
 
     def test_delitem(self):
         q = self.qclass(1, 2, 3, 4, 5, 6)

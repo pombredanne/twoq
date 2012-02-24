@@ -1,39 +1,44 @@
 # -*- coding: utf-8 -*-
 
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+
 #pylint: disable-msg=w0614,w0401
 from twoq.tests.active.man.mixins.filtering import *  # @UnusedWildImport
 from twoq.tests.active.man.mixins.queuing import MQMixin
 
 
-class TestManFilterQ(MQMixin, MFilterQMixin):
+class TestManFilterQ(unittest.TestCase, MFilterQMixin):
 
     def setUp(self):
         from twoq.active.filtering import mfilterq
         self.qclass = mfilterq
 
 
-class TestManFilteringQ(MQMixin, MFilteringQMixin):
+class TestManFilteringQ(unittest.TestCase, MQMixin, MFilteringQMixin):
 
     def setUp(self):
         from twoq.active.filtering import mfilteringq
         self.qclass = mfilteringq
 
 
-class TestManSliceQ(MQMixin, MSliceQMixin):
+class TestManSliceQ(unittest.TestCase, MQMixin, MSliceQMixin):
 
     def setUp(self):
         from twoq.active.filtering import msliceq
         self.qclass = msliceq
 
 
-class TestManCollectQ(MQMixin, MCollectQMixin):
+class TestManCollectQ(unittest.TestCase, MQMixin, MCollectQMixin):
 
     def setUp(self):
         from twoq.active.filtering import mcollectq
         self.qclass = mcollectq
 
 
-class TestManSetQ(MQMixin, MSetQMixin):
+class TestManSetQ(unittest.TestCase, MQMixin, MSetQMixin):
 
     def setUp(self):
         from twoq.active.filtering import msetq
@@ -41,5 +46,4 @@ class TestManSetQ(MQMixin, MSetQMixin):
 
 
 if __name__ == '__main__':
-    import cProfile
-    cProfile.run('unittest.main()')
+    unittest.main()

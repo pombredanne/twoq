@@ -238,24 +238,24 @@ class baseq(QueueingMixin):
 
 class _dq(baseq):
 
-    def __init__(self, maxlen=None, *args):
-        incoming = deque(maxlen=maxlen)
+    def __init__(self, *args):
+        incoming = deque()
         # extend if just one argument
         if len(args) == 1:
             incoming.append(args[0])
         else:
             incoming.extend(args)
-        super(_dq, self).__init__(incoming, deque(maxlen=maxlen))
+        super(_dq, self).__init__(incoming, deque())
 
 
 class scratchq(_dq):
 
-    def __init__(self, maxlen=None, *args):
-        super(scratchq, self).__init__(maxlen=None, *args)
+    def __init__(self, *args):
+        super(scratchq, self).__init__(*args)
         #######################################################################
         ## scratch queue ######################################################
         #######################################################################
-        self._scratch = deque(maxlen=maxlen)
+        self._scratch = deque()
         # outgoing things right append
         self._sappend = self._scratch.append
         # outgoing things right extend
