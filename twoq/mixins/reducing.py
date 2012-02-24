@@ -113,6 +113,15 @@ class MathMixin(local):
 
     _omin = min
 
+    def minmax(self):
+        '''minimum and maximum values among incoming things'''
+        with self._sync as sync:
+            iterable = sync.iterable
+            sync(iter([min(iterable), max(iterable)]))
+        return self
+
+    _minmax = minmax
+
     def mode(self, _cnt=Counter):
         '''mode of incoming things'''
         with self._sync as sync:

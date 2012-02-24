@@ -144,6 +144,20 @@ class MMathQMixin(object):
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 2)
         self.assertFalse(manq.balanced)
+        
+    def test_minmax(self):
+        manq = self.qclass(1, 2, 4).minmax()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), [1, 4])
+        self.assertFalse(manq.balanced)
+        manq = self.qclass(10, 5, 100, 2, 1000).minmax()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), [2, 1000])
+        self.assertFalse(manq.balanced)
 
     def test_sum(self):
         manq = self.qclass(1, 2, 3).sum()
