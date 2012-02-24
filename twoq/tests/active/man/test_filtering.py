@@ -13,6 +13,7 @@ from twoq.tests.active.man.mixins.queuing import MQMixin
 class TestManFilterQ(unittest.TestCase, MFilterQMixin):
 
     def setUp(self):
+        self.maxDiff = None
         from twoq.active.filtering import mfilterq
         self.qclass = mfilterq
 

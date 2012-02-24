@@ -1,8 +1,7 @@
-*twoq* is a iterator manipulator for Python that consolidates selected 
-parts of Python's functional programming support in one place and chains it to
-incoming and outgoing queues.
+*twoq* chains iterators together using a double-headed input and output queue,
+that can be shifted and synced as needed.
 
-Includes Python 2 <-> 3 compatibility aids and some useful patterns buried in
-the standard library.
+*twoq* als includes Python 2 <-> 3 compatibility aids and exposes some useful
+features buried in the standard library.
 
 Mirrored on https://github.com/kwarterthieves/twoq/
