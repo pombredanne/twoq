@@ -225,15 +225,6 @@ class baseq(QueueingMixin):
 
     _oextendleft = extendleft
 
-    def reverse(self, _reversed=None):
-        '''iterate over reversed incoming things, clearing as it goes'''
-        self.outgoing.extendleft(self.incoming)
-        self._inclear()
-        self._inextend(self.outgoing)
-        return self
-
-    _screverse = reverse
-
     ###########################################################################
     ## balance queues #########################################################
     ###########################################################################

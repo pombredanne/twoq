@@ -56,7 +56,16 @@ class MOrderingQMixin(object):
         self.assertTrue(manq.balanced)
         self.assertEqual(manq.value(), [5, 4, 6, 3, 1, 2])
         self.assertFalse(manq.balanced)
-
+        manq = self.qclass(4, 6, 65, 3, 63, 2,  4).sort()
+        self.assertTrue(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEqual(
+            manq.value(),
+            [2, 3, 4, 4, 6, 63, 65],
+        )
+        self.assertFalse(manq.balanced)
+        self.assertEqual(manq.outcount(), 0)
 
 class MRandomQMixin(object):
 

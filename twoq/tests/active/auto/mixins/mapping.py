@@ -31,6 +31,20 @@ class AMappingQMixin(object):
         self.assertEquals(
             self.qclass(1, 2, 3).tap(lambda x: x * 3).map().value(), [3, 6, 9],
         )
+        
+    def test_starmap(self):
+        self.assertEquals(
+            self.qclass(
+                (1, 2), (2, 3), (3, 4)
+            ).tap(lambda x, y: x * y).starmap().value(), [2, 6, 12],
+        )
+
+    def test_items(self):
+        self.assertEquals(
+            self.qclass(
+                dict([(1, 2), (2, 3), (3, 4)]), dict([(1, 2), (2, 3), (3, 4)])
+            ).tap(lambda x, y: x * y).items().value(), [2, 6, 12, 2, 6, 12],
+        )
 
     def test_invoke(self):
         self.assertEquals(
