@@ -4,67 +4,94 @@
 from inspect import ismodule
 
 from twoq.support import port
-
 from twoq.mixins.reducing import (
-    MathMixin, ReduceMixin, TruthMixin, ReducingMixin)
+    MathMixin, ReducingMixin, TruthMixin, ReduceMixin)
 
-from twoq.active.mixins import AutoQMixin, ManQMixin
+from twoq.active.mixins import AutoQMixin, ManQMixin, SyncQMixin
 
 ###############################################################################
 ## active math queues #########################################################
 ###############################################################################
 
 
-class mathq(AutoQMixin, MathMixin):
+class amathq(AutoQMixin, MathMixin):
 
-    '''auto synchronizing math queue'''
+    '''auto-balancing math queue'''
+
+mathq = amathq
 
 
-class manmathq(ManQMixin, MathMixin):
+class mmathq(ManQMixin, MathMixin):
 
-    '''manually synchronized math queue'''
+    '''manually balanced math queue'''
+
+
+class smathq(SyncQMixin, MathMixin):
+
+    '''autosynchronized math queue'''
 
 ###############################################################################
-## active reduce queues #######################################################
+## active reducing queues #####################################################
 ###############################################################################
 
 
-class reduceq(AutoQMixin, ReduceMixin):
+class areducingq(AutoQMixin, ReducingMixin):
 
-    '''auto synchronizing reduce queue'''
+    '''auto-balancing reducing queue'''
+
+reducingq = areducingq
 
 
-class manreduceq(ManQMixin, ReduceMixin):
+class mreducingq(ManQMixin, ReducingMixin):
 
-    '''manually synchronized reduce queue'''
+    '''manually balanced reducing queue'''
+
+
+class sreducingq(SyncQMixin, ReducingMixin):
+
+    '''autosynchronized reducing queue'''
 
 ###############################################################################
 ## active truth queues ####E###################################################
 ###############################################################################
 
 
-class truthq(AutoQMixin, TruthMixin):
+class atruthq(AutoQMixin, TruthMixin):
 
-    '''auto synchronizing truth queue'''
+    '''auto-balancing truth queue'''
+
+truthq = atruthq
 
 
-class mantruthq(ManQMixin, TruthMixin):
+class mtruthq(ManQMixin, TruthMixin):
 
-    '''manually synchronized truth queue'''
+    '''manually balanced truth queue'''
+
+
+class struthq(SyncQMixin, TruthMixin):
+
+    '''autosynchronized truth queue'''
 
 ###############################################################################
-## reducing queues ########E###################################################
+## reduce queues ##############################################################
 ###############################################################################
 
 
-class reducingq(AutoQMixin, ReducingMixin):
+class areduceq(AutoQMixin, ReduceMixin):
 
-    '''auto synchronizing reducing queue'''
+    '''auto-balancing reduce queue'''
+
+reduceq = areduceq
 
 
-class manreducingq(ManQMixin, ReducingMixin):
+class mreduceq(ManQMixin, ReduceMixin):
 
-    '''manually synchronized reducing queue'''
+    '''manually balanced reduce queue'''
+
+
+class sreduceq(SyncQMixin, ReduceMixin):
+
+    '''autosynchronized reduce queue'''
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
     name.startswith('_'), ismodule(obj),
