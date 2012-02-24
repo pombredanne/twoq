@@ -12,7 +12,7 @@ from collections import Counter, Iterable
 
 from twoq import support as ct
 
-__all__ = ('MathMixin', 'ReduceMixin', 'TruthMixin', 'ReducingMixin')
+__all__ = ('MathMixin', 'ReducingMixin', 'TruthMixin', 'ReduceMixin')
 isum = sum
 
 ###############################################################################
@@ -129,7 +129,7 @@ class MathMixin(local):
         return self
 
 
-class ReduceMixin(local):
+class ReducingMixin(local):
 
     '''reduce mixin'''
 
@@ -244,6 +244,6 @@ class TruthMixin(local):
         return self
 
 
-class ReducingMixin(MathMixin, ReduceMixin, TruthMixin):
+class ReduceMixin(MathMixin, ReducingMixin, TruthMixin):
 
     '''reducing mixin'''

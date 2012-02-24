@@ -4,83 +4,113 @@
 from inspect import ismodule
 
 from twoq.support import port
-
 from twoq.mixins.filtering import (
-    FilterMixin, FilteringMixin, CollectMixin, SetMixin, SliceMixin)
+    FilteringMixin, FilterMixin, CollectMixin, SetMixin, SliceMixin)
 
-from twoq.active.mixins import AutoQMixin, ManQMixin
+from twoq.active.mixins import AutoQMixin, ManQMixin, SyncQMixin
 
 ###############################################################################
 ## active filter queues #######################################################
 ###############################################################################
 
 
-class filterq(AutoQMixin, FilterMixin):
+class afilteringq(AutoQMixin, FilteringMixin):
 
-    '''auto synchronizing filter queue'''
+    '''auto-balanced filter queue'''
 
 
-class manfilterq(ManQMixin, FilterMixin):
+class mfilteringq(ManQMixin, FilteringMixin):
 
-    '''manually synchronized filter queue'''
+    '''manually balanced filter queue'''
+
+
+class sfilteringq(SyncQMixin, FilteringMixin):
+
+    '''autosynchronized filter queue'''
 
 ###############################################################################
 ## active collecting queues ###################################################
 ###############################################################################
 
 
-class collectq(AutoQMixin, CollectMixin):
+class acollectq(AutoQMixin, CollectMixin):
 
-    '''auto synchronizing collecting queue'''
+    '''auto-balanced collecting queue'''
+
+collectq = acollectq
 
 
-class mancollectq(ManQMixin, CollectMixin):
+class mcollectq(ManQMixin, CollectMixin):
 
-    '''manually synchronized collecting queue'''
+    '''manually balanced collecting queue'''
 
+
+class scollectq(SyncQMixin, CollectMixin):
+
+    '''autosynchronized collecting queue'''
 
 ###############################################################################
 ## active set queues ##########################################################
 ###############################################################################
 
 
-class setq(AutoQMixin, SetMixin):
+class asetq(AutoQMixin, SetMixin):
 
-    '''auto synchronizing set queue'''
+    '''auto-balanced set queue'''
+
+setq = asetq
 
 
-class mansetq(ManQMixin, SetMixin):
+class msetq(ManQMixin, SetMixin):
 
-    '''manually synchronized set queue'''
+    '''manually balanced set queue'''
 
+
+class ssetq(SyncQMixin, SetMixin):
+
+    '''autosynchronized set queue'''
 
 ###############################################################################
 ## active slice queues ########################################################
 ###############################################################################
 
 
-class sliceq(AutoQMixin, SliceMixin):
+class asliceq(AutoQMixin, SliceMixin):
 
-    '''auto synchronizing slice queue'''
+    '''auto-balanced slice queue'''
+
+sliceq = asliceq
 
 
-class mansliceq(ManQMixin, SliceMixin):
+class msliceq(ManQMixin, SliceMixin):
 
-    '''manually synchronized slice queue'''
+    '''manually balanced slice queue'''
+
+
+class ssliceq(SyncQMixin, SliceMixin):
+
+    '''autosynchronized slice queue'''
 
 ###############################################################################
-## active filtering queues ####################################################
+## active filter queues #######################################################
 ###############################################################################
 
 
-class filteringq(AutoQMixin, FilteringMixin):
+class afilterq(AutoQMixin, FilterMixin):
 
-    '''auto synchronizing filtering queue'''
+    '''auto-balanced filter queue'''
+
+filterq = afilterq
 
 
-class manfilteringq(ManQMixin, FilteringMixin):
+class mfilterq(ManQMixin, FilterMixin):
 
-    '''manually synchronized filtering queue'''
+    '''manually balanced filtering queue'''
+
+
+class sfilterq(SyncQMixin, FilterMixin):
+
+    '''autosynchronized filter queue'''
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
     name.startswith('_'), ismodule(obj),

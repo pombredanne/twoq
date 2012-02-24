@@ -3,10 +3,10 @@
 
 from threading import local
 
-__all__ = ['QueueMixin']
+__all__ = ['QueueingMixin']
 
 
-class QueueMixin(local):
+class QueueingMixin(local):
 
     '''queuing mixin'''
 
@@ -17,7 +17,7 @@ class QueueMixin(local):
         @param incoming: incoming things
         @param outgoing: outgoing things
         '''
-        super(QueueMixin, self).__init__()
+        super(QueueingMixin, self).__init__()
         # callable stub
         self._call = None
         # callable postitional arguments stub

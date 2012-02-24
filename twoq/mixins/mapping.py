@@ -12,7 +12,7 @@ from operator import methodcaller as mc
 from twoq import support as ct
 
 __all__ = (
-    'DelayMixin', 'CopyMixin', 'MapMixin', 'RepeatMixin', 'MappingMixin',
+    'DelayMixin', 'CopyMixin', 'MappingMixin', 'RepeatMixin', 'MapMixin',
 )
 
 ###############################################################################
@@ -105,7 +105,7 @@ class CopyMixin(local):
         return self
 
 
-class MapMixin(local):
+class MappingMixin(local):
 
     '''map mixin'''
 
@@ -186,6 +186,6 @@ class RepeatMixin(local):
         return self
 
 
-class MappingMixin(DelayMixin, CopyMixin, MapMixin, RepeatMixin):
+class MapMixin(DelayMixin, CopyMixin, MappingMixin, RepeatMixin):
 
     '''mapping mixin'''
