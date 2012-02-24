@@ -20,9 +20,6 @@ class Context(object):
         self._outclear = queue._outclear
         self._incoming = queue.incoming
 
-    def __exit__(self, t, v, e):
-        pass
-
     def __call__(self, args):
         self._outextend(args)
 
@@ -33,7 +30,7 @@ class Context(object):
         self._outappend(args)
 
 
-class ScratchContext(Context):
+class ManContext(Context):
 
     '''manual sync context manager'''
 
@@ -43,7 +40,7 @@ class ScratchContext(Context):
 
         @param queue: queue
         '''
-        super(ScratchContext, self).__init__(queue)
+        super(ManContext, self).__init__(queue)
         self._sxtend = queue._sxtend
         self._sappend = queue._sappend
         self._sclear = queue._sclear
@@ -67,7 +64,7 @@ class ScratchContext(Context):
         return self._scratch
 
 
-class AutoContext(ScratchContext):
+class AutoContext(ManContext):
 
     '''auto sync context manager'''
 
@@ -89,15 +86,6 @@ class AutoContext(ScratchContext):
         self._inclear()
         # extend incoming items with outgoing items
         self._inextend(self._outgoing)
-
-
-class ManContext(ScratchContext):
-
-    '''manual sync context manager'''
-
-    def __exit__(self, t, v, e):
-        # clear scratch queue
-        self._sclear()
 
 
 class SyncContext(Context):

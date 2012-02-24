@@ -35,6 +35,26 @@ class MMappingQMixin(object):
         self.assertEquals(manq.value(), [3, 6, 9])
         self.assertFalse(manq.balanced)
 
+    def test_starmap(self):
+        manq = self.qclass(
+            (1, 2), (2, 3), (3, 4)
+        ).tap(lambda x, y: x * y).starmap()
+        self.assertTrue(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.value(), [2, 6, 12])
+        self.assertFalse(manq.balanced)
+
+    def test_items(self):
+        manq = self.qclass(
+            dict([(1, 2), (2, 3), (3, 4)]), dict([(1, 2), (2, 3), (3, 4)])
+        ).tap(lambda x, y: x * y).items()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEquals(manq.final(), [2, 6, 12, 2, 6, 12])
+        self.assertTrue(manq.balanced)
+
     def test_invoke(self):
         manq = self.qclass([5, 1, 7], [3, 2, 1]).args(1).invoke('index')
         self.assertTrue(manq.balanced)
@@ -48,6 +68,8 @@ class MMappingQMixin(object):
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), [[1, 5, 7], [1, 2, 3]])
         self.assertFalse(manq.balanced)
+        manq.clear()
+        self.assertTrue(manq.balanced)
 
 
 class MCopyQMixin(object):

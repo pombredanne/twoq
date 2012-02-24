@@ -40,6 +40,10 @@ class AOrderingQMixin(object):
             ).sort().value(),
             [5, 4, 6, 3, 1, 2],
         )
+        self.assertEqual(
+            self.qclass(4, 6, 65, 3, 63, 2,  4).sort().value(),
+            [2, 3, 4, 4, 6, 63, 65],
+        )
 
 
 class ARandomQMixin(object):
