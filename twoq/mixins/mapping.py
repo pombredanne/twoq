@@ -10,10 +10,12 @@ from functools import partial
 from operator import methodcaller as mc
 
 from twoq import support as ct
+from twoq.support import port
 
 __all__ = (
     'DelayMixin', 'CopyMixin', 'MappingMixin', 'RepeatMixin', 'MapMixin',
 )
+chain_iter = it.chain.from_iterable
 
 ###############################################################################
 ## mapping subroutines ########################################################
@@ -170,6 +172,14 @@ class MappingMixin(local):
         return self
     
     _oinvoke = invoke
+    
+    def items(self, _s=it.starmap, _c=chain_iter, _m=ct.map, _i=port.items):
+        '''invoke call on each mapping to get key, value pairs'''
+        with self._sync as sync:
+            sync(_s(self._call, _c(_m(_i, sync.iterable))))
+        return self
+    
+    _ostarmap = items
 
     def map(self, _map=ct.map):
         '''invoke call on each incoming thing'''
@@ -178,6 +188,14 @@ class MappingMixin(local):
         return self
     
     _omap = map
+    
+    def starmap(self, _map=it.starmap):
+        '''invoke call on each incoming pair of things'''
+        with self._sync as sync:
+            sync(_map(self._call, sync.iterable))
+        return self
+    
+    _ostarmap = starmap
 
 
 class RepeatMixin(local):
