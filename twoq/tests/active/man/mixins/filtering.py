@@ -185,8 +185,8 @@ class MCollectQMixin(object):
             ('boo', stoog3.boo), ('foo', stoog3.foo), ('name', 'curly')],
         )
         self.assertFalse(manq.balanced)
-        import inspect
-        test = lambda x: not x[0].startswith('__') and inspect.ismethod(x[1])
+        from stuf.six import callable
+        test = lambda x: not x[0].startswith('_') and callable(x[1])
         manq = self.qclass(stooges, stoog2, stoog3).tap(test).deepmembers()
         self.assertFalse(manq.balanced)
         manq.sync()
