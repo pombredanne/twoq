@@ -4,6 +4,7 @@
 import operator as op
 import itertools as it
 import functools as ft
+from inspect import getmro
 from threading import local
 
 from stuf.utils import getcls
@@ -47,7 +48,7 @@ def members(iterable, _get=getattr):
             yield key, thing
 
 
-def memberfilter(call, iterable, _members=members, _filter=ct.filter):
+def mfilter(call, iterable, _members=members, _filter=ct.filter):
     '''
     filter members of things
 
@@ -179,18 +180,25 @@ class CollectMixin(local):
 
     '''gathering mixin'''
     
-    def deepmembers(self, mz=memberfilter, ci=chain_iter, gc=getcls):
+    def deepmembers(self, mz=mfilter, ci=chain_iter, gc=getcls):
         '''collect members of incoming things and their bases'''
         _mz = ft.partial(mz, self._call)
         with self._sync as sync:
-            def _memfilters(thing, mz=_mz, gc=gc):
-                return ci(ct.map(mz, ci([type.mro(gc(thing)), [thing]])))
+            if ct.port.PY3:
+                def _memfilters(thing, mz=_mz, gc=gc):
+                    t = lambda x: not x[0].startswith('mro')
+                    return ct.filter(
+                        t, ci(ct.map(mz, ci([getmro((gc(thing))), [thing]])))
+                    )
+            else:
+                def _memfilters(thing, mz=_mz, gc=gc):
+                    return ci(ct.map(mz, ci([getmro((gc(thing))), [thing]])))
             sync(ci(ct.map(_memfilters, sync.iterable)))
         return self
 
     _odeepmembers = deepmembers
 
-    def members(self, _mz=memberfilter, _ci=it.chain.from_iterable):
+    def members(self, _mz=mfilter, _ci=it.chain.from_iterable):
         '''collect members of incoming things'''
         _mz = ft.partial(_mz, self._call)
         with self._sync as sync:

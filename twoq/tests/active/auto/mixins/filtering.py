@@ -143,8 +143,8 @@ class ACollectQMixin(object):
             ('foo', stoog2.foo), ('name', 'larry'), ('age', 60), 
             ('boo', stoog3.boo), ('foo', stoog3.foo), ('name', 'curly')],
         )
-        import inspect
-        test = lambda x: not x[0].startswith('__') and inspect.ismethod(x[1])
+        from stuf.six import callable
+        test = lambda x: not x[0].startswith('_') and callable(x[1])
         self.assertSequenceEqual(
             self.qclass(
                 stooges, stoog2, stoog3
