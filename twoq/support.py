@@ -32,12 +32,12 @@ class port(object):
     # is python 3?
     PY3 = six.PY3
     # types
-    BINARY = six.binary_type
-    CLASS = six.class_types
-    INTEGER = six.integer_types
+    BINARY = six.binaries
+    CLASS = six.classes
+    INTEGER = six.integers
     MAXSIZE = six.MAXSIZE
-    STRING = six.string_types
-    UNICODE = six.text_type
+    STRING = six.strings
+    UNICODE = six.texts
     # classes
     BytesIO = six.BytesIO
     StringIO = six.StringIO
@@ -46,18 +46,18 @@ class port(object):
     int2byte = staticmethod(six.int2byte)
     u = staticmethod(six.u)
     # dictionary
-    items = staticmethod(six.iteritems)
-    keys = staticmethod(six.iterkeys)
-    values = staticmethod(six.itervalues)
+    items = staticmethod(six.items)
+    keys = staticmethod(six.keys)
+    values = staticmethod(six.values)
     # iterables
     iterator = staticmethod(six.advance_iterator)
     # classes
     metaclass = staticmethod(six.with_metaclass)
     # methods
-    code = staticmethod(six.get_function_code)
-    defaults = staticmethod(six.get_function_defaults)
-    method_function = staticmethod(six.get_method_function)
-    method_self = staticmethod(six.get_method_self)
+    code = staticmethod(six.function_code)
+    defaults = staticmethod(six.function_defaults)
+    method_function = staticmethod(six.method_function)
+    method_self = staticmethod(six.method_self)
     unbound = staticmethod(six.get_unbound_function)
     # exception
     reraise = staticmethod(six.reraise)
@@ -103,6 +103,6 @@ class port(object):
         return isinstance(value, cls.UNICODE)
 
     @staticmethod
-    def printit(*args, **kw):
+    def printf(*args, **kw):
         '''print output'''
-        return six.print_(*args, **kw)
+        return six.printf(*args, **kw)
