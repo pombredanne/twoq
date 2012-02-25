@@ -52,7 +52,7 @@ class MMappingQMixin(object):
         self.assertFalse(manq.balanced)
         manq.sync()
         self.assertTrue(manq.balanced)
-        self.assertEquals(manq.final(), [2, 6, 12, 2, 6, 12])
+        self.assertEquals(manq.end(), [2, 6, 12, 2, 6, 12])
         self.assertTrue(manq.balanced)
 
     def test_invoke(self):

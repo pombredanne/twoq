@@ -8,7 +8,7 @@ import itertools as it
 import functools as ft
 from threading import local
 from functools import partial
-from collections import Counter, Iterable
+from collections import Iterable
 
 from twoq import support as ct
 
@@ -122,7 +122,7 @@ class MathMixin(local):
 
     _minmax = minmax
 
-    def mode(self, _cnt=Counter):
+    def mode(self, _cnt=ct.Counter):
         '''mode of incoming things'''
         with self._sync as sync:
             sync.append(_cnt(sync.iterable).most_common(1)[0][0])
@@ -130,7 +130,7 @@ class MathMixin(local):
 
     _omode = mode
 
-    def uncommon(self, _cnt=Counter):
+    def uncommon(self, _cnt=ct.Counter):
         '''least common incoming thing'''
         with self._sync as sync:
             sync.append(_cnt(sync.iterable).most_common()[:-2:-1][0][0])
@@ -138,7 +138,7 @@ class MathMixin(local):
 
     _ouncommon = uncommon
 
-    def frequency(self, _cnt=Counter):
+    def frequency(self, _cnt=ct.Counter):
         '''frequency of each incoming thing'''
         with self._sync as sync:
             sync.append(_cnt(sync.iterable).most_common())

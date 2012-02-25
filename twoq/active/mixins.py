@@ -88,13 +88,13 @@ class baseq(QueueingMixin):
 
     _oindex = index
 
-    def final(self, _l=list, _ln=len):
+    def end(self, _l=list, _ln=len):
         '''return outgoing things and clear'''
         results = self.pop() if _ln(self.outgoing) == 1 else _l(self.outgoing)
         self.clear()
         return results
 
-    _ofinal = final
+    _ofinal = end
 
     def results(self, _iterexcept=iterexcept):
         '''iterate over reversed outgoing things, clearing as it goes'''
