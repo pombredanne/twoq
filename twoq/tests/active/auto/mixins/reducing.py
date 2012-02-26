@@ -8,12 +8,6 @@ from twoq.support import port
 
 class AReducingQMixin(object):
 
-    def test_flatten(self):
-        self.assertEquals(
-            self.qclass([[1], [2], [3, [[4]]]]).flatten().value(),
-            [[1], [2], [3, [[4]]]],
-        )
-
     def test_smash(self):
         self.assertEquals(
             self.qclass([[1, [2], [3, [[4]]]]]).smash().value(), [1, 2, 3, 4],
@@ -93,13 +87,13 @@ class AMathQMixin(object):
             self.qclass(10, 5, 100, 2, 1000).tap(lambda x: x).min().value(),
             2,
         )
-        
+
     def test_minmax(self):
         self.assertEquals(self.qclass(1, 2, 4).minmax().value(), [1, 4])
         self.assertEquals(
             self.qclass(10, 5, 100, 2, 1000).minmax().value(), [2, 1000],
         )
-        
+
     def test_median(self):
         self.assertEquals(self.qclass(4, 5, 7, 2, 1).median().value(), 4)
         self.assertEquals(self.qclass(4, 5, 7, 2, 1, 8).median().value(), 4.5)
@@ -108,12 +102,12 @@ class AMathQMixin(object):
         self.assertEquals(
             self.qclass(11, 3, 5, 11, 7, 3, 11).mode().value(), 11,
         )
-        
+
     def test_uncommon(self):
         self.assertEquals(
             self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon().value(), 7,
         )
-        
+
     def test_frequency(self):
         self.assertEquals(
             self.qclass(11, 3, 5, 11, 7, 3, 11).frequency().value(),
@@ -167,10 +161,10 @@ class ATruthQMixin(object):
             self.qclass(None, 0, 'yes', False).tap(bool).quantify().value(),
             1
         )
-        
-        
+
+
 class AReduceQMixin(AMathQMixin, AReducingQMixin, ATruthQMixin):
-    
+
     '''combination mixin'''
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([

@@ -67,6 +67,7 @@ class MOrderingQMixin(object):
         self.assertFalse(manq.balanced)
         self.assertEqual(manq.outcount(), 0)
 
+
 class MRandomQMixin(object):
 
     def test_choice(self):
@@ -95,7 +96,7 @@ class MRandomQMixin(object):
 
 
 class MOrderQMixin(MOrderingQMixin, MRandomQMixin):
-    
+
     '''combination mixin'''
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([

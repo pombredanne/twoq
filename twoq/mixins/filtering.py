@@ -172,14 +172,14 @@ class FilteringMixin(local):
         with self._sync as sync:
             sync(ct.filterfalse(lambda x: x in things, sync.iterable))
         return self
-    
+
     _owithout = without
 
 
 class CollectMixin(local):
 
     '''gathering mixin'''
-    
+
     def deepmembers(self, mz=mfilter, ci=chain_iter, gc=getcls):
         '''collect members of incoming things and their bases'''
         _mz = ft.partial(mz, self._call)

@@ -4,7 +4,8 @@
 from collections import deque
 from bisect import bisect_right
 
-from twoq.support import iterexcept
+from stuf.utils import iterexcept
+
 from twoq.mixins.queuing import QueueingMixin
 
 from twoq.active.contexts import AutoContext, ManContext, SyncContext

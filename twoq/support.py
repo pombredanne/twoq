@@ -7,23 +7,8 @@ from stuf.six.moves import (
     map, filterfalse, filter, zip, zip_longest, xrange)  # @UnresolvedImport @UnusedImport @IgnorePep8
 # pylint: enable-msg=f0401
 
-__all__ = ['port', 'iterexcerpt']
+__all__ = ['port']
 items = six.items
-
-
-def iterexcept(func, exception):
-    '''
-    call a function repeatedly until an exception is raised
-
-    Converts a call-until-exception interface to an iterator interface. Like
-    `__builtin__.iter(func, sentinel)` but uses an exception instead of a
-    sentinel to end the loop.
-    '''
-    try:
-        while 1:
-            yield func()
-    except exception:
-        pass
 
 
 class port(object):
@@ -122,13 +107,13 @@ else:
 
         '''dict subclass for counting hashable items'''
 
-        def __init__(self, iterable=None, **kwds):
+        def __init__(self, iterable=None, **kw):
             '''
             If given, count elements from an input iterable. Or, initialize
             count from another mapping of elements to their counts.
             '''
             super(Counter, self).__init__()
-            self.update(iterable, **kwds)
+            self.update(iterable, **kw)
 
         def __missing__(self, key):
             '''count of elements not in the Counter is zero'''
@@ -162,7 +147,7 @@ else:
                 'Use Counter(iterable) instead.'
             )
 
-        def update(self, iterable=None, **kwds):
+        def update(self, iterable=None, **kw):
             '''like dict.update() but add counts instead of replacing them'''
             if iterable is not None:
                 if isinstance(iterable, Mapping):
@@ -177,10 +162,10 @@ else:
                     self_get = self.get
                     for elem in iterable:
                         self[elem] = self_get(elem, 0) + 1
-            if kwds:
-                self.update(kwds)
+            if kw:
+                self.update(kw)
 
-        def subtract(self, iterable=None, **kwds):
+        def subtract(self, iterable=None, **kw):
             '''
             like dict.update() but subtracts counts instead of replacing them.
 
@@ -195,8 +180,8 @@ else:
                 else:
                     for elem in iterable:
                         self[elem] = self_get(elem, 0) - 1
-            if kwds:
-                self.subtract(kwds)
+            if kw:
+                self.subtract(kw)
 
         def copy(self):
             '''return a shallow copy'''
