@@ -41,7 +41,7 @@ class AOrderingQMixin(object):
             [5, 4, 6, 3, 1, 2],
         )
         self.assertEqual(
-            self.qclass(4, 6, 65, 3, 63, 2,  4).sort().value(),
+            self.qclass(4, 6, 65, 3, 63, 2, 4).sort().value(),
             [2, 3, 4, 4, 6, 63, 65],
         )
 
@@ -66,7 +66,7 @@ class ARandomQMixin(object):
 
 
 class AOrderQMixin(AOrderingQMixin, ARandomQMixin):
-    
+
     '''combination mixin'''
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
