@@ -172,14 +172,6 @@ class ReducingMixin(local):
 
     '''reduce mixin'''
 
-    def flatten(self, _chain=it.chain.from_iterable):
-        '''flatten nested incoming things'''
-        with self._sync as sync:
-            sync(_chain(sync.iterable))
-        return self
-
-    _oflatten = flatten
-
     def merge(self, _merge=hq.merge):
         '''flatten nested and ordered incoming things'''
         with self._sync as sync:
@@ -194,7 +186,7 @@ class ReducingMixin(local):
             sync(_smash(sync.iterable))
         return self
 
-    _osmash = smash
+    _osmash = flatten = smash
 
     def pairwise(self, _tee=it.tee, _next=next, _zip=ct.zip):
         '''
@@ -239,7 +231,7 @@ class ReducingMixin(local):
             else:
                 sync(_reduce(lambda x, y: self._call(y, x), sync.iterable))
         return self
-    
+
     _oreduce_right = reduce_right
 
     def roundrobin(self, _roundrobin=roundrobin):
@@ -251,7 +243,7 @@ class ReducingMixin(local):
         with self._sync as sync:
             sync(_roundrobin(sync.iterable))
         return self
-    
+
     _oroundrobin = roundrobin
 
     def zip(self, _zip=ct.zip):
@@ -275,7 +267,7 @@ class TruthMixin(local):
         with self._sync as sync:
             sync.append(_all(_map(self._call, sync.iterable)))
         return self
-    
+
     _oall = all
 
     def any(self, _any=any, _map=ct.map):
@@ -295,7 +287,7 @@ class TruthMixin(local):
         with self._sync as sync:
             sync.append(_contains(sync.iterable, thing))
         return self
-    
+
     _ocontains = contains
 
     def quantify(self, _sum=isum, _map=ct.map):
@@ -303,7 +295,7 @@ class TruthMixin(local):
         with self._sync as sync:
             sync.append(_sum(_map(self._call, sync.iterable)))
         return self
-    
+
     _oquantify = quantify
 
 

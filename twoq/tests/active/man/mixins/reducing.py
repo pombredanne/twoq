@@ -8,14 +8,6 @@ from twoq.support import port
 
 class MReducingQMixin(object):
 
-    def test_flatten(self):
-        manq = self.qclass([[1], [2], [3, [[4]]]]).flatten()
-        self.assertFalse(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEquals(manq.value(), [[1], [2], [3, [[4]]]])
-        self.assertFalse(manq.balanced)
-
     def test_smash(self):
         manq = self.qclass([[1, [2], [3, [[4]]]]]).smash()
         self.assertFalse(manq.balanced)
@@ -144,7 +136,7 @@ class MMathQMixin(object):
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 2)
         self.assertFalse(manq.balanced)
-        
+
     def test_minmax(self):
         manq = self.qclass(1, 2, 4).minmax()
         self.assertFalse(manq.balanced)
@@ -172,7 +164,7 @@ class MMathQMixin(object):
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 7)
         self.assertFalse(manq.balanced)
-        
+
     def test_mode(self):
         manq = self.qclass(11, 3, 5, 11, 7, 3, 11).mode()
         self.assertFalse(manq.balanced)
@@ -208,7 +200,7 @@ class MMathQMixin(object):
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 31.666666666666668)
         self.assertFalse(manq.balanced)
-        
+
     def test_uncommon(self):
         manq = self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon()
         self.assertFalse(manq.balanced)
@@ -216,7 +208,7 @@ class MMathQMixin(object):
         self.assertTrue(manq.balanced)
         self.assertEquals(manq.value(), 7)
         self.assertFalse(manq.balanced)
-        
+
     def test_frequency(self):
         manq = self.qclass(11, 3, 5, 11, 7, 3, 11).frequency()
         self.assertFalse(manq.balanced)
@@ -276,7 +268,7 @@ class MTruthQMixin(object):
 
 
 class MReduceQMixin(MMathQMixin, MReducingQMixin, MTruthQMixin):
-    
+
     '''combination mixin'''
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([

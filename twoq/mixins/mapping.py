@@ -155,7 +155,7 @@ class MappingMixin(local):
         with self._sync as sync:
             sync(_map(lambda x, y: self._call(*x, **y), sync.iterable))
         return self
-    
+
     _oeach = each
 
     def invoke(self, name, _mc=mc, _invoke=invoke, _map=ct.map):
@@ -170,15 +170,15 @@ class MappingMixin(local):
         with self._sync as sync:
             sync(_map(_call, sync.iterable))
         return self
-    
+
     _oinvoke = invoke
-    
+
     def items(self, _s=it.starmap, _c=chain_iter, _m=ct.map, _i=port.items):
         '''invoke call on each mapping to get key, value pairs'''
         with self._sync as sync:
             sync(_s(self._call, _c(_m(_i, sync.iterable))))
         return self
-    
+
     _ostarmap = items
 
     def map(self, _map=ct.map):
@@ -186,15 +186,15 @@ class MappingMixin(local):
         with self._sync as sync:
             sync(_map(self._call, sync.iterable))
         return self
-    
+
     _omap = map
-    
+
     def starmap(self, _map=it.starmap):
         '''invoke call on each incoming pair of things'''
         with self._sync as sync:
             sync(_map(self._call, sync.iterable))
         return self
-    
+
     _ostarmap = starmap
 
 
@@ -211,7 +211,7 @@ class RepeatMixin(local):
         with self._sync as sync:
             sync.iter(_chain(sync.iterable, _repeat(None)))
         return self
-    
+
     _opadnone = padnone
 
     def range(self, start, stop=0, step=1, _range=ct.xrange):
@@ -226,7 +226,7 @@ class RepeatMixin(local):
             else:
                 sync(_range(start))
         return self
-    
+
     _orange = range
 
     def repeat(self, n, _repeat=it.repeat, _tuple=tuple):
@@ -238,7 +238,7 @@ class RepeatMixin(local):
         with self._sync as sync:
             sync(_repeat(_tuple(sync.iterable), n))
         return self
-    
+
     _orepeat = repeat
 
     def times(self, n=None, _starmap=it.starmap, _repeat=it.repeat):
@@ -253,7 +253,7 @@ class RepeatMixin(local):
             else:
                 sync(_starmap(self._call, _repeat(sync.iterable, n)))
         return self
-    
+
     _otimes = times
 
 
