@@ -212,7 +212,7 @@ class CollectMixin(local):
         with self._sync as sync:
             sync(pick(names, sync.iterable))
         return self
-    
+
     _opick = pick
 
     def pluck(self, *keys):
@@ -235,7 +235,7 @@ class SetMixin(local):
                 lambda x, y: _set(x).difference(_set(y)), sync.iterable,
             ))
         return self
-    
+
     _odifference = difference
 
     def intersection(self, _reduce=ft.reduce, _set=set):
@@ -245,7 +245,7 @@ class SetMixin(local):
                 lambda x, y: _set(x).intersection(_set(y)), sync.iterable,
             ))
         return self
-    
+
     _ointersection = intersection
 
     def union(self, _reduce=ft.reduce, _set=set):
@@ -255,7 +255,7 @@ class SetMixin(local):
                 lambda x, y: _set(x).union(_set(y)), sync.iterable,
             ))
         return self
-    
+
     _ounion = union
 
     def unique(self, _unique=unique):
@@ -269,7 +269,7 @@ class SetMixin(local):
         with self._sync as sync:
             sync.iter(_unique(sync.iterable, self._call))
         return self
-    
+
     _ounique = unique
 
 
@@ -287,7 +287,7 @@ class SliceMixin(local):
         with self._sync as sync:
             sync.append(_next(_islice(sync.iterable, n, None), default))
         return self
-    
+
     _onth = nth
 
     def initial(self, _islice=it.islice, _len=len):
@@ -304,7 +304,7 @@ class SliceMixin(local):
         with self._sync as sync:
             sync(_islice(sync.iterable, 1, None))
         return self
-    
+
     _orest = rest
 
     def snatch(self, n, _islice=it.islice, _len=len):

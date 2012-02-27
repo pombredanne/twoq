@@ -13,43 +13,22 @@ from twoq.tests.mixins.auto.queuing import AQMixin
 class TestAutoOrderQ(unittest.TestCase, AQMixin, AOrderQMixin):
 
     def setUp(self):
-        from twoq.active.ordering import aorderq
+        from twoq.lazy.ordering import aorderq
         self.qclass = aorderq
 
 
 class TestAutoOrderingQ(unittest.TestCase, AQMixin, AOrderingQMixin):
 
     def setUp(self):
-        from twoq.active.ordering import aorderingq
+        from twoq.lazy.ordering import aorderingq
         self.qclass = aorderingq
 
 
 class TestAutoRandomQ(unittest.TestCase, AQMixin, ARandomQMixin):
 
     def setUp(self):
-        from twoq.active.ordering import arandomq
+        from twoq.lazy.ordering import arandomq
         self.qclass = arandomq
-
-
-class TestSyncOrderQ(unittest.TestCase, AQMixin, AOrderQMixin):
-
-    def setUp(self):
-        from twoq.active.ordering import sorderq
-        self.qclass = sorderq
-
-
-class TestSyncOrderingQ(unittest.TestCase, AQMixin, AOrderingQMixin):
-
-    def setUp(self):
-        from twoq.active.ordering import sorderingq
-        self.qclass = sorderingq
-
-
-class TestSyncRandomQ(unittest.TestCase, AQMixin, ARandomQMixin):
-
-    def setUp(self):
-        from twoq.active.ordering import srandomq
-        self.qclass = srandomq
 
 if __name__ == '__main__':
     unittest.main()

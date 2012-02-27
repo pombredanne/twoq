@@ -13,21 +13,21 @@ from twoq.tests.mixins.man.queuing import MQMixin
 class TestManOrderQ(unittest.TestCase, MQMixin, MOrderQMixin):
 
     def setUp(self):
-        from twoq.active.ordering import morderq
+        from twoq.lazy.ordering import morderq
         self.qclass = morderq
 
 
 class TestManOrderingQ(unittest.TestCase, MQMixin, MOrderingQMixin):
 
     def setUp(self):
-        from twoq.active.ordering import morderingq
+        from twoq.lazy.ordering import morderingq
         self.qclass = morderingq
 
 
 class TestManRandomQ(unittest.TestCase, MQMixin, MRandomQMixin):
 
     def setUp(self):
-        from twoq.active.ordering import mrandomq
+        from twoq.lazy.ordering import mrandomq
         self.qclass = mrandomq
 
 if __name__ == '__main__':

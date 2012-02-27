@@ -19,7 +19,7 @@ class TestManQ(
 ):
 
     def setUp(self):
-        from twoq import manq
+        from twoq.lazy.queuing import manq
         self.qclass = manq
 
 

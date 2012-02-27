@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''syncq tests'''
+'''autoq tests'''
 
 try:
     import unittest2 as unittest
@@ -13,13 +13,14 @@ from twoq.tests.mixins.auto.reducing import AReduceQMixin
 from twoq.tests.mixins.auto.filtering import AFilterQMixin
 
 
-class TestSyncQ(unittest.TestCase,
-    AQMixin, AFilterQMixin, AMapQMixin, AReduceQMixin, AOrderQMixin,
+class TestAutoQ(
+    unittest.TestCase, AQMixin, AFilterQMixin, AMapQMixin, AReduceQMixin,
+    AOrderQMixin,
 ):
 
     def setUp(self):
-        from twoq import syncq
-        self.qclass = syncq
+        from twoq.lazy.queuing import autoq
+        self.qclass = autoq
 
 
 if __name__ == '__main__':

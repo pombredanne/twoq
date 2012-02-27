@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq active contexts'''
 
-__all__ = ('SyncContext', 'ManContext')
+__all__ = ('AutoContext', 'SyncContext', 'ManContext')
 
 
 class Context(object):

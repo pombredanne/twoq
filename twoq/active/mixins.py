@@ -10,21 +10,27 @@ from twoq.mixins.queuing import QueueingMixin
 
 from twoq.active.contexts import AutoContext, ManContext, SyncContext
 
-__all__ = ['AutoQMixin', 'ManQMixin', 'SyncContext']
+__all__ = ['AutoQMixin', 'ManQMixin', 'SyncMixin']
 
 
 class baseq(QueueingMixin):
 
     '''base active queue'''
 
-    def __init__(self, incoming, outgoing):
+    def __init__(self, *args):
         '''
         init
 
         @param incoming: incoming queue
         @param outgoing: outgoing queue
         '''
-        super(baseq, self).__init__(incoming, outgoing)
+        incoming = deque()
+        # extend if just one argument
+        if len(args) == 1:
+            incoming.append(args[0])
+        else:
+            incoming.extend(args)
+        super(baseq, self).__init__(incoming, deque())
         #######################################################################
         ## incoming things ####################################################
         #######################################################################
@@ -278,19 +284,7 @@ class baseq(QueueingMixin):
     _outsync = outsync
 
 
-class _dq(baseq):
-
-    def __init__(self, *args):
-        incoming = deque()
-        # extend if just one argument
-        if len(args) == 1:
-            incoming.append(args[0])
-        else:
-            incoming.extend(args)
-        super(_dq, self).__init__(incoming, deque())
-
-
-class scratchq(_dq):
+class scratchq(baseq):
 
     def __init__(self, *args):
         super(scratchq, self).__init__(*args)
@@ -326,7 +320,7 @@ class ManQMixin(scratchq):
         return ManContext(self)
 
 
-class SyncQMixin(_dq):
+class SyncQMixin(baseq):
 
     '''synchronized manipulation queue'''
 

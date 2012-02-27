@@ -234,7 +234,7 @@ class ASetQMixin(object):
 
 
 class AFilterQMixin(AFilteringQMixin, ACollectQMixin, ASetQMixin, ASliceQMixin):
-    
+
     '''combination mixin'''
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
