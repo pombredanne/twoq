@@ -6,4 +6,4 @@ from twoq.active.queuing import twoq, manq, autoq, syncq
 
 __all__ = ('twoq', 'manq', 'autoq', 'port', 'syncq')
 
-__version__ = (0, 1, 9)
+__version__ = (0, 1, 10)
