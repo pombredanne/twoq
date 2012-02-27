@@ -10,7 +10,7 @@ from twoq.mixins.queuing import QueueingMixin
 
 from twoq.active.contexts import AutoContext, ManContext, SyncContext
 
-__all__ = ('AutoQMixin', 'ManQMixin', 'SyncQMixin')
+__all__ = ['AutoQMixin', 'ManQMixin', 'SyncMixin']
 
 
 class baseq(QueueingMixin):
@@ -211,7 +211,6 @@ class baseq(QueueingMixin):
         '''
         incoming = self.incoming
         incoming.rotate(-index)
-        incoming.popleft()
         incoming.appendleft(value)
         incoming.rotate(index)
         return self
@@ -245,7 +244,7 @@ class baseq(QueueingMixin):
     _oreup = reup
 
     def shift(self):
-        '''shift incoming things to outgoing things'''
+        '''shift outgoing things to incoming things'''
         self._inextend(self.outgoing)
         return self
 
@@ -253,7 +252,7 @@ class baseq(QueueingMixin):
 
     def sync(self):
         '''
-        shift incoming things to outgoing things, clearing incoming things
+        shift outgoing things to incoming things, clearing incoming things
         '''
         # clear incoming items
         self._inclear()
@@ -264,7 +263,7 @@ class baseq(QueueingMixin):
     _osync = sync
 
     def outshift(self):
-        '''shift outgoing things to incoming things'''
+        '''shift incoming things to outgoing things'''
         # extend incoming items with outgoing items
         self._outextend(self.incoming)
         return self
@@ -273,7 +272,7 @@ class baseq(QueueingMixin):
 
     def outsync(self):
         '''
-        shift outgoing things to incoming things, clearing outgoing things
+        shift incoming things to outgoing things, clearing outgoing things
         '''
         # clear incoming items
         self._outclear()

@@ -3,6 +3,7 @@
 
 
 class AQMixin(object):
+    ''
 
     ###########################################################################
     ## queue manipulation #####################################################
@@ -22,7 +23,7 @@ class AQMixin(object):
     def test_insert(self):
         q = self.qclass(1, 2, 3, 4, 5, 6)
         q.insert(2, 10)
-        self.assertEquals(q.outsync().value(), [1, 2, 10, 4, 5, 6])
+        self.assertEquals(q.outsync().value(), [1, 2, 10, 3, 4, 5, 6])
 
     def test_extend(self):
         self.assertEquals(
@@ -45,10 +46,12 @@ class AQMixin(object):
         self.assertEquals(autoq.value(), 'foo')
 
     def test_inclear(self):
-        self.assertEqual(len(self.qclass([1, 2, 5, 6]).inclear()), 0)
+        self.assertEqual(len(list(self.qclass([1, 2, 5, 6]).inclear())), 0)
 
     def test_outclear(self):
-        self.assertEqual(len(self.qclass([1, 2, 5, 6]).outclear().outgoing), 0)
+        self.assertEqual(
+            len(list(self.qclass([1, 2, 5, 6]).outclear().outgoing)), 0
+        )
 
     ###########################################################################
     ## queue balancing ########################################################
@@ -56,23 +59,23 @@ class AQMixin(object):
 
     def test_insync(self):
         q = self.qclass([1, 2, 3, 4, 5, 6]).outshift().inclear().shift()
-        self.assertSequenceEqual(q.incoming, q.outgoing)
+        self.assertEqual(list(q.incoming), list(q.outgoing))
 
     def test_inshift(self):
         q = self.qclass([1, 2, 3, 4, 5, 6]).outshift().sync()
-        self.assertSequenceEqual(q.incoming, q.outgoing)
+        self.assertEqual(list(q.incoming), list(q.outgoing))
 
     def test_outsync(self):
         q = self.qclass([1, 2, 3, 4, 5, 6]).outshift()
-        self.assertSequenceEqual(q.incoming, q.outgoing)
+        self.assertEqual(list(q.incoming), list(q.outgoing))
 
     def test_outshift(self):
         q = self.qclass([1, 2, 3, 4, 5, 6]).outsync()
-        self.assertSequenceEqual(q.incoming, q.outgoing)
+        self.assertEqual(list(q.incoming), list(q.outgoing))
 
-    ###########################################################################
-    ## queue information ######################################################
-    ###########################################################################
+    ##########################################################################
+    # queue information ######################################################
+    ##########################################################################
 
     def test_index(self):
         self.assertEquals(self.qclass(1, 2, 3, 4, 5, 6).index(3), 2)
