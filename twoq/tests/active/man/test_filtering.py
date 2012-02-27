@@ -6,8 +6,8 @@ except ImportError:
     import unittest
 
 #pylint: disable-msg=w0614,w0401
-from twoq.tests.active.man.mixins.filtering import *  # @UnusedWildImport
-from twoq.tests.active.man.mixins.queuing import MQMixin
+from twoq.tests.mixins.man.filtering import *  # @UnusedWildImport
+from twoq.tests.mixins.man.queuing import MQMixin
 
 
 class TestManFilterQ(unittest.TestCase, MFilterQMixin):

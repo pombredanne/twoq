@@ -6,11 +6,11 @@ try:
 except ImportError:
     import unittest
 
-from twoq.tests.active.auto.mixins.queuing import AQMixin
-from twoq.tests.active.auto.mixins.mapping import AMapQMixin
-from twoq.tests.active.auto.mixins.ordering import AOrderQMixin
-from twoq.tests.active.auto.mixins.reducing import AReduceQMixin
-from twoq.tests.active.auto.mixins.filtering import AFilterQMixin
+from twoq.tests.mixins.auto.queuing import AQMixin
+from twoq.tests.mixins.auto.mapping import AMapQMixin
+from twoq.tests.mixins.auto.ordering import AOrderQMixin
+from twoq.tests.mixins.auto.reducing import AReduceQMixin
+from twoq.tests.mixins.auto.filtering import AFilterQMixin
 
 
 class TestSyncQ(unittest.TestCase,

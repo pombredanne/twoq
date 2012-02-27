@@ -6,8 +6,8 @@ except ImportError:
     import unittest
 
 #pylint: disable-msg=w0614,w0401
-from twoq.tests.active.auto.mixins.reducing import *  # @UnusedWildImport
-from twoq.tests.active.auto.mixins.queuing import AQMixin
+from twoq.tests.mixins.auto.reducing import *  # @UnusedWildImport
+from twoq.tests.mixins.auto.queuing import AQMixin
 
 
 class TestAutoReduceQ(unittest.TestCase, AQMixin, AReduceQMixin):
@@ -34,8 +34,8 @@ class TestAutoMathQ(unittest.TestCase, AQMixin, AMathQMixin):
 class TestAutoTruthQ(unittest.TestCase, AQMixin, ATruthQMixin):
 
     def setUp(self):
-        from twoq.active.reducing import struthq
-        self.qclass = struthq
+        from twoq.active.reducing import atruthq
+        self.qclass = atruthq
 
 
 class TestSyncReduceQ(unittest.TestCase, AQMixin, AReduceQMixin):

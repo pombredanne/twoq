@@ -6,11 +6,11 @@ try:
 except ImportError:
     import unittest
 
-from twoq.tests.active.man.mixins.queuing import MQMixin
-from twoq.tests.active.man.mixins.mapping import MMapQMixin
-from twoq.tests.active.man.mixins.ordering import MOrderQMixin
-from twoq.tests.active.man.mixins.reducing import MReduceQMixin
-from twoq.tests.active.man.mixins.filtering import MFilterQMixin
+from twoq.tests.mixins.man.queuing import MQMixin
+from twoq.tests.mixins.man.mapping import MMapQMixin
+from twoq.tests.mixins.man.ordering import MOrderQMixin
+from twoq.tests.mixins.man.reducing import MReduceQMixin
+from twoq.tests.mixins.man.filtering import MFilterQMixin
 
 
 class TestManQ(
