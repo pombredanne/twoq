@@ -49,7 +49,7 @@ class OrderingMixin(local):
     def reverse(self, _reversed=reversed):
         '''reverse incoming things'''
         with self._sync as sync:
-            sync(_reversed(sync.iterable))
+            sync(_reversed(list(sync.iterable)))
         return self
 
     _oreverse = reverse
@@ -73,7 +73,7 @@ class RandomMixin(local):
     def choice(self, _choice=rm.choice):
         '''random choice from incoming things'''
         with self._sync as sync:
-            sync.append(_choice(sync.iterable))
+            sync.append(_choice(list(sync.iterable)))
         return self
 
     _ochoice = choice
@@ -93,7 +93,7 @@ class RandomMixin(local):
     def shuffle(self, _shuffle=rm.shuffle):
         '''shuffle incoming things'''
         with self._sync as sync:
-            iterable = sync.iterable
+            iterable = list(sync.iterable)
             _shuffle(iterable)
             sync(iterable)
         return self

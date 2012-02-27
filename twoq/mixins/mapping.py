@@ -249,9 +249,9 @@ class RepeatMixin(local):
         '''
         with self._sync as sync:
             if n is None:
-                sync(_starmap(self._call, _repeat(sync.iterable)))
+                sync(_starmap(self._call, _repeat(list(sync.iterable))))
             else:
-                sync(_starmap(self._call, _repeat(sync.iterable, n)))
+                sync(_starmap(self._call, _repeat(list(sync.iterable), n)))
         return self
 
     _otimes = times
