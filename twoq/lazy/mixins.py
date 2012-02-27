@@ -2,6 +2,7 @@
 '''lazy twoq mixins'''
 
 from itertools import tee
+from collections import deque
 
 from stuf.utils import exhaust
 
@@ -30,7 +31,7 @@ class baseq(QueueingMixin):
     ###########################################################################
 
     def __contains__(self, value):
-        self.incoming, incoming = tee(self.outgoing)
+        self.incoming, incoming = tee(self.incoming)
         return value in list(incoming)
 
     _oicontains = __contains__
@@ -59,16 +60,19 @@ class baseq(QueueingMixin):
 
     def index(self, thing):
         '''
-        insert thing into incoming things
+        index of item in incoming things
 
         @param thing: some thing
         '''
+        self.incoming, incoming = tee(self.incoming)
+        return list(incoming).index(thing)
 
     _oindex = index
 
     def end(self, _l=list, _ln=len):
         '''return outgoing things and clear'''
-        results = self.pop() if _ln(self.outgoing) == 1 else _l(self.outgoing)
+        results = list(self.outgoing)
+        results = self.pop() if _ln(results) == 1 else _l(results)
         self.clear()
         return results
 
@@ -83,11 +87,6 @@ class baseq(QueueingMixin):
     def value(self, _l=list, _ln=len):
         '''return outgoing things and clear'''
         results = list(self.outgoing)
-#        while not hasattr(results, 'pop'):
-#            try:
-#                results = (i for i in results)
-#            except AttributeError:
-#                break
         results = results.pop() if _ln(results) == 1 else results
         self.outclear()
         return results
@@ -106,7 +105,7 @@ class baseq(QueueingMixin):
         '''last thing among incoming things'''
         with self._sync as sync:
             i1, _ = tee(sync.iterable)
-            sync.append(next(reversed(list(i1))))
+            sync.append(deque(i1, maxlen=1).pop())
         return self
 
     _olast = last
@@ -115,23 +114,25 @@ class baseq(QueueingMixin):
     ## clear queues ###########################################################
     ###########################################################################
 
-#    def __delitem__(self, index):
-#        incoming = self.incoming
-#        incoming.rotate(-index)
-#        incoming.popleft()
-#        incoming.rotate(index)
-#
-#    _oidelitem = __delitem__
-#
-#    def remove(self, thing):
-#        '''
-#        remove thing from incoming things
-#
-#        @param thing: some thing
-#        '''
-#        return self
-#
-#    _oiremove = remove
+    def __delitem__(self, index):
+        self.incoming = list(self.incoming)
+        del self.incoming[index]
+        self.incoming = iter(self.incoming)
+
+    _oidelitem = __delitem__
+
+    def remove(self, thing):
+        '''
+        remove thing from incoming things
+
+        @param thing: some thing
+        '''
+        self.incoming = list(self.incoming)
+        self.incoming.remove(thing)
+        self.incoming = iter(self.incoming)
+        return self
+
+    _oiremove = remove
 
     def clear(self):
         '''clear all queues'''
@@ -160,53 +161,80 @@ class baseq(QueueingMixin):
     ## manipulate queues ######################################################
     ###########################################################################
 
-#    def append(self, thing):
-#        '''incoming things right append'''
-#        self._inappend(thing)
-#        return self
-#
-#    _oappend = append
-#
-#    def appendleft(self, thing):
-#        '''incoming things left append'''
-#        self._inappendleft(thing)
-#        return self
-#
-#    _oappendleft = appendleft
-#
-#    def insert(self, index, value):
-#        '''
-#        insert thing into incoming things
-#
-#        @param index: index position
-#        @param thing: some thing
-#        '''
-#        incoming = self.incoming
-#        incoming.rotate(-index)
-#        incoming.popleft()
-#        incoming.appendleft(value)
-#        incoming.rotate(index)
-#        return self
-#
-#    _oinsert = insert
-#
-#    def extend(self, things):
-#        '''incoming things right extend'''
-#        self._inextend(things)
-#        return self
-#
-#    _oextend = extend
-#
-#    def extendleft(self, things):
-#        '''incoming things left extend'''
-#        self.incoming
-#        return self
-#
-#    _oextendleft = extendleft
+    def append(self, thing):
+        '''incoming things right append'''
+        self.incoming = deque(self.incoming)
+        self.incoming.append(thing)
+        self.incoming = iter(self.incoming)
+        return self
+
+    _oappend = append
+
+    def appendleft(self, thing):
+        '''incoming things left append'''
+        self.incoming = deque(self.incoming)
+        self.incoming.appendleft(thing)
+        self.incoming = iter(self.incoming)
+        return self
+
+    _oappendleft = appendleft
+
+    def insert(self, index, value):
+        '''
+        insert thing into incoming things
+
+        @param index: index position
+        @param thing: some thing
+        '''
+        self.incoming = list(self.incoming)
+        self.incoming.insert(index, value)
+        self.incoming = iter(self.incoming)
+        return self
+
+    _oinsert = insert
+
+    def extend(self, things):
+        '''incoming things right extend'''
+        self.incoming = deque(self.incoming)
+        self.incoming.extend(things)
+        self.incoming = iter(self.incoming)
+        return self
+
+    _oextend = extend
+
+    def extendleft(self, things):
+        '''incoming things left extend'''
+        self.incoming = deque(self.incoming)
+        self.incoming.extendleft(things)
+        self.incoming = iter(self.incoming)
+        return self
+
+    _oextendleft = extendleft
 
     ###########################################################################
     ## balance queues #########################################################
     ###########################################################################
+
+    def shift(self):
+        '''shift outgoing things to incoming things'''
+        self.outgoing, self.incoming = tee(self.outgoing)
+        return self
+
+    _oshift = _osync = sync = shift
+
+    _osync = sync
+
+    def outshift(self):
+        '''shift incoming things to outgoing things'''
+        self.outgoing, self.incoming = tee(self.incoming)
+        return self
+
+    _outshift = _outsync = outsync = outshift
+
+
+class AutoQMixin(baseq):
+
+    '''auto balancing manipulation queue mixin'''
 
     def reup(self, _list=list):
         '''put incoming things in incoming things as one incoming thing'''
@@ -215,50 +243,6 @@ class baseq(QueueingMixin):
         return self
 
     _oreup = reup
-
-    def shift(self):
-        '''shift incoming things to outgoing things'''
-        self.outgoing, self.incoming = tee(self.outgoing)
-        return self
-
-    _oshift = shift
-
-    def sync(self):
-        '''
-        shift incoming things to outgoing things, clearing incoming things
-        '''
-        # clear incoming items
-        self.incoming = None
-        # extend incoming items with outgoing items
-        self.outgoing, self.incoming = tee(self.outgoing)
-        return self
-
-    _osync = sync
-
-    def outshift(self):
-        '''shift incoming things to outgoing things'''
-        # extend incoming items with outgoing items
-        self.outgoing, self.incoming = tee(self.incoming)
-        return self
-
-    _outshift = outshift
-
-    def outsync(self):
-        '''
-        shift outgoing things to incoming things, clearing outgoing things
-        '''
-        # clear incoming items
-        self.outgoing = None
-        # extend incoming items with outgoing items
-        self.outgoing, self.incoming = tee(self.incoming)
-        return self
-
-    _outsync = outsync
-
-
-class AutoQMixin(baseq):
-
-    '''auto balancing manipulation queue mixin'''
 
     @property
     def _sync(self):
@@ -272,3 +256,7 @@ class ManQMixin(baseq):
     @property
     def _sync(self):
         return ManContext(self)
+
+    def reup(self, _list=list):
+        '''put incoming things in incoming things as one incoming thing'''
+        return self
