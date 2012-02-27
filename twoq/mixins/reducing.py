@@ -26,7 +26,7 @@ def roundrobin(iterable, s=it.islice, c=it.cycle, p=partial, _i=iter, n=next):
 
     @param iterable: an iterable
     '''
-    pending = len(iterable)
+    pending = len(it.tee(iterable, 1))
     nexts = c(p(n, _i(i)) for i in iterable)
     while pending:
         try:
@@ -62,8 +62,8 @@ class MathMixin(local):
     def average(self, _sum=isum, _truediv=op.truediv, _len=len):
         '''average of all incoming things'''
         with self._sync as sync:
-            iterable = sync.iterable
-            sync.append(_truediv(_sum(iterable, 0.0), _len(iterable)))
+            iterable1, iterable2 = it.tee(sync.iterable)
+            sync.append(_truediv(_sum(iterable1, 0.0), _len(list(iterable2))))
         return self
 
     _oaverage = average
@@ -116,8 +116,8 @@ class MathMixin(local):
     def minmax(self):
         '''minimum and maximum values among incoming things'''
         with self._sync as sync:
-            iterable = sync.iterable
-            sync(iter([min(iterable), max(iterable)]))
+            iterable1, iterable2 = it.tee(sync.iterable)
+            sync(iter([min(iterable1), max(iterable2)]))
         return self
 
     _minmax = minmax

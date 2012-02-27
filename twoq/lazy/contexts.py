@@ -20,13 +20,13 @@ class Context(object):
         self._queue = queue
 
     def __call__(self, args):
-        self._queue.outgoing = tee(args, 1)
+        self._queue.outgoing = args
 
     def iter(self, args):
-        self._queue.outgoing = tee(iter(args), 1)
+        self._queue.outgoing = iter(args)
 
     def append(self, args):
-        self._queue.outgoing = tee(args, 1)
+        self._queue.outgoing = iter([args])
 
 
 class ManContext(Context):
@@ -37,7 +37,7 @@ class ManContext(Context):
         # clear outgoing _queue
         self._queue.outgoing = None
         # extend scratch _queue with incoming things
-        self._queue._scratch = tee(self._queue.incoming, 1)
+        self._queue._scratch, self._queue.incoming = tee(self._queue.incoming)
         return self
 
     def __exit__(self, t, v, e):

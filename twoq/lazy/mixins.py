@@ -23,32 +23,37 @@ class baseq(QueueingMixin):
         else:
             incoming = iter(args)
         self._scratch = None
-        super(baseq, self).__init__(incoming, None)
+        super(baseq, self).__init__(incoming, iter([]))
 
     ###########################################################################
     ## queue information ######################################################
     ###########################################################################
 
     def __contains__(self, value):
-        return value in tee(self.outgoing, 1)
+        self.incoming, incoming = tee(self.outgoing)
+        return value in list(incoming)
 
     _oicontains = __contains__
 
     def __len__(self):
-        return len(tee(self.outgoing, 1))
+        self.incoming, incoming = tee(self.incoming)
+        return len(list(incoming))
 
     count = _oicount = __len__
 
     def outcount(self):
         '''count of outgoing items'''
-        return len(tee(self.outgoing, 1))
+        self.outgoing, outgoing = tee(self.outgoing)
+        return len(list(outgoing))
 
     _ooutcount = outcount
 
     @property
     def balanced(self):
         '''if queues are balanced'''
-        return len(tee(self.outgoing, 1)) == len(tee(self.incoming, 1))
+        self.incoming, incoming = tee(self.incoming)
+        self.outgoing, outgoing = tee(self.outgoing)
+        return len(list(outgoing)) == len(list(incoming))
 
     _obalanced = balanced
 
@@ -77,12 +82,12 @@ class baseq(QueueingMixin):
 
     def value(self, _l=list, _ln=len):
         '''return outgoing things and clear'''
-        results = self.outgoing
-        while not hasattr(results, 'pop'):
-            try:
-                results = results.next()
-            except AttributeError:
-                break
+        results = list(self.outgoing)
+#        while not hasattr(results, 'pop'):
+#            try:
+#                results = (i for i in results)
+#            except AttributeError:
+#                break
         results = results.pop() if _ln(results) == 1 else results
         self.outclear()
         return results
@@ -100,7 +105,8 @@ class baseq(QueueingMixin):
     def last(self):
         '''last thing among incoming things'''
         with self._sync as sync:
-            sync.append(next(reversed(sync.iterable)))
+            i1, _ = tee(sync.iterable)
+            sync.append(next(reversed(list(i1))))
         return self
 
     _olast = last
@@ -138,14 +144,14 @@ class baseq(QueueingMixin):
 
     def inclear(self):
         '''incoming things clear'''
-        self.incoming = None
+        self.incoming = iter([])
         return self
 
     _oiclear = inclear
 
     def outclear(self):
         '''incoming things clear'''
-        self.outgoing = None
+        self.outgoing = iter([])
         return self
 
     _ooutclear = outclear

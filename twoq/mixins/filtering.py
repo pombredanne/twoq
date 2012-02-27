@@ -153,8 +153,7 @@ class FilteringMixin(local):
         with self._sync as sync:
             call = self._call
             falsy, truey = _t(sync.iterable)
-            sync.append(list(_ff(call, falsy)))
-            sync.append(list(_filter(call, truey)))
+            sync(iter([list(_ff(call, falsy)), list(_filter(call, truey))]))
         return self
 
     _opartition = partition
@@ -293,8 +292,8 @@ class SliceMixin(local):
     def initial(self, _islice=it.islice, _len=len):
         '''all incoming things except the last thing'''
         with self._sync as sync:
-            iterable = sync.iterable
-            sync(_islice(iterable, _len(iterable) - 1))
+            iterable1, iterable2 = it.tee(sync.iterable)
+            sync(_islice(iterable1, _len(list(iterable2)) - 1))
         return self
 
     _oinitial = initial
@@ -314,8 +313,8 @@ class SliceMixin(local):
         @param n: number of things
         '''
         with self._sync as sync:
-            iterable = sync.iterable
-            sync(_islice(iterable, _len(iterable) - n, None))
+            iterable1, iterable2 = it.tee(sync.iterable)
+            sync(_islice(iterable1, _len(list(iterable2)) - n, None))
         return self
 
     _osnatch = snatch
