@@ -10,7 +10,7 @@ from twoq.mixins.queuing import QueueingMixin
 
 from twoq.active.contexts import AutoContext, ManContext, SyncContext
 
-__all__ = ['AutoQMixin', 'ManQMixin', 'SyncMixin']
+__all__ = ('AutoQMixin', 'ManQMixin', 'SyncQMixin')
 
 
 class baseq(QueueingMixin):
