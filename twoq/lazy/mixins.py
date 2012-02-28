@@ -4,8 +4,6 @@
 from itertools import tee
 from collections import deque
 
-from stuf.utils import exhaust
-
 from twoq.mixins.queuing import QueueingMixin
 
 from twoq.lazy.contexts import AutoContext, ManContext
@@ -69,25 +67,25 @@ class baseq(QueueingMixin):
 
     _oindex = index
 
-    def end(self, _l=list, _ln=len):
+    def end(self):
         '''return outgoing things and clear'''
         results = list(self.outgoing)
-        results = self.pop() if _ln(results) == 1 else _l(results)
+        results = results.pop() if len(results) == 1 else list(results)
         self.clear()
         return results
 
     _ofinal = end
 
-    def results(self, _iterexcept=exhaust):
+    def results(self):
         '''iterate over reversed outgoing things, clearing as it goes'''
         return self.outgoing
 
     _oresults = results
 
-    def value(self, _l=list, _ln=len):
+    def value(self):
         '''return outgoing things and clear'''
         results = list(self.outgoing)
-        results = results.pop() if _ln(results) == 1 else results
+        results = results.pop() if len(results) == 1 else list(results)
         self.outclear()
         return results
 
@@ -236,10 +234,10 @@ class AutoQMixin(baseq):
 
     '''auto balancing manipulation queue mixin'''
 
-    def reup(self, _list=list):
+    def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
         with self._sync as _sync:
-            _sync.append(_list(self.incoming))
+            _sync.append(list(self.incoming))
         return self
 
     _oreup = reup
@@ -257,6 +255,6 @@ class ManQMixin(baseq):
     def _sync(self):
         return ManContext(self)
 
-    def reup(self, _list=list):
+    def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
         return self

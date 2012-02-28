@@ -21,4 +21,4 @@ class manq(ManQMixin, FilterMixin, MapMixin, ReduceMixin, OrderMixin):
     '''manually balanced manipulation queue'''
 
 
-twoq = autoq
+lazyq = autoq

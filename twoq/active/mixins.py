@@ -85,34 +85,38 @@ class baseq(QueueingMixin):
 
     _obalanced = balanced
 
-    def index(self, thing, _bisect_right=bisect_right):
+    def index(self, thing):
         '''
         insert thing into incoming things
 
         @param thing: some thing
         '''
-        return _bisect_right(self.incoming, thing) - 1
+        return bisect_right(self.incoming, thing) - 1
 
     _oindex = index
 
-    def end(self, _l=list, _ln=len):
+    def end(self):
         '''return outgoing things and clear'''
-        results = self.pop() if _ln(self.outgoing) == 1 else _l(self.outgoing)
+        results = self.pop() if len(
+            self.outgoing
+        ) == 1 else list(self.outgoing)
         self.clear()
         return results
 
     _ofinal = end
 
-    def results(self, _iterexcept=iterexcept):
+    def results(self):
         '''iterate over reversed outgoing things, clearing as it goes'''
-        for thing in _iterexcept(self.outgoing.popleft, IndexError):
+        for thing in iterexcept(self.outgoing.popleft, IndexError):
             yield thing
 
     _oresults = results
 
-    def value(self, _l=list, _ln=len):
-        '''return outgoing things and clear'''
-        results = self.pop() if _ln(self.outgoing) == 1 else _l(self.outgoing)
+    def value(self):
+        '''return outgoing things and clear outgoing things'''
+        results = self.pop() if len(
+            self.outgoing
+        ) == 1 else list(self.outgoing)
         self._outclear()
         return results
 
@@ -146,14 +150,14 @@ class baseq(QueueingMixin):
 
     _oidelitem = __delitem__
 
-    def remove(self, thing, _bisect_right=bisect_right):
+    def remove(self, thing):
         '''
         remove thing from incoming things
 
         @param thing: some thing
         '''
         incoming = self.incoming
-        position = _bisect_right(incoming, thing) - 1
+        position = bisect_right(incoming, thing) - 1
         incoming.rotate(-position)
         incoming.popleft()
         incoming.rotate(position)
@@ -235,10 +239,10 @@ class baseq(QueueingMixin):
     ## balance queues #########################################################
     ###########################################################################
 
-    def reup(self, _list=list):
+    def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
         with self._sync as _sync:
-            _sync.append(_list(self.incoming))
+            _sync.append(list(self.incoming))
         return self
 
     _oreup = reup
