@@ -18,13 +18,6 @@ class TestAutoFilterQ(unittest.TestCase, AQMixin, AFilterQMixin):
         self.qclass = afilterq
 
 
-class TestAutoFilteringQ(unittest.TestCase, AQMixin, AFilteringQMixin):
-
-    def setUp(self):
-        from twoq.lazy.filtering import afilteringq
-        self.qclass = afilteringq
-
-
 class TestAutoSliceQ(unittest.TestCase, AQMixin, ASliceQMixin):
 
     def setUp(self):

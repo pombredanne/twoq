@@ -4,8 +4,7 @@
 from inspect import ismodule
 
 from twoq.support import port
-from twoq.mixins.reducing import (
-    MathMixin, ReducingMixin, TruthMixin, ReduceMixin)
+from twoq.mixins.reducing import MathMixin, TruthMixin, ReduceMixin
 
 from twoq.lazy.mixins import AutoQMixin, ManQMixin
 
@@ -26,22 +25,6 @@ class mmathq(ManQMixin, MathMixin):
     '''manually balanced math queue'''
 
 ###############################################################################
-## lazy reducing queues #######################################################
-###############################################################################
-
-
-class areducingq(AutoQMixin, ReducingMixin):
-
-    '''auto-balancing reducing queue'''
-
-reducingq = areducingq
-
-
-class mreducingq(ManQMixin, ReducingMixin):
-
-    '''manually balanced reducing queue'''
-
-###############################################################################
 ## lazy truth queues ######E###################################################
 ###############################################################################
 
@@ -59,7 +42,7 @@ class mtruthq(ManQMixin, TruthMixin):
 
 
 ###############################################################################
-## reduce queues ##############################################################
+## lazy reduce queues #########################################################
 ###############################################################################
 
 

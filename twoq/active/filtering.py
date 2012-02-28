@@ -5,28 +5,9 @@ from inspect import ismodule
 
 from twoq.support import port
 from twoq.mixins.filtering import (
-    FilteringMixin, FilterMixin, CollectMixin, SetMixin, SliceMixin)
+    FilterMixin, CollectMixin, SetMixin, SliceMixin)
 
 from twoq.active.mixins import AutoQMixin, ManQMixin, SyncQMixin
-
-###############################################################################
-## active filter queues #######################################################
-###############################################################################
-
-
-class afilteringq(AutoQMixin, FilteringMixin):
-
-    '''auto-balanced filter queue'''
-
-
-class mfilteringq(ManQMixin, FilteringMixin):
-
-    '''manually balanced filter queue'''
-
-
-class sfilteringq(SyncQMixin, FilteringMixin):
-
-    '''autosynchronized filter queue'''
 
 ###############################################################################
 ## active collecting queues ###################################################

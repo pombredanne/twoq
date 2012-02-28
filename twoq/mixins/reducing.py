@@ -11,7 +11,7 @@ from functools import partial, reduce as ireduce
 
 from twoq import support as ct
 
-__all__ = ('MathMixin', 'ReducingMixin', 'TruthMixin', 'ReduceMixin')
+__all__ = ('MathMixin', 'TruthMixin', 'ReduceMixin')
 
 ###############################################################################
 ## reducing subroutines #######################################################
@@ -166,9 +166,50 @@ class MathMixin(local):
     _osum = sum
 
 
-class ReducingMixin(local):
+class TruthMixin(local):
 
-    '''reduce mixin'''
+    '''truth mixin'''
+
+    def all(self):
+        '''if `all` incoming things are `True`'''
+        with self._sync as sync:
+            sync.append(all(ct.map(self._call, sync.iterable)))
+        return self
+
+    _oall = all
+
+    def any(self):
+        '''if `any` incoming things are `True`'''
+        with self._sync as sync:
+            sync.append(any(ct.map(self._call, sync.iterable)))
+        return self
+
+    _oany = any
+
+    def contains(self, thing):
+        '''
+        if `thing` is in incoming things
+
+        @param thing: some thing
+        '''
+        with self._sync as sync:
+            sync.append(contains(sync.iterable, thing))
+        return self
+
+    _ocontains = contains
+
+    def quantify(self):
+        '''how many times call is True for incoming things'''
+        with self._sync as sync:
+            sync.append(sum(ct.map(self._call, sync.iterable)))
+        return self
+
+    _oquantify = quantify
+
+
+class ReduceMixin(MathMixin, TruthMixin):
+
+    '''reducing mixin'''
 
     def merge(self):
         '''flatten nested and ordered incoming things'''
@@ -254,49 +295,3 @@ class ReducingMixin(local):
         return self
 
     _ozip = zip
-
-
-class TruthMixin(local):
-
-    '''truth mixin'''
-
-    def all(self):
-        '''if `all` incoming things are `True`'''
-        with self._sync as sync:
-            sync.append(all(ct.map(self._call, sync.iterable)))
-        return self
-
-    _oall = all
-
-    def any(self):
-        '''if `any` incoming things are `True`'''
-        with self._sync as sync:
-            sync.append(any(ct.map(self._call, sync.iterable)))
-        return self
-
-    _oany = any
-
-    def contains(self, thing):
-        '''
-        if `thing` is in incoming things
-
-        @param thing: some thing
-        '''
-        with self._sync as sync:
-            sync.append(contains(sync.iterable, thing))
-        return self
-
-    _ocontains = contains
-
-    def quantify(self):
-        '''how many times call is True for incoming things'''
-        with self._sync as sync:
-            sync.append(sum(ct.map(self._call, sync.iterable)))
-        return self
-
-    _oquantify = quantify
-
-
-class ReduceMixin(MathMixin, ReducingMixin, TruthMixin):
-
-    '''reducing mixin'''

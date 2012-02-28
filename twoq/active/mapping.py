@@ -4,8 +4,7 @@
 from inspect import ismodule
 
 from twoq.support import port
-from twoq.mixins.mapping import (
-    DelayMixin, CopyMixin, MappingMixin, RepeatMixin, MapMixin)
+from twoq.mixins.mapping import DelayMixin, CopyMixin, RepeatMixin, MapMixin
 
 from twoq.active.mixins import AutoQMixin, ManQMixin, SyncQMixin
 
@@ -50,27 +49,6 @@ class mcopyq(ManQMixin, CopyMixin):
 class scopyq(SyncQMixin, CopyMixin):
 
     '''autosynchronized copy queue'''
-
-###############################################################################
-## active map queues ##########################################################
-###############################################################################
-
-
-class amappingq(AutoQMixin, MappingMixin):
-
-    '''auto-balanced mapping queue'''
-
-mappingq = amappingq
-
-
-class mmappingq(ManQMixin, MappingMixin):
-
-    '''manually balanced mapping queue'''
-
-
-class smappingq(SyncQMixin, MappingMixin):
-
-    '''autosynchronized mapping queue'''
 
 ###############################################################################
 ## active repeat queues #######################################################

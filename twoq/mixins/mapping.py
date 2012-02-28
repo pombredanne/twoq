@@ -11,9 +11,7 @@ from itertools import starmap, chain, repeat
 from stuf.six import items
 from twoq import support as ct
 
-__all__ = (
-    'DelayMixin', 'CopyMixin', 'MappingMixin', 'RepeatMixin', 'MapMixin',
-)
+__all__ = ('DelayMixin', 'CopyMixin', 'RepeatMixin', 'MapMixin')
 chain_iter = chain.from_iterable
 
 ###############################################################################
@@ -145,58 +143,6 @@ class CopyMixin(local):
     _odeepcopy = deepcopy
 
 
-class MappingMixin(local):
-
-    '''map mixin'''
-
-    def each(self):
-        '''invoke call with passed arguments, keywords in incoming things'''
-        with self._sync as sync:
-            sync(starmap(lambda x, y: self._call(*x, **y), sync.iterable))
-        return self
-
-    _oeach = each
-
-    def invoke(self, name):
-        '''
-        invoke call on each incoming thing with passed arguments, keywords
-        but return incoming thing instead if call returns None
-
-        @param name: name of method
-        '''
-        _caller = methodcaller(name, *self._args, **self._kw)
-        _call = partial(invoke, caller=_caller)
-        with self._sync as sync:
-            sync(ct.map(_call, sync.iterable))
-        return self
-
-    _oinvoke = invoke
-
-    def items(self):
-        '''invoke call on each mapping to get key, value pairs'''
-        with self._sync as sync:
-            sync(starmap(self._call, chain_iter(ct.map(items, sync.iterable))))
-        return self
-
-    _ostarmap = items
-
-    def map(self):
-        '''invoke call on each incoming thing'''
-        with self._sync as sync:
-            sync(ct.map(self._call, sync.iterable))
-        return self
-
-    _omap = map
-
-    def starmap(self):
-        '''invoke call on each incoming pair of things'''
-        with self._sync as sync:
-            sync(starmap(self._call, sync.iterable))
-        return self
-
-    _ostarmap = starmap
-
-
 class RepeatMixin(local):
 
     '''repetition mixin'''
@@ -258,6 +204,53 @@ class RepeatMixin(local):
     _otimes = times
 
 
-class MapMixin(DelayMixin, CopyMixin, MappingMixin, RepeatMixin):
+class MapMixin(DelayMixin, CopyMixin, RepeatMixin):
 
     '''mapping mixin'''
+
+    def each(self):
+        '''invoke call with passed arguments, keywords in incoming things'''
+        with self._sync as sync:
+            sync(starmap(lambda x, y: self._call(*x, **y), sync.iterable))
+        return self
+
+    _oeach = each
+
+    def invoke(self, name):
+        '''
+        invoke call on each incoming thing with passed arguments, keywords
+        but return incoming thing instead if call returns None
+
+        @param name: name of method
+        '''
+        _caller = methodcaller(name, *self._args, **self._kw)
+        _call = partial(invoke, caller=_caller)
+        with self._sync as sync:
+            sync(ct.map(_call, sync.iterable))
+        return self
+
+    _oinvoke = invoke
+
+    def items(self):
+        '''invoke call on each mapping to get key, value pairs'''
+        with self._sync as sync:
+            sync(starmap(self._call, chain_iter(ct.map(items, sync.iterable))))
+        return self
+
+    _ostarmap = items
+
+    def map(self):
+        '''invoke call on each incoming thing'''
+        with self._sync as sync:
+            sync(ct.map(self._call, sync.iterable))
+        return self
+
+    _omap = map
+
+    def starmap(self):
+        '''invoke call on each incoming pair of things'''
+        with self._sync as sync:
+            sync(starmap(self._call, sync.iterable))
+        return self
+
+    _ostarmap = starmap

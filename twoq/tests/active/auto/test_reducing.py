@@ -17,13 +17,6 @@ class TestAutoReduceQ(unittest.TestCase, AQMixin, AReduceQMixin):
         self.qclass = areduceq
 
 
-class TestAutoReducingQ(unittest.TestCase, AQMixin, AReducingQMixin):
-
-    def setUp(self):
-        from twoq.active.reducing import areducingq
-        self.qclass = areducingq
-
-
 class TestAutoMathQ(unittest.TestCase, AQMixin, AMathQMixin):
 
     def setUp(self):
@@ -43,13 +36,6 @@ class TestSyncReduceQ(unittest.TestCase, AQMixin, AReduceQMixin):
     def setUp(self):
         from twoq.active.reducing import sreduceq
         self.qclass = sreduceq
-
-
-class TestSyncReducingQ(unittest.TestCase, AQMixin, AReducingQMixin):
-
-    def setUp(self):
-        from twoq.active.reducing import sreducingq
-        self.qclass = sreducingq
 
 
 class TestSyncMathQ(unittest.TestCase, AQMixin, AMathQMixin):

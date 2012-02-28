@@ -17,13 +17,6 @@ class TestManOrderQ(unittest.TestCase, MQMixin, MOrderQMixin):
         self.qclass = morderq
 
 
-class TestManOrderingQ(unittest.TestCase, MQMixin, MOrderingQMixin):
-
-    def setUp(self):
-        from twoq.lazy.ordering import morderingq
-        self.qclass = morderingq
-
-
 class TestManRandomQ(unittest.TestCase, MQMixin, MRandomQMixin):
 
     def setUp(self):

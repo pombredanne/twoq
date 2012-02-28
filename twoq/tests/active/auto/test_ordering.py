@@ -17,13 +17,6 @@ class TestAutoOrderQ(unittest.TestCase, AQMixin, AOrderQMixin):
         self.qclass = aorderq
 
 
-class TestAutoOrderingQ(unittest.TestCase, AQMixin, AOrderingQMixin):
-
-    def setUp(self):
-        from twoq.active.ordering import aorderingq
-        self.qclass = aorderingq
-
-
 class TestAutoRandomQ(unittest.TestCase, AQMixin, ARandomQMixin):
 
     def setUp(self):
@@ -36,13 +29,6 @@ class TestSyncOrderQ(unittest.TestCase, AQMixin, AOrderQMixin):
     def setUp(self):
         from twoq.active.ordering import sorderq
         self.qclass = sorderq
-
-
-class TestSyncOrderingQ(unittest.TestCase, AQMixin, AOrderingQMixin):
-
-    def setUp(self):
-        from twoq.active.ordering import sorderingq
-        self.qclass = sorderingq
 
 
 class TestSyncRandomQ(unittest.TestCase, AQMixin, ARandomQMixin):

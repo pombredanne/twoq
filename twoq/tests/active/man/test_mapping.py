@@ -17,13 +17,6 @@ class TestManMap(unittest.TestCase, MQMixin, MMapQMixin):
         self.qclass = mmapq
 
 
-class TestManMappingQ(unittest.TestCase, MQMixin, MMappingQMixin):
-
-    def setUp(self):
-        from twoq.active.mapping import mmappingq
-        self.qclass = mmappingq
-
-
 class TestManRepeatQ(
     unittest.TestCase, MQMixin, MRepeatQMixin
 ):

@@ -17,13 +17,6 @@ class TestAutoMap(AQMixin, AMapQMixin):
         self.qclass = amapq
 
 
-class TestAutoMappingQ(unittest.TestCase, AQMixin, AMappingQMixin):
-
-    def setUp(self):
-        from twoq.lazy.mapping import amappingq
-        self.qclass = amappingq
-
-
 class TestAutoRepeatQ(unittest.TestCase, AQMixin, ARepeatQMixin):
 
     def setUp(self):

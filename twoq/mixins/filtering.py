@@ -11,9 +11,7 @@ from stuf.utils import getcls
 
 from twoq import support as ct
 
-__all__ = (
-    'FilteringMixin', 'FilterMixin', 'CollectMixin', 'SetMixin', 'SliceMixin'
-)
+__all__ = ('FilterMixin', 'CollectMixin', 'SetMixin', 'SliceMixin')
 chain_iter = chain.from_iterable
 
 ###############################################################################
@@ -113,69 +111,6 @@ def unique(iterable, key=None):
 ###############################################################################
 ## filter mixins ##############################################################
 ###############################################################################
-
-
-class FilteringMixin(local):
-
-    '''filter mixin'''
-
-    def compact(self):
-        '''strip "untrue" things from incoming things'''
-        with self._sync as sync:
-            sync.iter(ct.filter(truth, sync.iterable))
-        return self
-
-    _ocompact = compact
-
-    def filter(self):
-        '''incoming things for which call is `True`'''
-        with self._sync as sync:
-            sync(ct.filter(self._call, sync.iterable))
-        return self
-
-    _ofilter = filter
-
-    def find(self):
-        '''first incoming thing for which call is `True`'''
-        with self._sync as sync:
-            sync(find(self._call, self.incoming))
-        return self
-
-    _ofind = find
-
-    def partition(self):
-        '''
-        split incoming things into `True` and `False` things based on results
-        of callable
-
-        @param test: a test
-        '''
-        with self._sync as sync:
-            call = self._call
-            falsy, truey = tee(sync.iterable)
-            sync(iter(
-                [list(ct.filterfalse(call, falsy)),
-                list(ct.filter(call, truey))]),
-            )
-        return self
-
-    _opartition = partition
-
-    def reject(self):
-        '''incoming things for which call is `False`'''
-        with self._sync as sync:
-            sync(ct.filterfalse(self._call, sync.iterable))
-        return self
-
-    _oreject = reject
-
-    def without(self, *things):
-        '''strip things from incoming things'''
-        with self._sync as sync:
-            sync(ct.filterfalse(lambda x: x in things, sync.iterable))
-        return self
-
-    _owithout = without
 
 
 class CollectMixin(local):
@@ -330,6 +265,64 @@ class SliceMixin(local):
     _otake = take
 
 
-class FilterMixin(FilteringMixin, CollectMixin, SetMixin, SliceMixin):
+class FilterMixin(CollectMixin, SetMixin, SliceMixin):
 
     '''filters mixin'''
+
+    def compact(self):
+        '''strip "untrue" things from incoming things'''
+        with self._sync as sync:
+            sync.iter(ct.filter(truth, sync.iterable))
+        return self
+
+    _ocompact = compact
+
+    def filter(self):
+        '''incoming things for which call is `True`'''
+        with self._sync as sync:
+            sync(ct.filter(self._call, sync.iterable))
+        return self
+
+    _ofilter = filter
+
+    def find(self):
+        '''first incoming thing for which call is `True`'''
+        with self._sync as sync:
+            sync(find(self._call, self.incoming))
+        return self
+
+    _ofind = find
+
+    def partition(self):
+        '''
+        split incoming things into `True` and `False` things based on results
+        of callable
+
+        @param test: a test
+        '''
+        with self._sync as sync:
+            call = self._call
+            falsy, truey = tee(sync.iterable)
+            sync(iter(
+                [list(ct.filterfalse(call, falsy)),
+                list(ct.filter(call, truey))]),
+            )
+        return self
+
+    _opartition = partition
+
+    def reject(self):
+        '''incoming things for which call is `False`'''
+        with self._sync as sync:
+            sync(ct.filterfalse(self._call, sync.iterable))
+        return self
+
+    _oreject = reject
+
+    def without(self, *things):
+        '''strip things from incoming things'''
+        with self._sync as sync:
+            sync(ct.filterfalse(lambda x: x in things, sync.iterable))
+        return self
+
+    _owithout = without

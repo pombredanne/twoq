@@ -7,12 +7,47 @@ from random import choice, shuffle, sample
 
 from twoq import support as ct
 
-__all__ = ('OrderingMixin', 'OrderMixin', 'RandomMixin')
+__all__ = ('OrderMixin', 'RandomMixin')
 
 
-class OrderingMixin(local):
+class RandomMixin(local):
 
-    '''order mixin'''
+    '''random mixin'''
+
+    def choice(self):
+        '''random choice from incoming things'''
+        with self._sync as sync:
+            sync.append(choice(list(sync.iterable)))
+        return self
+
+    _ochoice = choice
+
+    def sample(self, n):
+        '''
+        random sampling drawn from `n` incoming things
+
+        @param n: number of things
+        '''
+        with self._sync as sync:
+            sync(sample(list(sync.iterable), n))
+        return self
+
+    _osample = sample
+
+    def shuffle(self):
+        '''shuffle incoming things'''
+        with self._sync as sync:
+            iterable = list(sync.iterable)
+            shuffle(iterable)
+            sync(iterable)
+        return self
+
+    _oshuffle = shuffle
+
+
+class OrderMixin(RandomMixin):
+
+    '''ordering mixin'''
 
     def group(self):
         '''group incoming things using _call for key function'''
@@ -64,43 +99,3 @@ class OrderingMixin(local):
         return self
 
     _osort = sort
-
-
-class RandomMixin(local):
-
-    '''random mixin'''
-
-    def choice(self):
-        '''random choice from incoming things'''
-        with self._sync as sync:
-            sync.append(choice(list(sync.iterable)))
-        return self
-
-    _ochoice = choice
-
-    def sample(self, n):
-        '''
-        random sampling drawn from `n` incoming things
-
-        @param n: number of things
-        '''
-        with self._sync as sync:
-            sync(sample(list(sync.iterable), n))
-        return self
-
-    _osample = sample
-
-    def shuffle(self):
-        '''shuffle incoming things'''
-        with self._sync as sync:
-            iterable = list(sync.iterable)
-            shuffle(iterable)
-            sync(iterable)
-        return self
-
-    _oshuffle = shuffle
-
-
-class OrderMixin(OrderingMixin, RandomMixin):
-
-    '''ordering mixin'''

@@ -18,13 +18,6 @@ class TestAutoFilterQ(unittest.TestCase, AQMixin, AFilterQMixin):
         self.qclass = afilterq
 
 
-class TestAutoFilteringQ(unittest.TestCase, AQMixin, AFilteringQMixin):
-
-    def setUp(self):
-        from twoq.active.filtering import afilteringq
-        self.qclass = afilteringq
-
-
 class TestAutoSliceQ(unittest.TestCase, AQMixin, ASliceQMixin):
 
     def setUp(self):
@@ -55,13 +48,6 @@ class TestSyncFilterQ(unittest.TestCase, AQMixin, AFilterQMixin):
         self.maxDiff = None
         from twoq.active.filtering import sfilterq
         self.qclass = sfilterq
-
-
-class TestSyncFilteringQ(unittest.TestCase, AQMixin, AFilteringQMixin):
-
-    def setUp(self):
-        from twoq.active.filtering import sfilteringq
-        self.qclass = sfilteringq
 
 
 class TestSyncSliceQ(unittest.TestCase, AQMixin, ASliceQMixin):

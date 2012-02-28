@@ -17,13 +17,6 @@ class TestAutoReduceQ(unittest.TestCase, AQMixin, AReduceQMixin):
         self.qclass = areduceq
 
 
-class TestAutoReducingQ(unittest.TestCase, AQMixin, AReducingQMixin):
-
-    def setUp(self):
-        from twoq.lazy.reducing import areducingq
-        self.qclass = areducingq
-
-
 class TestAutoMathQ(unittest.TestCase, AQMixin, AMathQMixin):
 
     def setUp(self):

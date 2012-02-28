@@ -17,13 +17,6 @@ class TestAutoMap(AQMixin, AMapQMixin):
         self.qclass = amapq
 
 
-class TestAutoMappingQ(unittest.TestCase, AQMixin, AMappingQMixin):
-
-    def setUp(self):
-        from twoq.active.mapping import amappingq
-        self.qclass = amappingq
-
-
 class TestAutoRepeatQ(unittest.TestCase, AQMixin, ARepeatQMixin):
 
     def setUp(self):
@@ -43,13 +36,6 @@ class TestSyncMap(AQMixin, AMapQMixin):
     def setUp(self):
         from twoq.active.mapping import smapq
         self.qclass = smapq
-
-
-class TestSyncMappingQ(unittest.TestCase, AQMixin, AMappingQMixin):
-
-    def setUp(self):
-        from twoq.active.mapping import smappingq
-        self.qclass = smappingq
 
 
 class TestSyncRepeatQ(unittest.TestCase, AQMixin, ARepeatQMixin):

@@ -4,8 +4,7 @@
 from inspect import ismodule
 
 from twoq.support import port
-from twoq.mixins.reducing import (
-    MathMixin, ReducingMixin, TruthMixin, ReduceMixin)
+from twoq.mixins.reducing import MathMixin, TruthMixin, ReduceMixin
 
 from twoq.active.mixins import AutoQMixin, ManQMixin, SyncQMixin
 
@@ -29,27 +28,6 @@ class mmathq(ManQMixin, MathMixin):
 class smathq(SyncQMixin, MathMixin):
 
     '''autosynchronized math queue'''
-
-###############################################################################
-## active reducing queues #####################################################
-###############################################################################
-
-
-class areducingq(AutoQMixin, ReducingMixin):
-
-    '''auto-balancing reducing queue'''
-
-reducingq = areducingq
-
-
-class mreducingq(ManQMixin, ReducingMixin):
-
-    '''manually balanced reducing queue'''
-
-
-class sreducingq(SyncQMixin, ReducingMixin):
-
-    '''autosynchronized reducing queue'''
 
 ###############################################################################
 ## active truth queues ####E###################################################

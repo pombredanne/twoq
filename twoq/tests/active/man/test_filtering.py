@@ -18,13 +18,6 @@ class TestManFilterQ(unittest.TestCase, MFilterQMixin):
         self.qclass = mfilterq
 
 
-class TestManFilteringQ(unittest.TestCase, MQMixin, MFilteringQMixin):
-
-    def setUp(self):
-        from twoq.active.filtering import mfilteringq
-        self.qclass = mfilteringq
-
-
 class TestManSliceQ(unittest.TestCase, MQMixin, MSliceQMixin):
 
     def setUp(self):
