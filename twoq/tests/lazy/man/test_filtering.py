@@ -7,10 +7,11 @@ except ImportError:
 
 #pylint: disable-msg=w0614,w0401
 from twoq.tests.mixins.man.filtering import *  # @UnusedWildImport
+from twoq.tests.mixins.man.manning import Manning
 from twoq.tests.mixins.man.queuing import MQMixin
 
 
-class TestManFilterQ(unittest.TestCase, MFilterQMixin):
+class TestManFilterQ(Manning, MFilterQMixin):
 
     def setUp(self):
         self.maxDiff = None
@@ -18,21 +19,21 @@ class TestManFilterQ(unittest.TestCase, MFilterQMixin):
         self.qclass = mfilterq
 
 
-class TestManSliceQ(unittest.TestCase, MQMixin, MSliceQMixin):
+class TestManSliceQ(Manning, MQMixin, MSliceQMixin):
 
     def setUp(self):
         from twoq.lazy.filtering import msliceq
         self.qclass = msliceq
 
 
-class TestManCollectQ(unittest.TestCase, MQMixin, MCollectQMixin):
+class TestManCollectQ(Manning, MQMixin, MCollectQMixin):
 
     def setUp(self):
         from twoq.lazy.filtering import mcollectq
         self.qclass = mcollectq
 
 
-class TestManSetQ(unittest.TestCase, MQMixin, MSetQMixin):
+class TestManSetQ(Manning, MQMixin, MSetQMixin):
 
     def setUp(self):
         from twoq.lazy.filtering import msetq

@@ -6,49 +6,6 @@ from inspect import ismodule
 from twoq.support import port
 
 
-class AFilteringQMixin(object):
-
-    def test_filter(self):
-        self.assertEquals(
-            self.qclass(1, 2, 3, 4, 5, 6).tap(
-                lambda x: x % 2 == 0
-            ).filter().value(), [2, 4, 6]
-        )
-
-    def test_find(self):
-        self.assertEquals(
-            self.qclass(1, 2, 3, 4, 5, 6).tap(
-                lambda x: x % 2 == 0
-            ).find().value(), 2,
-        )
-
-    def test_reject(self):
-        self.assertEquals(
-            self.qclass(1, 2, 3, 4, 5, 6).tap(
-                lambda x: x % 2 == 0
-            ).reject().value(), [1, 3, 5]
-        )
-
-    def test_partition(self):
-        self.assertEquals(
-            self.qclass(1, 2, 3, 4, 5, 6).tap(
-                lambda x: x % 2 == 0
-            ).partition().value(), [[1, 3, 5], [2, 4, 6]]
-        )
-
-    def test_compact(self):
-        self.assertEqual(
-            self.qclass(0, 1, False, 2, '', 3).compact().value(),
-            [1, 2, 3],
-        )
-
-    def test_without(self):
-        self.assertEqual(
-            self.qclass(1, 2, 1, 0, 3, 1, 4).without(0, 1).value(),
-            [2, 3, 4],
-        )
-
-
 class ASliceQMixin(object):
 
     def test_first(self):
@@ -115,23 +72,23 @@ class ACollectQMixin(object):
         class stooges:
             name = 'moe'
             age = 40
-            def boo(self):
+            def boo(self):#@IgnorePep8
                 return 'boo'
-            def foo(self):
+            def foo(self):#@IgnorePep8
                 return 'foo'
         class stoog2: #@IgnorePep8
             name = 'larry'
             age = 50
-            def boo(self):
+            def boo(self):#@IgnorePep8
                 return 'boo'
-            def foo(self):
+            def foo(self):#@IgnorePep8
                 return 'foo'
         class stoog3: #@IgnorePep8
             name = 'curly'
             age = 60
-            def boo(self):
+            def boo(self):#@IgnorePep8
                 return 'boo'
-            def foo(self):
+            def foo(self):#@IgnorePep8
                 return 'foo'
         test = lambda x: not x[0].startswith('__')
         self.assertSequenceEqual(
@@ -140,7 +97,7 @@ class ACollectQMixin(object):
             ).tap(test).deepmembers().sync().value(),
             [('age', 40), ('boo', stooges.boo), ('foo', stooges.foo),
             ('name', 'moe'), ('age', 50), ('boo', stoog2.boo),
-            ('foo', stoog2.foo), ('name', 'larry'), ('age', 60), 
+            ('foo', stoog2.foo), ('name', 'larry'), ('age', 60),
             ('boo', stoog3.boo), ('foo', stoog3.foo), ('name', 'curly')],
         )
         from stuf.six import callable
@@ -209,6 +166,14 @@ class ASetQMixin(object):
             [1, 3, 4],
         )
 
+    def test_disjointed(self):
+        self.assertTrue(
+            self.qclass([1, 2, 3], [5, 4, 10]).disjointed().value()
+        )
+        self.assertFalse(
+            self.qclass([1, 2, 3], [5, 2, 10]).disjointed().value()
+        )
+
     def test_intersection(self):
         self.assertEqual(
             self.qclass(
@@ -219,7 +184,7 @@ class ASetQMixin(object):
     def test_union(self):
         self.assertEqual(
             self.qclass([1, 2, 3], [101, 2, 1, 10], [2, 1]).union().value(),
-            [1, 2, 3, 101, 10],
+            [1, 10, 3, 2, 101],
         )
 
     def test_unique(self):
@@ -233,9 +198,49 @@ class ASetQMixin(object):
         )
 
 
-class AFilterQMixin(AFilteringQMixin, ACollectQMixin, ASetQMixin, ASliceQMixin):
+class AFilterQMixin(ACollectQMixin, ASetQMixin, ASliceQMixin):
 
     '''combination mixin'''
+
+    def test_filter(self):
+        self.assertEquals(
+            self.qclass(1, 2, 3, 4, 5, 6).tap(
+                lambda x: x % 2 == 0
+            ).filter().value(), [2, 4, 6]
+        )
+
+    def test_find(self):
+        self.assertEquals(
+            self.qclass(1, 2, 3, 4, 5, 6).tap(
+                lambda x: x % 2 == 0
+            ).find().value(), 2,
+        )
+
+    def test_reject(self):
+        self.assertEquals(
+            self.qclass(1, 2, 3, 4, 5, 6).tap(
+                lambda x: x % 2 == 0
+            ).reject().value(), [1, 3, 5]
+        )
+
+    def test_partition(self):
+        self.assertEquals(
+            self.qclass(1, 2, 3, 4, 5, 6).tap(
+                lambda x: x % 2 == 0
+            ).partition().value(), [[1, 3, 5], [2, 4, 6]]
+        )
+
+    def test_compact(self):
+        self.assertEqual(
+            self.qclass(0, 1, False, 2, '', 3).compact().value(),
+            [1, 2, 3],
+        )
+
+    def test_without(self):
+        self.assertEqual(
+            self.qclass(1, 2, 1, 0, 3, 1, 4).without(0, 1).value(),
+            [2, 3, 4],
+        )
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
     name.startswith('_'), ismodule(obj), name in ['ismodule', 'port']

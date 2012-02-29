@@ -6,7 +6,28 @@ from inspect import ismodule
 from twoq.support import port
 
 
-class AOrderingQMixin(object):
+class ARandomQMixin(object):
+
+    def test_choice(self):
+        self.assertEqual(
+            len(self.qclass(1, 2, 3, 4, 5, 6).choice()), 1,
+        )
+
+    def test_sample(self):
+        self.assertEqual(
+            len(self.qclass(1, 2, 3, 4, 5, 6).sample(3).value()), 3,
+        )
+
+    def test_shuffle(self):
+        self.assertEqual(
+            len(self.qclass(1, 2, 3, 4, 5, 6).shuffle()),
+            len([5, 4, 6, 3, 1, 2]),
+        )
+
+
+class AOrderQMixin(ARandomQMixin):
+
+    '''combination mixin'''
 
     def test_group(self,):
         from math import floor
@@ -45,29 +66,6 @@ class AOrderingQMixin(object):
             [2, 3, 4, 4, 6, 63, 65],
         )
 
-
-class ARandomQMixin(object):
-
-    def test_choice(self):
-        self.assertEqual(
-            len(self.qclass(1, 2, 3, 4, 5, 6).choice()), 1,
-        )
-
-    def test_sample(self):
-        self.assertEqual(
-            len(self.qclass(1, 2, 3, 4, 5, 6).sample(3).value()), 3,
-        )
-
-    def test_shuffle(self):
-        self.assertEqual(
-            len(self.qclass(1, 2, 3, 4, 5, 6).shuffle()),
-            len([5, 4, 6, 3, 1, 2]),
-        )
-
-
-class AOrderQMixin(AOrderingQMixin, ARandomQMixin):
-
-    '''combination mixin'''
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
     name.startswith('_'), ismodule(obj), name in ['ismodule', 'port']

@@ -6,57 +6,6 @@ from inspect import ismodule
 from twoq.support import port
 
 
-class AMappingQMixin(object):
-
-    def test_wrap(self):
-        from stuf import stuf
-        self.assertDictEqual(
-            self.qclass(
-                ('a', 1), ('b', 2), ('c', 3)
-            ).reup().wrap(stuf).map().value(),
-            stuf(a=1, b=2, c=3),
-        )
-
-    def test_each(self):
-        def test(*args, **kw):
-            return sum(args) * kw['a']
-        self.assertEquals(
-            self.qclass(
-                ((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})
-            ).tap(test).each().value(),
-            [6, 10, 14],
-        )
-
-    def test_map(self):
-        self.assertEquals(
-            self.qclass(1, 2, 3).tap(lambda x: x * 3).map().value(), [3, 6, 9],
-        )
-        
-    def test_starmap(self):
-        self.assertEquals(
-            self.qclass(
-                (1, 2), (2, 3), (3, 4)
-            ).tap(lambda x, y: x * y).starmap().value(), [2, 6, 12],
-        )
-
-    def test_items(self):
-        self.assertEquals(
-            self.qclass(
-                dict([(1, 2), (2, 3), (3, 4)]), dict([(1, 2), (2, 3), (3, 4)])
-            ).tap(lambda x, y: x * y).items().value(), [2, 6, 12, 2, 6, 12],
-        )
-
-    def test_invoke(self):
-        self.assertEquals(
-            self.qclass([5, 1, 7], [3, 2, 1]).args(1).invoke('index').value(),
-            [1, 2],
-        )
-        self.assertEquals(
-            self.qclass([5, 1, 7], [3, 2, 1]).invoke('sort').value(),
-            [[1, 5, 7], [1, 2, 3]],
-        )
-        
- 
 class ACopyQMixin(object):
 
     def test_copy(self):
@@ -138,9 +87,56 @@ class ADelayQMixin(object):
         )
 
 
-class AMapQMixin(ACopyQMixin, ADelayQMixin, AMappingQMixin, ARepeatQMixin):
-    
-    '''combination mixin'''
+class AMapQMixin(ACopyQMixin, ADelayQMixin, ARepeatQMixin):
+
+    def test_wrap(self):
+        from stuf import stuf
+        self.assertDictEqual(
+            self.qclass(
+                ('a', 1), ('b', 2), ('c', 3)
+            ).reup().wrap(stuf).map().value(),
+            stuf(a=1, b=2, c=3),
+        )
+
+    def test_each(self):
+        def test(*args, **kw):
+            return sum(args) * kw['a']
+        self.assertEquals(
+            self.qclass(
+                ((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})
+            ).tap(test).each().value(),
+            [6, 10, 14],
+        )
+
+    def test_map(self):
+        self.assertEquals(
+            self.qclass(1, 2, 3).tap(lambda x: x * 3).map().value(), [3, 6, 9],
+        )
+
+    def test_starmap(self):
+        self.assertEquals(
+            self.qclass(
+                (1, 2), (2, 3), (3, 4)
+            ).tap(lambda x, y: x * y).starmap().value(), [2, 6, 12],
+        )
+
+    def test_items(self):
+        self.assertEquals(
+            self.qclass(
+                dict([(1, 2), (2, 3), (3, 4)]), dict([(1, 2), (2, 3), (3, 4)])
+            ).tap(lambda x, y: x * y).items().value(), [2, 6, 12, 2, 6, 12],
+        )
+
+    def test_invoke(self):
+        self.assertEquals(
+            self.qclass([5, 1, 7], [3, 2, 1]).args(1).invoke('index').value(),
+            [1, 2],
+        )
+        self.assertEquals(
+            self.qclass([5, 1, 7], [3, 2, 1]).invoke('sort').value(),
+            [[1, 5, 7], [1, 2, 3]],
+        )
+
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
     name.startswith('_'), ismodule(obj), name in ['ismodule', 'port']

@@ -6,6 +6,7 @@ try:
 except ImportError:
     import unittest
 
+from twoq.tests.mixins.man.manning import Manning
 from twoq.tests.mixins.man.queuing import MQMixin
 from twoq.tests.mixins.man.mapping import MMapQMixin
 from twoq.tests.mixins.man.ordering import MOrderQMixin
@@ -14,8 +15,7 @@ from twoq.tests.mixins.man.filtering import MFilterQMixin
 
 
 class TestManQ(
-    unittest.TestCase, MQMixin, MFilterQMixin, MMapQMixin, MReduceQMixin,
-    MOrderQMixin,
+    Manning, MQMixin, MFilterQMixin, MMapQMixin, MReduceQMixin, MOrderQMixin,
 ):
 
     def setUp(self):

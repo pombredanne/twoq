@@ -7,10 +7,11 @@ except ImportError:
 
 #pylint: disable-msg=w0614,w0401
 from twoq.tests.mixins.man.mapping import *  # @UnusedWildImport
+from twoq.tests.mixins.man.manning import Manning
 from twoq.tests.mixins.man.queuing import MQMixin
 
 
-class TestManMap(unittest.TestCase, MQMixin, MMapQMixin):
+class TestManMap(Manning, MQMixin, MMapQMixin):
 
     def setUp(self):
         from twoq.active.mapping import mmapq
@@ -18,7 +19,7 @@ class TestManMap(unittest.TestCase, MQMixin, MMapQMixin):
 
 
 class TestManRepeatQ(
-    unittest.TestCase, MQMixin, MRepeatQMixin
+    Manning, MQMixin, MRepeatQMixin
 ):
 
     def setUp(self):
@@ -26,7 +27,7 @@ class TestManRepeatQ(
         self.qclass = mrepeatq
 
 
-class TestManDelayQ(unittest.TestCase, MQMixin, MDelayQMixin):
+class TestManDelayQ(Manning, MQMixin, MDelayQMixin):
 
     def setUp(self):
         from twoq.active.mapping import mdelayq

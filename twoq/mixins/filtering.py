@@ -168,19 +168,35 @@ class SetMixin(local):
     def difference(self):
         '''difference between incoming things'''
         with self._sync as sync:
+            sync(ireduce(lambda x, y: set(x).difference(y), sync.iterable))
+        return self
+
+    _odifference = difference
+
+    def symmetric_difference(self):
+        '''symettric difference between incoming things'''
+        with self._sync as sync:
             sync(ireduce(
-                lambda x, y: set(x).difference(set(y)), sync.iterable,
+                lambda x, y: set(x).symmetric_difference(y), sync.iterable,
             ))
         return self
 
     _odifference = difference
 
+    def disjointed(self):
+        '''disjoint between incoming things'''
+        with self._sync as sync:
+            sync.append(
+                ireduce(lambda x, y: set(x).isdisjoint(y), sync.iterable)
+            )
+        return self
+
+    _disjointed = disjointed
+
     def intersection(self):
         '''intersection between incoming things'''
         with self._sync as sync:
-            sync(ireduce(
-                lambda x, y: set(x).intersection(set(y)), sync.iterable,
-            ))
+            sync(ireduce(lambda x, y: set(x).intersection(y), sync.iterable))
         return self
 
     _ointersection = intersection
@@ -188,10 +204,28 @@ class SetMixin(local):
     def union(self):
         '''union between incoming things'''
         with self._sync as sync:
-            sync(ireduce(lambda x, y: set(x).union(set(y)), sync.iterable))
+            sync(ireduce(lambda x, y: set(x).union(y), sync.iterable))
         return self
 
     _ounion = union
+
+    def subset(self):
+        '''incoming things are subsets of incoming things'''
+        with self._sync as sync:
+            sync.append(
+                ireduce(lambda x, y: set(x).issubset(y), sync.iterable)
+            )
+        return self
+
+    def superset(self):
+        '''incoming things are supersets of incoming things'''
+        with self._sync as sync:
+            sync.append(
+                ireduce(lambda x, y: set(x).issubset(y), sync.iterable)
+            )
+        return self
+
+    _superset = superset
 
     def unique(self):
         '''
