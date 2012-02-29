@@ -62,8 +62,8 @@ class baseq(QueueingMixin):
     ## queue information ######################################################
     ###########################################################################
 
-    def __contains__(self, value):
-        return value in self.incoming
+    def __contains__(self, thing):
+        return thing in self.incoming
 
     _oicontains = __contains__
 
@@ -73,7 +73,7 @@ class baseq(QueueingMixin):
     count = _oicount = __len__
 
     def outcount(self):
-        '''count of outgoing items'''
+        '''count of outgoing things'''
         return len(self.outgoing)
 
     _ooutcount = outcount
@@ -96,7 +96,7 @@ class baseq(QueueingMixin):
     _oindex = index
 
     def end(self):
-        '''return outgoing things and clear'''
+        '''return outgoing things and clear out all things'''
         results = self.pop() if len(
             self.outgoing
         ) == 1 else list(self.outgoing)
@@ -106,7 +106,7 @@ class baseq(QueueingMixin):
     _ofinal = end
 
     def results(self):
-        '''iterate over reversed outgoing things, clearing as it goes'''
+        '''yield outgoing things and clear outgoing things'''
         for thing in iterexcept(self.outgoing.popleft, IndexError):
             yield thing
 
@@ -123,7 +123,7 @@ class baseq(QueueingMixin):
     _ovalue = value
 
     def first(self):
-        '''first thing among incoming things'''
+        '''first incoming thing'''
         with self._sync as sync:
             sync.append(sync.iterable.popleft())
         return self
@@ -131,7 +131,7 @@ class baseq(QueueingMixin):
     _ofirst = first
 
     def last(self):
-        '''last thing among incoming things'''
+        '''last incoming thing'''
         with self._sync as sync:
             sync.append(sync.iterable.pop())
         return self
@@ -166,7 +166,7 @@ class baseq(QueueingMixin):
     _oiremove = remove
 
     def clear(self):
-        '''clear all queues'''
+        '''clear every thing'''
         self._call = None
         self._outclear()
         self._inclear()
@@ -175,14 +175,14 @@ class baseq(QueueingMixin):
     _oclear = clear
 
     def inclear(self):
-        '''incoming things clear'''
+        '''clear incoming things'''
         self._inclear()
         return self
 
     _oiclear = inclear
 
     def outclear(self):
-        '''incoming things clear'''
+        '''clear outgoing things'''
         self._inclear()
         return self
 
@@ -193,20 +193,28 @@ class baseq(QueueingMixin):
     ###########################################################################
 
     def append(self, thing):
-        '''incoming things right append'''
+        '''
+        append thing to right side of incoming things
+
+        @param thing: some thing
+        '''
         self._inappend(thing)
         return self
 
     _oappend = append
 
     def appendleft(self, thing):
-        '''incoming things left append'''
+        '''
+        append `thing` to left side of incoming things
+
+        @param thing: some thing
+        '''
         self._inappendleft(thing)
         return self
 
     _oappendleft = appendleft
 
-    def insert(self, index, value):
+    def insert(self, index, thing):
         '''
         insert thing into incoming things
 
@@ -215,21 +223,29 @@ class baseq(QueueingMixin):
         '''
         incoming = self.incoming
         incoming.rotate(-index)
-        incoming.appendleft(value)
+        incoming.appendleft(thing)
         incoming.rotate(index)
         return self
 
     _oinsert = insert
 
     def extend(self, things):
-        '''incoming things right extend'''
+        '''
+        extend right side of incoming things with `things`
+
+        @param thing: some things
+        '''
         self._inextend(things)
         return self
 
     _oextend = extend
 
     def extendleft(self, things):
-        '''incoming things left extend'''
+        '''
+        extend left side of incoming things with `things`
+
+        @param thing: some things
+        '''
         self._inextendleft(things)
         return self
 
@@ -258,9 +274,9 @@ class baseq(QueueingMixin):
         '''
         shift outgoing things to incoming things, clearing incoming things
         '''
-        # clear incoming items
+        # clear incoming things
         self._inclear()
-        # extend incoming items with outgoing items
+        # extend incoming things with outgoing things
         self._inextend(self.outgoing)
         return self
 
@@ -268,7 +284,7 @@ class baseq(QueueingMixin):
 
     def outshift(self):
         '''shift incoming things to outgoing things'''
-        # extend incoming items with outgoing items
+        # extend incoming things with outgoing things
         self._outextend(self.incoming)
         return self
 
@@ -278,9 +294,9 @@ class baseq(QueueingMixin):
         '''
         shift incoming things to outgoing things, clearing outgoing things
         '''
-        # clear incoming items
+        # clear incoming things
         self._outclear()
-        # extend incoming items with outgoing items
+        # extend incoming things with outgoing things
         self._outextend(self.incoming)
         return self
 

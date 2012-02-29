@@ -115,10 +115,10 @@ def unique(iterable, key=None):
 
 class CollectMixin(local):
 
-    '''gathering mixin'''
+    '''collecting mixin'''
 
     def deepmembers(self):
-        '''collect members of incoming things and their bases'''
+        '''collect object members from incoming things and their bases'''
         _mz = partial(mfilter, self._call)
         with self._sync as sync:
             if ct.port.PY3:
@@ -136,7 +136,7 @@ class CollectMixin(local):
     _odeepmembers = deepmembers
 
     def members(self):
-        '''collect members of incoming things'''
+        '''collect object members from incoming things'''
         _mz = partial(mfilter, self._call)
         with self._sync as sync:
             sync(chain_iter(ct.map(_mz, sync.iterable)))
@@ -145,7 +145,7 @@ class CollectMixin(local):
     _omembers = members
 
     def pick(self, *names):
-        '''attributes of incoming things by attribute `*names`'''
+        '''collect object attributes from incoming things by their `*names`'''
         with self._sync as sync:
             sync(pick(names, sync.iterable))
         return self
@@ -153,7 +153,7 @@ class CollectMixin(local):
     _opick = pick
 
     def pluck(self, *keys):
-        '''items of incoming things by item `*keys`'''
+        '''collect object items from incoming things by item `*keys`'''
         with self._sync as sync:
             sync(pluck(keys, sync.iterable))
         return self
@@ -211,7 +211,7 @@ class SliceMixin(local):
 
     def nth(self, n, default=None):
         '''
-        nth incoming thing or default thing
+        `nth` incoming thing or default thing
 
         @param n: number of things
         @param default: default thing (default: None)
@@ -296,9 +296,7 @@ class FilterMixin(CollectMixin, SetMixin, SliceMixin):
     def partition(self):
         '''
         split incoming things into `True` and `False` things based on results
-        of callable
-
-        @param test: a test
+        of call
         '''
         with self._sync as sync:
             call = self._call

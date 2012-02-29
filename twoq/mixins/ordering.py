@@ -15,7 +15,7 @@ class RandomMixin(local):
     '''random mixin'''
 
     def choice(self):
-        '''random choice from incoming things'''
+        '''random choice of/from incoming things'''
         with self._sync as sync:
             sync.append(choice(list(sync.iterable)))
         return self
@@ -26,7 +26,7 @@ class RandomMixin(local):
         '''
         random sampling drawn from `n` incoming things
 
-        @param n: number of things
+        @param n: number of incoming things
         '''
         with self._sync as sync:
             sync(sample(list(sync.iterable), n))
@@ -35,7 +35,7 @@ class RandomMixin(local):
     _osample = sample
 
     def shuffle(self):
-        '''shuffle incoming things'''
+        '''randomly order incoming things'''
         with self._sync as sync:
             iterable = list(sync.iterable)
             shuffle(iterable)
@@ -50,7 +50,7 @@ class OrderMixin(RandomMixin):
     '''ordering mixin'''
 
     def group(self):
-        '''group incoming things using _call for key function'''
+        '''group incoming things using call for key function'''
         with self._sync as sync:
             if self._call is None:
                 sync(ct.map(
@@ -67,13 +67,11 @@ class OrderMixin(RandomMixin):
 
     def grouper(self, n, fill=None):
         '''
-        split incoming things into sequences of length `n`, using fill thing to
-        pad out incomplete sequences
+        split incoming things into sequences of length `n`, using `fill` thing
+        to pad incomplete sequences
 
         @param n: number of things
         @param fill: fill thing (default: None)
-
-        grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
         '''
         with self._sync as sync:
             sync(ct.zip_longest(fillvalue=fill, *[iter(sync.iterable)] * n))

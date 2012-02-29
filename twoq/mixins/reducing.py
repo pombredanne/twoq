@@ -67,11 +67,7 @@ class MathMixin(local):
     _oaverage = average
 
     def fsum(self):
-        '''
-        add incoming things together
-
-        @param start: starting number (default: 0)
-        '''
+        '''add incoming things together'''
         with self._sync as sync:
             sync.append(fsum(sync.iterable))
         return self
@@ -79,7 +75,7 @@ class MathMixin(local):
     _ofsum = average
 
     def max(self):
-        '''find maximum value in incoming things using call for key function'''
+        '''find maximum thing in incoming things using call as key function'''
         with self._sync as sync:
             if self._call is None:
                 sync.append(max(sync.iterable))
@@ -90,7 +86,7 @@ class MathMixin(local):
     _omax = max
 
     def median(self):
-        '''mean of incoming things'''
+        '''mean of all incoming things'''
         with self._sync as sync:
             i = list(sorted(sync.iterable))
             e = truediv(len(i) - 1, 2)
@@ -101,7 +97,7 @@ class MathMixin(local):
     _omedian = median
 
     def min(self):
-        '''find minimum value in incoming things using call for key function'''
+        '''find minimum thing in incoming things using call as key function'''
         with self._sync as sync:
             if self._call is None:
                 sync.append(min(sync.iterable))
@@ -112,7 +108,7 @@ class MathMixin(local):
     _omin = min
 
     def minmax(self):
-        '''minimum and maximum values among incoming things'''
+        '''minimum and maximum things among all incoming things'''
         with self._sync as sync:
             iterable1, iterable2 = tee(sync.iterable)
             sync(iter([min(iterable1), max(iterable2)]))
@@ -121,7 +117,7 @@ class MathMixin(local):
     _minmax = minmax
 
     def mode(self):
-        '''mode of incoming things'''
+        '''mode of all incoming things'''
         with self._sync as sync:
             sync.append(ct.Counter(sync.iterable).most_common(1)[0][0])
         return self
@@ -145,7 +141,7 @@ class MathMixin(local):
     _ofrequency = frequency
 
     def statrange(self):
-        '''statistical range of incoming things'''
+        '''statistical range of all incoming things'''
         with self._sync as sync:
             iterz = list(sorted(sync.iterable))
             sync.append(iterz[-1] - iterz[0])
@@ -155,7 +151,7 @@ class MathMixin(local):
 
     def sum(self, start=0):
         '''
-        add incoming things together
+        add all incoming things together
 
         @param start: starting number (default: 0)
         '''
@@ -199,7 +195,7 @@ class TruthMixin(local):
     _ocontains = contains
 
     def quantify(self):
-        '''how many times call is True for incoming things'''
+        '''how many times call is `True` for incoming things'''
         with self._sync as sync:
             sync.append(sum(ct.map(self._call, sync.iterable)))
         return self
@@ -212,7 +208,7 @@ class ReduceMixin(MathMixin, TruthMixin):
     '''reducing mixin'''
 
     def merge(self):
-        '''flatten nested and ordered incoming things'''
+        '''flatten nested but ordered incoming things'''
         with self._sync as sync:
             sync(merge(*sync.iterable))
         return self
@@ -228,11 +224,7 @@ class ReduceMixin(MathMixin, TruthMixin):
     _osmash = flatten = smash
 
     def pairwise(self):
-        '''
-        every two incoming things as a tuple
-
-        s -> (s0,s1), (s1,s2), (s2, s3), ...
-        '''
+        '''every two incoming things as a tuple'''
         with self._sync as sync:
             a, b = tee(sync.iterable)
             next(b, None)
@@ -243,7 +235,8 @@ class ReduceMixin(MathMixin, TruthMixin):
 
     def reduce(self, initial=None):
         '''
-        reduce incoming things to one thing using call
+        reduce incoming things to one thing using call (from left side of
+        incoming things)
 
         @param initial: initial thing (default: None)
         '''
@@ -258,7 +251,8 @@ class ReduceMixin(MathMixin, TruthMixin):
 
     def reduce_right(self, initial=None):
         '''
-        reduce incoming things to one thing from right side using call
+        reduce incoming things to one thing from right side of incoming things
+        using call
 
         @param initial: initial thing (default: None)
         '''
@@ -274,11 +268,7 @@ class ReduceMixin(MathMixin, TruthMixin):
     _oreduce_right = reduce_right
 
     def roundrobin(self):
-        '''
-        interleave incoming things into one thing e.g.
-
-        roundrobin('ABC', 'D', 'EF') --> A D E B F C
-        '''
+        '''interleave incoming things into one thing'''
         with self._sync as sync:
             sync(roundrobin(sync.iterable))
         return self
@@ -287,7 +277,7 @@ class ReduceMixin(MathMixin, TruthMixin):
 
     def zip(self):
         '''
-        smash incoming things into single thing, pairing things by iterable
+        smash incoming things into one single thing, pairing things by iterable
         position
         '''
         with self._sync as sync:

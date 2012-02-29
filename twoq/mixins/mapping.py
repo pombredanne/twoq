@@ -80,8 +80,8 @@ class DelayMixin(local):
 
     def delay_each(self, wait):
         '''
-        invoke call with passed arguments, keywords in incoming things after a
-        delay
+        invoke call with passed arguments, keywords in incoming things after
+        delay `wait`
 
         @param wait: time in seconds
         '''
@@ -94,8 +94,9 @@ class DelayMixin(local):
 
     def delay_invoke(self, name, wait):
         '''
-        invoke call on each incoming thing with passed arguments, keywords
-        after a delay but return incoming thing instead if call returns None
+        invoke method `name` on each incoming thing with passed arguments,
+        keywords after delay `wait` but return incoming thing instead if method
+        returns `None`
 
         @param name: name of method
         @param wait: time in seconds
@@ -110,7 +111,7 @@ class DelayMixin(local):
 
     def delay_map(self, wait):
         '''
-        invoke call on each incoming thing after a delay
+        invoke call on each incoming thing after delay `wait`
 
         @param wait: time in seconds
         '''
@@ -124,7 +125,7 @@ class DelayMixin(local):
 
 class CopyMixin(local):
 
-    '''duplication mixin'''
+    '''copy mixin'''
 
     def copy(self):
         '''copy each incoming thing'''
@@ -148,11 +149,7 @@ class RepeatMixin(local):
     '''repetition mixin'''
 
     def padnone(self):
-        '''
-        incoming things and then `None` indefinitely
-
-        (Useful for emulating the behavior of 2.x classic `builtin` `map`)
-        '''
+        '''incoming things and then `None` indefinitely'''
         with self._sync as sync:
             sync.iter(chain(sync.iterable, repeat(None)))
         return self
@@ -161,7 +158,7 @@ class RepeatMixin(local):
 
     def range(self, start, stop=0, step=1):
         '''
-        repeat incoming things `n` times
+        put sequence of numbers in incoming things
 
         @param start: number to start with
         @param stop: number to stop with (default: 0)
@@ -190,9 +187,10 @@ class RepeatMixin(local):
 
     def times(self, n=None):
         '''
-        repeat call with passed arguments
+        repeat call with incoming things `n` times
 
-        @param n: number of times to repeat calls (default: None)
+        @param n: number of times to repeat calls with incoming things
+            (default: None)
         '''
         with self._sync as sync:
             if n is None:
@@ -218,8 +216,8 @@ class MapMixin(DelayMixin, CopyMixin, RepeatMixin):
 
     def invoke(self, name):
         '''
-        invoke call on each incoming thing with passed arguments, keywords
-        but return incoming thing instead if call returns None
+        invoke method `name` on each incoming thing with passed arguments,
+        keywords but return incoming thing instead if method returns `None`
 
         @param name: name of method
         '''
@@ -248,7 +246,7 @@ class MapMixin(DelayMixin, CopyMixin, RepeatMixin):
     _omap = map
 
     def starmap(self):
-        '''invoke call on each incoming pair of things'''
+        '''invoke call on each sequence of incoming things'''
         with self._sync as sync:
             sync(starmap(self._call, sync.iterable))
         return self
