@@ -19,75 +19,61 @@ class MMathQMixin(object):
         self.assertFalse(manq.balanced)
         manq.sync()
         self.assertTrue(manq.balanced)
-        self.assertEquals(
-            stuf(manq.value()), stuf(name='curly', age=60),
-        )
+        self.assertEqual(stuf(manq.value()), stuf(name='curly', age=60))
         self.assertFalse(manq.balanced)
         self._false_true_false(
-            self.qclass(1, 2, 4).max(),
-            self.assertEquals,
-            4
+            self.qclass(1, 2, 4).max(), self.assertEqual, 4,
         )
 
     def test_min(self):
         self._false_true_false(
             self.qclass(10, 5, 100, 2, 1000).min(),
-            self.assertEquals,
+            self.assertEqual,
             2,
         )
         self._false_true_false(
             self.qclass(10, 5, 100, 2, 1000).tap(lambda x: x).min(),
-            self.assertEquals,
-            2
+            self.assertEqual,
+            2,
         )
 
     def test_minmax(self):
         self._false_true_false(
-            self.qclass(1, 2, 4).minmax(),
-            self.assertEquals,
-            [1, 4],
+            self.qclass(1, 2, 4).minmax(), self.assertEqual, [1, 4],
         )
         self._false_true_false(
             self.qclass(10, 5, 100, 2, 1000).minmax(),
-            self.assertEquals,
-            [2, 1000]
+            self.assertEqual,
+            [2, 1000],
         )
 
     def test_sum(self):
         self._false_true_false(
-            self.qclass(1, 2, 3).sum(),
-            self.assertEquals,
-            6
+            self.qclass(1, 2, 3).sum(), self.assertEqual, 6,
         )
         self._false_true_false(
-            self.qclass(1, 2, 3).sum(1),
-            self.assertEquals,
-            7
+            self.qclass(1, 2, 3).sum(1), self.assertEqual, 7,
         )
 
     def test_mode(self):
         self._false_true_false(
             self.qclass(11, 3, 5, 11, 7, 3, 11).mode(),
-            self.assertEquals,
-            11
+            self.assertEqual,
+            11,
         )
 
     def test_median(self):
         self._false_true_false(
-            self.qclass(4, 5, 7, 2, 1).median(),
-            self.assertEquals,
-            4
+            self.qclass(4, 5, 7, 2, 1).median(), self.assertEqual, 4,
         )
         self._false_true_false(
-            self.qclass(4, 5, 7, 2, 1, 8).median(),
-            self.assertEquals,
-            4.5
+            self.qclass(4, 5, 7, 2, 1, 8).median(), self.assertEqual, 4.5,
         )
 
     def test_fsum(self):
         self._false_true_false(
             self.qclass(.1, .1, .1, .1, .1, .1, .1, .1, .1, .1).fsum(),
-            self.assertEquals,
+            self.assertEqual,
             1.0,
         )
 
@@ -95,21 +81,21 @@ class MMathQMixin(object):
         self._false_true_false(
             self.qclass(10, 40, 45).average(),
             self.assertEqual,
-            31.666666666666668
+            31.666666666666668,
         )
 
     def test_uncommon(self):
         self._false_true_false(
             self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon(),
             self.assertEqual,
-            7
+            7,
         )
 
     def test_frequency(self):
         self._false_true_false(
             self.qclass(11, 3, 5, 11, 7, 3, 11).frequency(),
             self.assertEqual,
-            [(11, 3), (3, 2), (5, 1), (7, 1)]
+            [(11, 3), (3, 2), (5, 1), (7, 1)],
         )
 
     def test_statrange(self):
@@ -136,8 +122,7 @@ class MTruthQMixin(object):
 
     def test_include(self):
         self._false_true_false(
-            self.qclass(1, 2, 3).contains(3),
-            self.assertTrue
+            self.qclass(1, 2, 3).contains(3), self.assertTrue,
         )
 
     def test_quantify(self):
@@ -147,10 +132,9 @@ class MTruthQMixin(object):
             3,
         )
         self._false_true_false(
-            self.qclass(
-                None, 0, 'yes', False).tap(bool).quantify(),
+            self.qclass(None, 0, 'yes', False).tap(bool).quantify(),
             self.assertEqual,
-            1
+            1,
         )
 
 
@@ -159,14 +143,14 @@ class MReduceQMixin(MMathQMixin, MTruthQMixin):
     def test_smash(self):
         self._false_true_false(
             self.qclass([[1, [2], [3, [[4]]]]]).smash(),
-            self.assertEquals,
+            self.assertEqual,
             [1, 2, 3, 4],
         )
 
     def test_merge(self):
         self._false_true_false(
             self.qclass([4, 5, 6], [1, 2, 3]).merge(),
-            self.assertEquals,
+            self.assertEqual,
             [1, 2, 3, 4, 5, 6],
         )
 
@@ -175,7 +159,7 @@ class MReduceQMixin(MMathQMixin, MTruthQMixin):
             self.qclass(
                 'moe', 30, True, 'larry', 40, False, 'curly', 50, 1, 1,
             ).pairwise(),
-            self.assertEquals,
+            self.assertEqual,
             [('moe', 30), (30, True), (True, 'larry'), ('larry', 40),
             (40, False), (False, 'curly'), ('curly', 50), (50, 1), (1, 1)]
         )
@@ -183,12 +167,12 @@ class MReduceQMixin(MMathQMixin, MTruthQMixin):
     def test_reduce(self):
         self._false_true_false(
             self.qclass(1, 2, 3).tap(lambda x, y: x + y).reduce(),
-            self.assertEquals,
+            self.assertEqual,
             6,
         )
         self._false_true_false(
             self.qclass(1, 2, 3).tap(lambda x, y: x + y).reduce(1),
-            self.assertEquals,
+            self.assertEqual,
             7,
         )
 
@@ -197,14 +181,14 @@ class MReduceQMixin(MMathQMixin, MTruthQMixin):
             self.qclass([0, 1], [2, 3], [4, 5]).tap(
                 lambda x, y: x + y
             ).reduce_right(),
-            self.assertListEqual,
+            self.assertEqual,
              [4, 5, 2, 3, 0, 1],
         )
         self._false_true_false(
             self.qclass([0, 1], [2, 3], [4, 5]).tap(
                 lambda x, y: x + y
             ).reduce_right([0, 0]),
-            self.assertListEqual,
+            self.assertEqual,
             [4, 5, 2, 3, 0, 1, 0, 0],
         )
 
@@ -220,7 +204,7 @@ class MReduceQMixin(MMathQMixin, MTruthQMixin):
     def test_zip(self):
         self._true_true_false(
             self.qclass(
-                ['moe', 'larry', 'curly'], [30, 40, 50], [True, False, False]
+                ['moe', 'larry', 'curly'], [30, 40, 50], [True, False, False],
             ).zip(),
             self.assertEqual,
             [('moe', 30, True), ('larry', 40, False), ('curly', 50, False)],

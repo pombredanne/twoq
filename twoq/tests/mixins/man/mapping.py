@@ -78,14 +78,14 @@ class MDelayQMixin(object):
             self.qclass(
                 ((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})
             ).tap(test).delay_each(0.5),
-            self.assertEquals,
+            self.assertEqual,
             [6, 10, 14],
         )
 
     def test_delay_map(self):
         self._true_true_false(
             self.qclass(1, 2, 3).tap(lambda x: x * 3).delay_map(0.1),
-            self.assertEquals,
+            self.assertEqual,
             [3, 6, 9],
         )
 
@@ -94,12 +94,12 @@ class MDelayQMixin(object):
             self.qclass(
                 [5, 1, 7], [3, 2, 1]
             ).args(1).delay_invoke('index', 0.5),
-            self.assertEquals,
+            self.assertEqual,
             [1, 2],
         )
         self._true_true_false(
             self.qclass([5, 1, 7], [3, 2, 1]).delay_invoke('sort', 0.1),
-            self.assertEquals,
+            self.assertEqual,
             [[1, 5, 7], [1, 2, 3]],
         )
 
@@ -120,14 +120,14 @@ class MMapQMixin(MCopyQMixin, MDelayQMixin, MRepeatQMixin):
             self.qclass(
                 ((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})
             ).tap(test).each(),
-            self.assertEquals,
+            self.assertEqual,
             [6, 10, 14],
         )
 
     def test_map(self):
         self._true_true_false(
             self.qclass(1, 2, 3).tap(lambda x: x * 3).map(),
-            self.assertEquals,
+            self.assertEqual,
             [3, 6, 9],
         )
 
@@ -143,7 +143,7 @@ class MMapQMixin(MCopyQMixin, MDelayQMixin, MRepeatQMixin):
     def test_items(self):
         self._false_true_false(
             self.qclass(
-            dict([(1, 2), (2, 3), (3, 4)]), dict([(1, 2), (2, 3), (3, 4)])
+                dict([(1, 2), (2, 3), (3, 4)]), dict([(1, 2), (2, 3), (3, 4)])
             ).tap(lambda x, y: x * y).items(),
             self.assertEqual,
             [2, 6, 12, 2, 6, 12],
@@ -152,15 +152,14 @@ class MMapQMixin(MCopyQMixin, MDelayQMixin, MRepeatQMixin):
     def test_invoke(self):
         self._true_true_false(
             self.qclass([5, 1, 7], [3, 2, 1]).args(1).invoke('index'),
-            self.assertEquals,
+            self.assertEqual,
             [1, 2],
         )
         self._true_true_false(
             self.qclass([5, 1, 7], [3, 2, 1]).invoke('sort'),
-            self.assertEquals,
+            self.assertEqual,
             [[1, 5, 7], [1, 2, 3]]
         )
-
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
     name.startswith('_'), ismodule(obj), name in ['ismodule', 'port']

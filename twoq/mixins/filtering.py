@@ -174,21 +174,21 @@ class SetMixin(local):
     _odifference = difference
 
     def symmetric_difference(self):
-        '''symettric difference between incoming things'''
+        '''symmetric difference between incoming things'''
         with self._sync as sync:
             sync(ireduce(
                 lambda x, y: set(x).symmetric_difference(y), sync.iterable,
             ))
         return self
 
-    _odifference = difference
+    _osymmetric_difference = symmetric_difference
 
     def disjointed(self):
         '''disjoint between incoming things'''
         with self._sync as sync:
-            sync.append(
-                ireduce(lambda x, y: set(x).isdisjoint(y), sync.iterable)
-            )
+            sync.append(ireduce(
+                lambda x, y: set(x).isdisjoint(y), sync.iterable,
+            ))
         return self
 
     _disjointed = disjointed
@@ -201,6 +201,26 @@ class SetMixin(local):
 
     _ointersection = intersection
 
+    def subset(self):
+        '''incoming things are subsets of incoming things'''
+        with self._sync as sync:
+            sync.append(ireduce(
+                lambda x, y: set(x).issubset(y), sync.iterable,
+            ))
+        return self
+    
+    _subset = subset
+
+    def superset(self):
+        '''incoming things are supersets of incoming things'''
+        with self._sync as sync:
+            sync.append(ireduce(
+                lambda x, y: set(x).issubset(y), sync.iterable
+            ))
+        return self
+
+    _superset = superset
+    
     def union(self):
         '''union between incoming things'''
         with self._sync as sync:
@@ -208,24 +228,6 @@ class SetMixin(local):
         return self
 
     _ounion = union
-
-    def subset(self):
-        '''incoming things are subsets of incoming things'''
-        with self._sync as sync:
-            sync.append(
-                ireduce(lambda x, y: set(x).issubset(y), sync.iterable)
-            )
-        return self
-
-    def superset(self):
-        '''incoming things are supersets of incoming things'''
-        with self._sync as sync:
-            sync.append(
-                ireduce(lambda x, y: set(x).issubset(y), sync.iterable)
-            )
-        return self
-
-    _superset = superset
 
     def unique(self):
         '''

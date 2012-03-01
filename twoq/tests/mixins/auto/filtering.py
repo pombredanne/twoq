@@ -203,28 +203,28 @@ class AFilterQMixin(ACollectQMixin, ASetQMixin, ASliceQMixin):
     '''combination mixin'''
 
     def test_filter(self):
-        self.assertEquals(
+        self.assertEqual(
             self.qclass(1, 2, 3, 4, 5, 6).tap(
                 lambda x: x % 2 == 0
             ).filter().value(), [2, 4, 6]
         )
 
     def test_find(self):
-        self.assertEquals(
+        self.assertEqual(
             self.qclass(1, 2, 3, 4, 5, 6).tap(
                 lambda x: x % 2 == 0
             ).find().value(), 2,
         )
 
     def test_reject(self):
-        self.assertEquals(
+        self.assertEqual(
             self.qclass(1, 2, 3, 4, 5, 6).tap(
                 lambda x: x % 2 == 0
             ).reject().value(), [1, 3, 5]
         )
 
     def test_partition(self):
-        self.assertEquals(
+        self.assertEqual(
             self.qclass(1, 2, 3, 4, 5, 6).tap(
                 lambda x: x % 2 == 0
             ).partition().value(), [[1, 3, 5], [2, 4, 6]]

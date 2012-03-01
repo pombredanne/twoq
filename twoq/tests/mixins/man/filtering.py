@@ -262,7 +262,7 @@ class MFilterQMixin(MCollectQMixin, MSetQMixin, MSliceQMixin):
                 1, 2, 3, 4, 5, 6
             ).tap(lambda x: x % 2 == 0).partition(),
             self.assertEqual,
-            [[1, 3, 5], [2, 4, 6]]
+            [[1, 3, 5], [2, 4, 6]],
         )
 
     def test_compact(self):

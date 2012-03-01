@@ -31,17 +31,17 @@ class AOrderQMixin(ARandomQMixin):
 
     def test_group(self,):
         from math import floor
-        self.assertEquals(
+        self.assertEqual(
         self.qclass(1.3, 2.1, 2.4).tap(lambda x: floor(x)).group().value(),
             [[1.0, [1.3]], [2.0, [2.1, 2.4]]]
         )
-        self.assertEquals(
+        self.assertEqual(
             self.qclass(1.3, 2.1, 2.4).group().value(),
             [[1.3, [1.3]], [2.1, [2.1]], [2.4, [2.4]]],
         )
 
     def test_grouper(self):
-        self.assertEquals(
+        self.assertEqual(
             self.qclass(
                 'moe', 'larry', 'curly', 30, 40, 50, True
             ).grouper(2, 'x').value(),
