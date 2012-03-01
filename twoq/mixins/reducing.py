@@ -12,6 +12,9 @@ from functools import partial, reduce as ireduce
 from twoq import support as ct
 
 __all__ = ('MathMixin', 'TruthMixin', 'ReduceMixin')
+Counter = ct.Counter
+_zip = zip
+_map = ct.map
 
 ###############################################################################
 ## reducing subroutines #######################################################
@@ -25,14 +28,16 @@ def roundrobin(iterable):
     @param iterable: an iterable
     '''
     pending = len(tee(iterable, 1))
-    nexts = cycle(partial(next, iter(i)) for i in iterable)
+    _cycle = cycle
+    _islice = islice
+    nexts = _cycle(partial(next, iter(i)) for i in iterable)
     while pending:
         try:
             for nextz in nexts:
                 yield nextz()
         except StopIteration:
             pending -= 1
-            nexts = cycle(islice(nexts, pending))
+            nexts = _cycle(_islice(nexts, pending))
 
 
 def smash(iterable):
@@ -41,9 +46,12 @@ def smash(iterable):
 
     @param iterable: an iterable
     '''
+    isstring = ct.port.isstring
+    _Iterable = Iterable
+    _smash = smash
     for i in iterable:
-        if isinstance(i, Iterable) and not ct.port.isstring(i):
-            for j in smash(i):
+        if isinstance(i, _Iterable) and not isstring(i):
+            for j in _smash(i):
                 yield j
         else:
             yield i
@@ -76,11 +84,12 @@ class MathMixin(local):
 
     def max(self):
         '''find maximum thing in incoming things using call as key function'''
+        call = self._call
         with self._sync as sync:
-            if self._call is None:
+            if call is None:
                 sync.append(max(sync.iterable))
             else:
-                sync.append(max(sync.iterable, key=self._call))
+                sync.append(max(sync.iterable, key=call))
         return self
 
     _omax = max
@@ -98,11 +107,12 @@ class MathMixin(local):
 
     def min(self):
         '''find minimum thing in incoming things using call as key function'''
+        call = self._call
         with self._sync as sync:
-            if self._call is None:
+            if call is None:
                 sync.append(min(sync.iterable))
             else:
-                sync.append(min(sync.iterable, key=self._call))
+                sync.append(min(sync.iterable, key=call))
         return self
 
     _omin = min
@@ -119,7 +129,7 @@ class MathMixin(local):
     def mode(self):
         '''mode of all incoming things'''
         with self._sync as sync:
-            sync.append(ct.Counter(sync.iterable).most_common(1)[0][0])
+            sync.append(Counter(sync.iterable).most_common(1)[0][0])
         return self
 
     _omode = mode
@@ -127,7 +137,7 @@ class MathMixin(local):
     def uncommon(self):
         '''least common incoming thing'''
         with self._sync as sync:
-            sync.append(ct.Counter(sync.iterable).most_common()[:-2:-1][0][0])
+            sync.append(Counter(sync.iterable).most_common()[:-2:-1][0][0])
         return self
 
     _ouncommon = uncommon
@@ -135,7 +145,7 @@ class MathMixin(local):
     def frequency(self):
         '''frequency of each incoming thing'''
         with self._sync as sync:
-            sync.append(ct.Counter(sync.iterable).most_common())
+            sync.append(Counter(sync.iterable).most_common())
         return self
 
     _ofrequency = frequency
@@ -168,16 +178,18 @@ class TruthMixin(local):
 
     def all(self):
         '''if `all` incoming things are `True`'''
+        call = self._call
         with self._sync as sync:
-            sync.append(all(ct.map(self._call, sync.iterable)))
+            sync.append(all(_map(call, sync.iterable)))
         return self
 
     _oall = all
 
     def any(self):
         '''if `any` incoming things are `True`'''
+        call = self._call
         with self._sync as sync:
-            sync.append(any(ct.map(self._call, sync.iterable)))
+            sync.append(any(_map(call, sync.iterable)))
         return self
 
     _oany = any
@@ -196,8 +208,9 @@ class TruthMixin(local):
 
     def quantify(self):
         '''how many times call is `True` for incoming things'''
+        call = self._call
         with self._sync as sync:
-            sync.append(sum(ct.map(self._call, sync.iterable)))
+            sync.append(sum(_map(call, sync.iterable)))
         return self
 
     _oquantify = quantify
@@ -228,7 +241,7 @@ class ReduceMixin(MathMixin, TruthMixin):
         with self._sync as sync:
             a, b = tee(sync.iterable)
             next(b, None)
-            sync(ct.zip(a, b))
+            sync(_zip(a, b))
         return self
 
     _opairwise = pairwise
@@ -240,11 +253,12 @@ class ReduceMixin(MathMixin, TruthMixin):
 
         @param initial: initial thing (default: None)
         '''
+        call = self._call
         with self._sync as sync:
             if initial:
-                sync.append(ireduce(self._call, sync.iterable, initial))
+                sync.append(ireduce(call, sync.iterable, initial))
             else:
-                sync.append(ireduce(self._call, sync.iterable))
+                sync.append(ireduce(call, sync.iterable))
         return self
 
     _oreduce = reduce
@@ -256,13 +270,12 @@ class ReduceMixin(MathMixin, TruthMixin):
 
         @param initial: initial thing (default: None)
         '''
+        call = self._call
         with self._sync as sync:
             if initial:
-                sync(ireduce(
-                    lambda x, y: self._call(y, x), sync.iterable, initial,
-                ))
+                sync(ireduce(lambda x, y: call(y, x), sync.iterable, initial))
             else:
-                sync(ireduce(lambda x, y: self._call(y, x), sync.iterable))
+                sync(ireduce(lambda x, y: call(y, x), sync.iterable))
         return self
 
     _oreduce_right = reduce_right
@@ -281,7 +294,7 @@ class ReduceMixin(MathMixin, TruthMixin):
         position
         '''
         with self._sync as sync:
-            sync(ct.zip(*sync.iterable))
+            sync(_zip(*sync.iterable))
         return self
 
     _ozip = zip

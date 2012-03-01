@@ -9,6 +9,7 @@ from twoq.support import port
 class AMathQMixin(object):
 
     def test_max(self):
+        self.assertEqual(self.qclass(1, 2, 4).max().value(), 4)
         from stuf import stuf
         stooges = [
             stuf(name='moe', age=40),
@@ -19,7 +20,6 @@ class AMathQMixin(object):
             stuf(self.qclass(*stooges).tap(lambda x: x.age).max().value()),
             stuf(name='curly', age=60),
         )
-        self.assertEqual(self.qclass(1, 2, 4).max().value(), 4)
 
     def test_min(self):
         self.assertEqual(self.qclass(10, 5, 100, 2, 1000).min().value(), 2)

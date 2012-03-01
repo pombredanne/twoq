@@ -13,6 +13,8 @@ from twoq import support as ct
 
 __all__ = ('DelayMixin', 'CopyMixin', 'RepeatMixin', 'MapMixin')
 chain_iter = chain.from_iterable
+_map = ct.map
+_xrange = ct.xrange
 
 ###############################################################################
 ## mapping subroutines ########################################################
@@ -104,7 +106,7 @@ class DelayMixin(local):
         _caller = methodcaller(name, *self._args, **self._kw)
         _call = partial(delay_invoke, wait=wait, caller=_caller)
         with self._sync as sync:
-            sync(ct.map(_call, sync.iterable))
+            sync(_map(_call, sync.iterable))
         return self
 
     _odelay_invoke = delay_invoke
@@ -117,7 +119,7 @@ class DelayMixin(local):
         '''
         _call = partial(delay_map, wait=wait, caller=self._call)
         with self._sync as sync:
-            sync(ct.map(_call, sync.iterable))
+            sync(_map(_call, sync.iterable))
         return self
 
     _odelay_map = delay_map
@@ -130,7 +132,7 @@ class CopyMixin(local):
     def copy(self):
         '''copy each incoming thing'''
         with self._sync as sync:
-            sync(ct.map(copy, sync.iterable))
+            sync(_map(copy, sync.iterable))
         return self
 
     _ocopy = copy
@@ -138,7 +140,7 @@ class CopyMixin(local):
     def deepcopy(self):
         '''copy each incoming thing deeply'''
         with self._sync as sync:
-            sync(ct.map(deepcopy, sync.iterable))
+            sync(_map(deepcopy, sync.iterable))
         return self
 
     _odeepcopy = deepcopy
@@ -166,9 +168,9 @@ class RepeatMixin(local):
         '''
         with self._sync as sync:
             if stop:
-                sync(ct.xrange(start, stop, step))
+                sync(_xrange(start, stop, step))
             else:
-                sync(ct.xrange(start))
+                sync(_xrange(start))
         return self
 
     _orange = range
@@ -192,11 +194,12 @@ class RepeatMixin(local):
         @param n: number of times to repeat calls with incoming things
             (default: None)
         '''
+        call = self._call
         with self._sync as sync:
             if n is None:
-                sync(starmap(self._call, repeat(list(sync.iterable))))
+                sync(starmap(call, repeat(list(sync.iterable))))
             else:
-                sync(starmap(self._call, repeat(list(sync.iterable), n)))
+                sync(starmap(call, repeat(list(sync.iterable), n)))
         return self
 
     _otimes = times
@@ -208,8 +211,9 @@ class MapMixin(DelayMixin, CopyMixin, RepeatMixin):
 
     def each(self):
         '''invoke call with passed arguments, keywords in incoming things'''
+        call = self._call
         with self._sync as sync:
-            sync(starmap(lambda x, y: self._call(*x, **y), sync.iterable))
+            sync(starmap(lambda x, y: call(*x, **y), sync.iterable))
         return self
 
     _oeach = each
@@ -224,31 +228,34 @@ class MapMixin(DelayMixin, CopyMixin, RepeatMixin):
         _caller = methodcaller(name, *self._args, **self._kw)
         _call = partial(invoke, caller=_caller)
         with self._sync as sync:
-            sync(ct.map(_call, sync.iterable))
+            sync(_map(_call, sync.iterable))
         return self
 
     _oinvoke = invoke
 
     def items(self):
         '''invoke call on each mapping to get key, value pairs'''
+        call = self._call
         with self._sync as sync:
-            sync(starmap(self._call, chain_iter(ct.map(items, sync.iterable))))
+            sync(starmap(call, chain_iter(_map(items, sync.iterable))))
         return self
 
     _ostarmap = items
 
     def map(self):
         '''invoke call on each incoming thing'''
+        call = self._call
         with self._sync as sync:
-            sync(ct.map(self._call, sync.iterable))
+            sync(_map(call, sync.iterable))
         return self
 
     _omap = map
 
     def starmap(self):
         '''invoke call on each sequence of incoming things'''
+        call = self._call
         with self._sync as sync:
-            sync(starmap(self._call, sync.iterable))
+            sync(starmap(call, sync.iterable))
         return self
 
     _ostarmap = starmap

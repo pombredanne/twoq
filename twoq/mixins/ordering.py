@@ -8,6 +8,8 @@ from random import choice, shuffle, sample
 from twoq import support as ct
 
 __all__ = ('OrderMixin', 'RandomMixin')
+_map = ct.map
+_zip_longest = ct.zip_longest
 
 
 class RandomMixin(local):
@@ -51,15 +53,15 @@ class OrderMixin(RandomMixin):
 
     def group(self):
         '''group incoming things using call for key function'''
+        call = self._call
         with self._sync as sync:
-            if self._call is None:
-                sync(ct.map(
+            if call is None:
+                sync(_map(
                     lambda x: [x[0], list(x[1])], groupby(sync.iterable)
                 ))
             else:
-                sync(ct.map(
-                    lambda x: [x[0], list(x[1])],
-                    groupby(sync.iterable, self._call),
+                sync(_map(
+                    lambda x: [x[0], list(x[1])], groupby(sync.iterable, call),
                 ))
         return self
 
@@ -74,7 +76,7 @@ class OrderMixin(RandomMixin):
         @param fill: fill thing (default: None)
         '''
         with self._sync as sync:
-            sync(ct.zip_longest(fillvalue=fill, *[iter(sync.iterable)] * n))
+            sync(_zip_longest(fillvalue=fill, *[iter(sync.iterable)] * n))
         return self
 
     _ogrouper = grouper
@@ -89,11 +91,12 @@ class OrderMixin(RandomMixin):
 
     def sort(self):
         '''sort incoming things using call for key function'''
+        call = self._call
         with self._sync as sync:
             if self._call is None:
                 sync(sorted(sync.iterable))
             else:
-                sync(sorted(sync.iterable, key=self._call))
+                sync(sorted(sync.iterable, key=call))
         return self
 
     _osort = sort

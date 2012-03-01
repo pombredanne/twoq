@@ -9,11 +9,14 @@ from twoq.support import port
 class MMathQMixin(object):
 
     def test_max(self):
+        self._false_true_false(
+            self.qclass(1, 2, 4).max(), self.assertEqual, 4,
+        )
         from stuf import stuf
         stooges = [
             stuf(name='moe', age=40),
             stuf(name='larry', age=50),
-            stuf(name='curly', age=60)
+            stuf(name='curly', age=60),
         ]
         manq = self.qclass(*stooges).tap(lambda x: x.age).max()
         self.assertFalse(manq.balanced)
@@ -21,9 +24,6 @@ class MMathQMixin(object):
         self.assertTrue(manq.balanced)
         self.assertEqual(stuf(manq.value()), stuf(name='curly', age=60))
         self.assertFalse(manq.balanced)
-        self._false_true_false(
-            self.qclass(1, 2, 4).max(), self.assertEqual, 4,
-        )
 
     def test_min(self):
         self._false_true_false(
