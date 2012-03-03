@@ -6,26 +6,26 @@ from inspect import ismodule
 from twoq.support import port
 from twoq.mixins.mapping import DelayMixin, CopyMixin, RepeatMixin, MapMixin
 
-from twoq.active.mixins import AutoQMixin, ManQMixin, SyncQMixin
+from twoq.active.mixins import AutoResultMixin, ManResultMixin, SyncResultMixin
 
 ###############################################################################
 ## active delayed map queues ##################################################
 ###############################################################################
 
 
-class adelayq(AutoQMixin, DelayMixin):
+class adelayq(AutoResultMixin, DelayMixin):
 
     '''auto-balanced delayed map queue'''
 
 delayq = adelayq
 
 
-class mdelayq(ManQMixin, DelayMixin):
+class mdelayq(ManResultMixin, DelayMixin):
 
     '''manually balanced delayed map queue'''
 
 
-class sdelayq(SyncQMixin, DelayMixin):
+class sdelayq(SyncResultMixin, DelayMixin):
 
     '''autosynchronized  delayed map queue'''
 
@@ -34,19 +34,19 @@ class sdelayq(SyncQMixin, DelayMixin):
 ###############################################################################
 
 
-class acopyq(AutoQMixin, CopyMixin):
+class acopyq(AutoResultMixin, CopyMixin):
 
     '''auto-balanced copy queue'''
 
 copyq = acopyq
 
 
-class mcopyq(ManQMixin, CopyMixin):
+class mcopyq(ManResultMixin, CopyMixin):
 
     '''manually balanced copy queue'''
 
 
-class scopyq(SyncQMixin, CopyMixin):
+class scopyq(SyncResultMixin, CopyMixin):
 
     '''autosynchronized copy queue'''
 
@@ -55,19 +55,19 @@ class scopyq(SyncQMixin, CopyMixin):
 ###############################################################################
 
 
-class arepeatq(AutoQMixin, RepeatMixin):
+class arepeatq(AutoResultMixin, RepeatMixin):
 
     '''auto-balanced repeat queue'''
 
 repeatq = arepeatq
 
 
-class mrepeatq(ManQMixin, RepeatMixin):
+class mrepeatq(ManResultMixin, RepeatMixin):
 
     '''manually balanced repeat queue'''
 
 
-class srepeatq(SyncQMixin, RepeatMixin):
+class srepeatq(SyncResultMixin, RepeatMixin):
 
     '''autosynchronized repeat queue'''
 
@@ -76,19 +76,19 @@ class srepeatq(SyncQMixin, RepeatMixin):
 ###############################################################################
 
 
-class amapq(AutoQMixin, MapMixin):
+class amapq(AutoResultMixin, MapMixin):
 
     '''auto-balanced map queue'''
 
 mapq = amapq
 
 
-class mmapq(ManQMixin, MapMixin):
+class mmapq(ManResultMixin, MapMixin):
 
     '''manually balanced map queue'''
 
 
-class smapq(SyncQMixin, MapMixin):
+class smapq(SyncResultMixin, MapMixin):
 
     '''autosynchronized map queue'''
 

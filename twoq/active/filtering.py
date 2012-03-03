@@ -7,26 +7,26 @@ from twoq.support import port
 from twoq.mixins.filtering import (
     FilterMixin, CollectMixin, SetMixin, SliceMixin)
 
-from twoq.active.mixins import AutoQMixin, ManQMixin, SyncQMixin
+from twoq.active.mixins import AutoResultMixin, ManResultMixin, SyncResultMixin
 
 ###############################################################################
 ## active collecting queues ###################################################
 ###############################################################################
 
 
-class acollectq(AutoQMixin, CollectMixin):
+class acollectq(AutoResultMixin, CollectMixin):
 
     '''auto-balanced collecting queue'''
 
 collectq = acollectq
 
 
-class mcollectq(ManQMixin, CollectMixin):
+class mcollectq(ManResultMixin, CollectMixin):
 
     '''manually balanced collecting queue'''
 
 
-class scollectq(SyncQMixin, CollectMixin):
+class scollectq(SyncResultMixin, CollectMixin):
 
     '''autosynchronized collecting queue'''
 
@@ -35,19 +35,19 @@ class scollectq(SyncQMixin, CollectMixin):
 ###############################################################################
 
 
-class asetq(AutoQMixin, SetMixin):
+class asetq(AutoResultMixin, SetMixin):
 
     '''auto-balanced set queue'''
 
 setq = asetq
 
 
-class msetq(ManQMixin, SetMixin):
+class msetq(ManResultMixin, SetMixin):
 
     '''manually balanced set queue'''
 
 
-class ssetq(SyncQMixin, SetMixin):
+class ssetq(SyncResultMixin, SetMixin):
 
     '''autosynchronized set queue'''
 
@@ -56,19 +56,19 @@ class ssetq(SyncQMixin, SetMixin):
 ###############################################################################
 
 
-class asliceq(AutoQMixin, SliceMixin):
+class asliceq(AutoResultMixin, SliceMixin):
 
     '''auto-balanced slice queue'''
 
 sliceq = asliceq
 
 
-class msliceq(ManQMixin, SliceMixin):
+class msliceq(ManResultMixin, SliceMixin):
 
     '''manually balanced slice queue'''
 
 
-class ssliceq(SyncQMixin, SliceMixin):
+class ssliceq(SyncResultMixin, SliceMixin):
 
     '''autosynchronized slice queue'''
 
@@ -77,19 +77,19 @@ class ssliceq(SyncQMixin, SliceMixin):
 ###############################################################################
 
 
-class afilterq(AutoQMixin, FilterMixin):
+class afilterq(AutoResultMixin, FilterMixin):
 
     '''auto-balanced filter queue'''
 
 filterq = afilterq
 
 
-class mfilterq(ManQMixin, FilterMixin):
+class mfilterq(ManResultMixin, FilterMixin):
 
     '''manually balanced filtering queue'''
 
 
-class sfilterq(SyncQMixin, FilterMixin):
+class sfilterq(SyncResultMixin, FilterMixin):
 
     '''autosynchronized filter queue'''
 

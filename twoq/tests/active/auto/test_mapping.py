@@ -30,26 +30,5 @@ class TestAutoDelayQ(unittest.TestCase, AQMixin, ADelayQMixin):
         from twoq.active.mapping import adelayq
         self.qclass = adelayq
 
-
-class TestSyncMap(AQMixin, AMapQMixin):
-
-    def setUp(self):
-        from twoq.active.mapping import smapq
-        self.qclass = smapq
-
-
-class TestSyncRepeatQ(unittest.TestCase, AQMixin, ARepeatQMixin):
-
-    def setUp(self):
-        from twoq.active.mapping import srepeatq
-        self.qclass = srepeatq
-
-
-class TestSyncDelayQ(unittest.TestCase, AQMixin, ADelayQMixin):
-
-    def setUp(self):
-        from twoq.active.mapping import sdelayq
-        self.qclass = sdelayq
-
 if __name__ == '__main__':
     unittest.main()

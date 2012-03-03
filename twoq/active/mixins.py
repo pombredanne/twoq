@@ -95,49 +95,6 @@ class baseq(QueueingMixin):
 
     _oindex = index
 
-    def end(self):
-        '''return outgoing things and clear out all things'''
-        results = self.pop() if len(
-            self.outgoing
-        ) == 1 else list(self.outgoing)
-        self.clear()
-        return results
-
-    _ofinal = end
-
-    def results(self):
-        '''yield outgoing things and clear outgoing things'''
-        for thing in iterexcept(self.outgoing.popleft, IndexError):
-            yield thing
-
-    _oresults = results
-
-    def value(self):
-        '''return outgoing things and clear outgoing things'''
-        results = self.pop() if len(
-            self.outgoing
-        ) == 1 else list(self.outgoing)
-        self._outclear()
-        return results
-
-    _ovalue = value
-
-    def first(self):
-        '''first incoming thing'''
-        with self._sync as sync:
-            sync.append(sync.iterable.popleft())
-        return self
-
-    _ofirst = first
-
-    def last(self):
-        '''last incoming thing'''
-        with self._sync as sync:
-            sync.append(sync.iterable.pop())
-        return self
-
-    _olast = last
-
     ###########################################################################
     ## clear queues ###########################################################
     ###########################################################################
@@ -321,6 +278,52 @@ class scratchq(baseq):
         self._spopleft = self._scratch.popleft
 
 
+class resultq(baseq):
+
+    def end(self):
+        '''return outgoing things and clear out all things'''
+        results = self.pop() if len(
+            self.outgoing
+        ) == 1 else list(self.outgoing)
+        self.clear()
+        return results
+
+    _ofinal = end
+
+    def results(self):
+        '''yield outgoing things and clear outgoing things'''
+        for thing in iterexcept(self.outgoing.popleft, IndexError):
+            yield thing
+
+    _oresults = results
+
+    def value(self):
+        '''return outgoing things and clear outgoing things'''
+        results = self.pop() if len(
+            self.outgoing
+        ) == 1 else list(self.outgoing)
+        self._outclear()
+        return results
+
+    _ovalue = value
+
+    def first(self):
+        '''first incoming thing'''
+        with self._sync as sync:
+            sync.append(sync.iterable.popleft())
+        return self
+
+    _ofirst = first
+
+    def last(self):
+        '''last incoming thing'''
+        with self._sync as sync:
+            sync.append(sync.iterable.pop())
+        return self
+
+    _olast = last
+
+
 class AutoQMixin(scratchq):
 
     '''auto balancing manipulation queue mixin'''
@@ -328,6 +331,11 @@ class AutoQMixin(scratchq):
     @property
     def _sync(self):
         return AutoContext(self)
+
+
+class AutoResultMixin(AutoQMixin, resultq):
+
+    '''auto balancing manipulation queue mixin'''
 
 
 class ManQMixin(scratchq):
@@ -339,6 +347,11 @@ class ManQMixin(scratchq):
         return ManContext(self)
 
 
+class ManResultMixin(ManQMixin, resultq):
+
+    '''manually balanced manipulation queue mixin'''
+
+
 class SyncQMixin(baseq):
 
     '''synchronized manipulation queue'''
@@ -346,3 +359,8 @@ class SyncQMixin(baseq):
     @property
     def _sync(self):
         return SyncContext(self)
+
+
+class SyncResultMixin(SyncQMixin, resultq):
+
+    '''synchronized manipulation queue'''

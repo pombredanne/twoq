@@ -31,26 +31,5 @@ class TestAutoTruthQ(unittest.TestCase, AQMixin, ATruthQMixin):
         self.qclass = atruthq
 
 
-class TestSyncReduceQ(unittest.TestCase, AQMixin, AReduceQMixin):
-
-    def setUp(self):
-        from twoq.active.reducing import sreduceq
-        self.qclass = sreduceq
-
-
-class TestSyncMathQ(unittest.TestCase, AQMixin, AMathQMixin):
-
-    def setUp(self):
-        from twoq.active.reducing import smathq
-        self.qclass = smathq
-
-
-class TestSyncTruthQ(unittest.TestCase, AQMixin, ATruthQMixin):
-
-    def setUp(self):
-        from twoq.active.reducing import struthq
-        self.qclass = struthq
-
-
 if __name__ == '__main__':
     unittest.main()

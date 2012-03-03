@@ -6,26 +6,26 @@ from inspect import ismodule
 from twoq.support import port
 from twoq.mixins.reducing import MathMixin, TruthMixin, ReduceMixin
 
-from twoq.active.mixins import AutoQMixin, ManQMixin, SyncQMixin
+from twoq.active.mixins import AutoResultMixin, ManResultMixin, SyncResultMixin
 
 ###############################################################################
 ## active math queues #########################################################
 ###############################################################################
 
 
-class amathq(AutoQMixin, MathMixin):
+class amathq(AutoResultMixin, MathMixin):
 
     '''auto-balancing math queue'''
 
 mathq = amathq
 
 
-class mmathq(ManQMixin, MathMixin):
+class mmathq(ManResultMixin, MathMixin):
 
     '''manually balanced math queue'''
 
 
-class smathq(SyncQMixin, MathMixin):
+class smathq(SyncResultMixin, MathMixin):
 
     '''autosynchronized math queue'''
 
@@ -34,19 +34,19 @@ class smathq(SyncQMixin, MathMixin):
 ###############################################################################
 
 
-class atruthq(AutoQMixin, TruthMixin):
+class atruthq(AutoResultMixin, TruthMixin):
 
     '''auto-balancing truth queue'''
 
 truthq = atruthq
 
 
-class mtruthq(ManQMixin, TruthMixin):
+class mtruthq(ManResultMixin, TruthMixin):
 
     '''manually balanced truth queue'''
 
 
-class struthq(SyncQMixin, TruthMixin):
+class struthq(SyncResultMixin, TruthMixin):
 
     '''autosynchronized truth queue'''
 
@@ -55,19 +55,19 @@ class struthq(SyncQMixin, TruthMixin):
 ###############################################################################
 
 
-class areduceq(AutoQMixin, ReduceMixin):
+class areduceq(AutoResultMixin, ReduceMixin):
 
     '''auto-balancing reduce queue'''
 
 reduceq = areduceq
 
 
-class mreduceq(ManQMixin, ReduceMixin):
+class mreduceq(ManResultMixin, ReduceMixin):
 
     '''manually balanced reduce queue'''
 
 
-class sreduceq(SyncQMixin, ReduceMixin):
+class sreduceq(SyncResultMixin, ReduceMixin):
 
     '''autosynchronized reduce queue'''
 
