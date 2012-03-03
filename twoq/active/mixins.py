@@ -124,7 +124,7 @@ class baseq(QueueingMixin):
 
     def clear(self):
         '''clear every thing'''
-        self._call = None
+        self.detap()
         self._outclear()
         self._inclear()
         return self
@@ -140,7 +140,7 @@ class baseq(QueueingMixin):
 
     def outclear(self):
         '''clear outgoing things'''
-        self._inclear()
+        self._oclear()
         return self
 
     _ooutclear = outclear
