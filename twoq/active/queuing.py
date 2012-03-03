@@ -2,8 +2,8 @@
 '''twoq active queues'''
 
 from twoq.mixins.mapping import MapMixin
-from twoq.mixins.reducing import ReduceMixin
 from twoq.mixins.ordering import OrderMixin
+from twoq.mixins.reducing import ReduceMixin
 from twoq.mixins.filtering import FilterMixin
 
 from twoq.active.mixins import AutoQMixin, ManQMixin, SyncQMixin
