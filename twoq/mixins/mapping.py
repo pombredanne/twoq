@@ -103,8 +103,11 @@ class DelayMixin(local):
         @param name: name of method
         @param wait: time in seconds
         '''
-        _caller = methodcaller(name, *self._args, **self._kw)
-        _call = partial(delay_invoke, wait=wait, caller=_caller)
+        _call = partial(
+            delay_invoke,
+            wait=wait,
+            caller=methodcaller(name, *self._args, **self._kw),
+        )
         with self._sync as sync:
             sync(_map(_call, sync.iterable))
         return self
@@ -225,8 +228,9 @@ class MapMixin(DelayMixin, CopyMixin, RepeatMixin):
 
         @param name: name of method
         '''
-        _caller = methodcaller(name, *self._args, **self._kw)
-        _call = partial(invoke, caller=_caller)
+        _call = partial(
+            invoke, caller=methodcaller(name, *self._args, **self._kw),
+        )
         with self._sync as sync:
             sync(_map(_call, sync.iterable))
         return self
