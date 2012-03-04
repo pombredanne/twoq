@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 '''twoq active queues'''
 
-from twoq.mixins.mapping import MapMixin
-from twoq.mixins.ordering import OrderMixin
-from twoq.mixins.reducing import ReduceMixin
-from twoq.mixins.filtering import FilterMixin
+from twoq.mixins.mapping import MappingMixin as MapMixin
+from twoq.mixins.ordering import OrderingMixin as OrderMixin
+from twoq.mixins.reducing import ReducingMixin as ReduceMixin
+from twoq.mixins.filtering import FilteringMixin as FilterMixin
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin, SyncResultMixin
 

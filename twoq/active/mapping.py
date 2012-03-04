@@ -4,7 +4,8 @@
 from inspect import ismodule
 
 from twoq.support import port
-from twoq.mixins.mapping import DelayMixin, CopyMixin, RepeatMixin, MapMixin
+from twoq.mixins.mapping import (
+    DelayMixin, CopyMixin, RepeatMixin, MappingMixin)
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin, SyncResultMixin
 
@@ -76,19 +77,19 @@ class srepeatq(SyncResultMixin, RepeatMixin):
 ###############################################################################
 
 
-class amapq(AutoResultMixin, MapMixin):
+class amapq(AutoResultMixin, MappingMixin):
 
     '''auto-balanced map queue'''
 
 mapq = amapq
 
 
-class mmapq(ManResultMixin, MapMixin):
+class mmapq(ManResultMixin, MappingMixin):
 
     '''manually balanced map queue'''
 
 
-class smapq(SyncResultMixin, MapMixin):
+class smapq(SyncResultMixin, MappingMixin):
 
     '''autosynchronized map queue'''
 

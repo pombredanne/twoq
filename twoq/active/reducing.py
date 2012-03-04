@@ -4,7 +4,7 @@
 from inspect import ismodule
 
 from twoq.support import port
-from twoq.mixins.reducing import MathMixin, TruthMixin, ReduceMixin
+from twoq.mixins.reducing import MathMixin, TruthMixin, ReducingMixin
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin, SyncResultMixin
 
@@ -55,19 +55,19 @@ class struthq(SyncResultMixin, TruthMixin):
 ###############################################################################
 
 
-class areduceq(AutoResultMixin, ReduceMixin):
+class areduceq(AutoResultMixin, ReducingMixin):
 
     '''auto-balancing reduce queue'''
 
 reduceq = areduceq
 
 
-class mreduceq(ManResultMixin, ReduceMixin):
+class mreduceq(ManResultMixin, ReducingMixin):
 
     '''manually balanced reduce queue'''
 
 
-class sreduceq(SyncResultMixin, ReduceMixin):
+class sreduceq(SyncResultMixin, ReducingMixin):
 
     '''autosynchronized reduce queue'''
 

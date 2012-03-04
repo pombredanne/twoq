@@ -7,7 +7,7 @@ from random import choice, shuffle, sample
 
 from twoq import support as ct
 
-__all__ = ('OrderMixin', 'RandomMixin')
+__all__ = ('OrderMixin', 'RandomMixin', 'OrderingMixin')
 _map = ct.map
 _zip_longest = ct.zip_longest
 
@@ -47,9 +47,9 @@ class RandomMixin(local):
     _oshuffle = shuffle
 
 
-class OrderMixin(RandomMixin):
+class OrderMixin(local):
 
-    '''ordering mixin'''
+    '''order mixin'''
 
     def group(self):
         '''group incoming things using call for key function'''
@@ -100,3 +100,8 @@ class OrderMixin(RandomMixin):
         return self
 
     _osort = sort
+
+
+class OrderingMixin(OrderMixin, RandomMixin):
+
+    '''ordering mixin'''

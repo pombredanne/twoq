@@ -4,7 +4,7 @@
 from inspect import ismodule
 
 from twoq.support import port
-from twoq.mixins.ordering import RandomMixin, OrderMixin
+from twoq.mixins.ordering import RandomMixin, OrderingMixin
 
 from twoq.lazy.mixins import AutoQMixin, ManQMixin
 
@@ -29,14 +29,14 @@ class mrandomq(ManQMixin, RandomMixin):
 ###############################################################################
 
 
-class aorderq(AutoQMixin, OrderMixin):
+class aorderq(AutoQMixin, OrderingMixin):
 
     '''auto-balanced order queue'''
 
 orderq = aorderq
 
 
-class morderq(ManQMixin, OrderMixin):
+class morderq(ManQMixin, OrderingMixin):
 
     '''manually balanced order queue'''
 

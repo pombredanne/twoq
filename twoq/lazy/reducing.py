@@ -4,7 +4,7 @@
 from inspect import ismodule
 
 from twoq.support import port
-from twoq.mixins.reducing import MathMixin, TruthMixin, ReduceMixin
+from twoq.mixins.reducing import MathMixin, TruthMixin, ReducingMixin
 
 from twoq.lazy.mixins import AutoQMixin, ManQMixin
 
@@ -46,16 +46,17 @@ class mtruthq(ManQMixin, TruthMixin):
 ###############################################################################
 
 
-class areduceq(AutoQMixin, ReduceMixin):
+class areduceq(AutoQMixin, ReducingMixin):
 
     '''auto-balancing reduce queue'''
 
 reduceq = areduceq
 
 
-class mreduceq(ManQMixin, ReduceMixin):
+class mreduceq(ManQMixin, ReducingMixin):
 
     '''manually balanced reduce queue'''
+
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
     name.startswith('_'), ismodule(obj),

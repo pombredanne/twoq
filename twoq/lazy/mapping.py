@@ -4,7 +4,8 @@
 from inspect import ismodule
 
 from twoq.support import port
-from twoq.mixins.mapping import DelayMixin, CopyMixin, RepeatMixin, MapMixin
+from twoq.mixins.mapping import (
+    DelayMixin, CopyMixin, RepeatMixin, MappingMixin)
 
 from twoq.lazy.mixins import AutoQMixin, ManQMixin
 
@@ -61,14 +62,14 @@ class mrepeatq(ManQMixin, RepeatMixin):
 ###############################################################################
 
 
-class amapq(AutoQMixin, MapMixin):
+class amapq(AutoQMixin, MappingMixin):
 
     '''auto-balanced map queue'''
 
 mapq = amapq
 
 
-class mmapq(ManQMixin, MapMixin):
+class mmapq(ManQMixin, MappingMixin):
 
     '''manually balanced map queue'''
 

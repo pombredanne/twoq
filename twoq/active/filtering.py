@@ -5,7 +5,7 @@ from inspect import ismodule
 
 from twoq.support import port
 from twoq.mixins.filtering import (
-    FilterMixin, CollectMixin, SetMixin, SliceMixin)
+    FilteringMixin, CollectMixin, SetMixin, SliceMixin)
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin, SyncResultMixin
 
@@ -77,19 +77,19 @@ class ssliceq(SyncResultMixin, SliceMixin):
 ###############################################################################
 
 
-class afilterq(AutoResultMixin, FilterMixin):
+class afilterq(AutoResultMixin, FilteringMixin):
 
     '''auto-balanced filter queue'''
 
 filterq = afilterq
 
 
-class mfilterq(ManResultMixin, FilterMixin):
+class mfilterq(ManResultMixin, FilteringMixin):
 
     '''manually balanced filtering queue'''
 
 
-class sfilterq(SyncResultMixin, FilterMixin):
+class sfilterq(SyncResultMixin, FilteringMixin):
 
     '''autosynchronized filter queue'''
 

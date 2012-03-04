@@ -11,7 +11,9 @@ from itertools import starmap, chain, repeat
 from stuf.six import items
 from twoq import support as ct
 
-__all__ = ('DelayMixin', 'CopyMixin', 'RepeatMixin', 'MapMixin')
+__all__ = (
+    'DelayMixin', 'CopyMixin', 'RepeatMixin', 'MapMixin', 'MappingMixin',
+)
 chain_iter = chain.from_iterable
 _map = ct.map
 _xrange = ct.xrange
@@ -208,7 +210,7 @@ class RepeatMixin(local):
     _otimes = times
 
 
-class MapMixin(DelayMixin, CopyMixin, RepeatMixin):
+class MapMixin(local):
 
     '''mapping mixin'''
 
@@ -263,3 +265,8 @@ class MapMixin(DelayMixin, CopyMixin, RepeatMixin):
         return self
 
     _ostarmap = starmap
+
+
+class MappingMixin(DelayMixin, CopyMixin, RepeatMixin, MapMixin):
+
+    '''mapping mixin'''

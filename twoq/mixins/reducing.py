@@ -11,7 +11,7 @@ from functools import partial, reduce as ireduce
 
 from twoq import support as ct
 
-__all__ = ('MathMixin', 'TruthMixin', 'ReduceMixin')
+__all__ = ('MathMixin', 'TruthMixin', 'ReduceMixin', 'ReducingMixin')
 Counter = ct.Counter
 _zip = zip
 _map = ct.map
@@ -216,9 +216,9 @@ class TruthMixin(local):
     _oquantify = quantify
 
 
-class ReduceMixin(MathMixin, TruthMixin):
+class ReduceMixin(local):
 
-    '''reducing mixin'''
+    '''reduce mixin'''
 
     def merge(self):
         '''flatten nested but ordered incoming things'''
@@ -298,3 +298,8 @@ class ReduceMixin(MathMixin, TruthMixin):
         return self
 
     _ozip = zip
+
+
+class ReducingMixin(MathMixin, TruthMixin, ReduceMixin):
+
+    '''reducing mixin'''

@@ -11,7 +11,9 @@ from stuf.utils import getcls
 
 from twoq import support as ct
 
-__all__ = ('FilterMixin', 'CollectMixin', 'SetMixin', 'SliceMixin')
+__all__ = (
+    'FilterMixin', 'CollectMixin', 'SetMixin', 'SliceMixin', 'FilteringMixin',
+)
 chain_iter = chain.from_iterable
 _filter = ct.filter
 _filterfalse = ct.filterfalse
@@ -308,7 +310,7 @@ class SliceMixin(local):
     _otake = take
 
 
-class FilterMixin(CollectMixin, SetMixin, SliceMixin):
+class FilterMixin(local):
 
     '''filters mixin'''
 
@@ -369,3 +371,8 @@ class FilterMixin(CollectMixin, SetMixin, SliceMixin):
         return self
 
     _owithout = without
+
+
+class FilteringMixin(CollectMixin, SetMixin, SliceMixin, FilterMixin):
+
+    '''filtering mixin'''
