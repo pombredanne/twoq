@@ -6,17 +6,17 @@ from twoq.mixins.reducing import ReducingMixin as ReduceMixin
 from twoq.mixins.ordering import OrderingMixin as OrderMixin
 from twoq.mixins.filtering import FilteringMixin as FilterMixin
 
-from twoq.lazy.mixins import AutoQMixin, ManQMixin
+from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
 
 __all__ = ('autoq', 'manq', 'twoq')
 
 
-class autoq(AutoQMixin, FilterMixin, MapMixin, ReduceMixin, OrderMixin):
+class autoq(AutoResultMixin, FilterMixin, MapMixin, ReduceMixin, OrderMixin):
 
     '''auto-balancing manipulation queue'''
 
 
-class manq(ManQMixin, FilterMixin, MapMixin, ReduceMixin, OrderMixin):
+class manq(ManResultMixin, FilterMixin, MapMixin, ReduceMixin, OrderMixin):
 
     '''manually balanced manipulation queue'''
 

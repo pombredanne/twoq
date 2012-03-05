@@ -217,7 +217,7 @@ class SetMixin(local):
                 lambda x, y: set(x).issubset(y), sync.iterable,
             ))
         return self
-    
+
     _subset = subset
 
     def superset(self):
@@ -229,7 +229,7 @@ class SetMixin(local):
         return self
 
     _superset = superset
-    
+
     def union(self):
         '''union between incoming things'''
         with self._sync as sync:

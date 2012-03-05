@@ -6,21 +6,21 @@ from inspect import ismodule
 from twoq.support import port
 from twoq.mixins.reducing import MathMixin, TruthMixin, ReducingMixin
 
-from twoq.lazy.mixins import AutoQMixin, ManQMixin
+from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
 
 ###############################################################################
 ## lazy math queues ###########################################################
 ###############################################################################
 
 
-class amathq(AutoQMixin, MathMixin):
+class amathq(AutoResultMixin, MathMixin):
 
     '''auto-balancing math queue'''
 
 mathq = amathq
 
 
-class mmathq(ManQMixin, MathMixin):
+class mmathq(ManResultMixin, MathMixin):
 
     '''manually balanced math queue'''
 
@@ -29,14 +29,14 @@ class mmathq(ManQMixin, MathMixin):
 ###############################################################################
 
 
-class atruthq(AutoQMixin, TruthMixin):
+class atruthq(AutoResultMixin, TruthMixin):
 
     '''auto-balancing truth queue'''
 
 truthq = atruthq
 
 
-class mtruthq(ManQMixin, TruthMixin):
+class mtruthq(ManResultMixin, TruthMixin):
 
     '''manually balanced truth queue'''
 
@@ -46,14 +46,14 @@ class mtruthq(ManQMixin, TruthMixin):
 ###############################################################################
 
 
-class areduceq(AutoQMixin, ReducingMixin):
+class areduceq(AutoResultMixin, ReducingMixin):
 
     '''auto-balancing reduce queue'''
 
 reduceq = areduceq
 
 
-class mreduceq(ManQMixin, ReducingMixin):
+class mreduceq(ManResultMixin, ReducingMixin):
 
     '''manually balanced reduce queue'''
 

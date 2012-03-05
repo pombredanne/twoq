@@ -24,12 +24,8 @@ class baseq(QueueingMixin):
         @param incoming: incoming queue
         @param outgoing: outgoing queue
         '''
-        incoming = deque()
         # extend if just one argument
-        if len(args) == 1:
-            incoming.append(args[0])
-        else:
-            incoming.extend(args)
+        incoming = deque(args[0]) if len(args) == 1 else deque(args)
         super(baseq, self).__init__(incoming, deque())
         #######################################################################
         ## incoming things ####################################################

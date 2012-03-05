@@ -7,21 +7,21 @@ from twoq.support import port
 from twoq.mixins.filtering import (
     FilteringMixin, CollectMixin, SetMixin, SliceMixin)
 
-from twoq.lazy.mixins import AutoQMixin, ManQMixin
+from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
 
 ###############################################################################
 ## lazy collecting queues ###################################################
 ###############################################################################
 
 
-class acollectq(AutoQMixin, CollectMixin):
+class acollectq(AutoResultMixin, CollectMixin):
 
     '''auto-balanced collecting queue'''
 
 collectq = acollectq
 
 
-class mcollectq(ManQMixin, CollectMixin):
+class mcollectq(ManResultMixin, CollectMixin):
 
     '''manually balanced collecting queue'''
 
@@ -30,14 +30,14 @@ class mcollectq(ManQMixin, CollectMixin):
 ###############################################################################
 
 
-class asetq(AutoQMixin, SetMixin):
+class asetq(AutoResultMixin, SetMixin):
 
     '''auto-balanced set queue'''
 
 setq = asetq
 
 
-class msetq(ManQMixin, SetMixin):
+class msetq(ManResultMixin, SetMixin):
 
     '''manually balanced set queue'''
 
@@ -46,14 +46,14 @@ class msetq(ManQMixin, SetMixin):
 ###############################################################################
 
 
-class asliceq(AutoQMixin, SliceMixin):
+class asliceq(AutoResultMixin, SliceMixin):
 
     '''auto-balanced slice queue'''
 
 sliceq = asliceq
 
 
-class msliceq(ManQMixin, SliceMixin):
+class msliceq(ManResultMixin, SliceMixin):
 
     '''manually balanced slice queue'''
 
@@ -62,14 +62,14 @@ class msliceq(ManQMixin, SliceMixin):
 ###############################################################################
 
 
-class afilterq(AutoQMixin, FilteringMixin):
+class afilterq(AutoResultMixin, FilteringMixin):
 
     '''auto-balanced filter queue'''
 
 filterq = afilterq
 
 
-class mfilterq(ManQMixin, FilteringMixin):
+class mfilterq(ManResultMixin, FilteringMixin):
 
     '''manually balanced filtering queue'''
 
