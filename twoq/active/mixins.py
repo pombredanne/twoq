@@ -13,7 +13,7 @@ from twoq.active.contexts import AutoContext, ManContext, SyncContext
 __all__ = ('AutoQMixin', 'ManQMixin', 'SyncQMixin')
 
 
-class baseq(QueueingMixin):
+class BaseQMixin(QueueingMixin):
 
     '''base active queue'''
 
@@ -25,8 +25,12 @@ class baseq(QueueingMixin):
         @param outgoing: outgoing queue
         '''
         # extend if just one argument
-        incoming = deque(args[0]) if len(args) == 1 else deque(args)
-        super(baseq, self).__init__(incoming, deque())
+        incoming = deque()
+        if len(args) == 1:
+            incoming.append(args[0])
+        else:
+            incoming.extend(args)
+        super(BaseQMixin, self).__init__(incoming, deque())
         #######################################################################
         ## incoming things ####################################################
         #######################################################################
@@ -256,10 +260,10 @@ class baseq(QueueingMixin):
     _outsync = outsync
 
 
-class scratchq(baseq):
+class ScratchQMixin(BaseQMixin):
 
     def __init__(self, *args):
-        super(scratchq, self).__init__(*args)
+        super(ScratchQMixin, self).__init__(*args)
         #######################################################################
         ## scratch queue ######################################################
         #######################################################################
@@ -274,7 +278,7 @@ class scratchq(baseq):
         self._spopleft = self._scratch.popleft
 
 
-class resultq(baseq):
+class ResultQMixin(BaseQMixin):
 
     def end(self):
         '''return outgoing things and clear out all things'''
@@ -320,7 +324,7 @@ class resultq(baseq):
     _olast = last
 
 
-class AutoQMixin(scratchq):
+class AutoQMixin(ScratchQMixin):
 
     '''auto balancing manipulation queue mixin'''
 
@@ -329,12 +333,12 @@ class AutoQMixin(scratchq):
         return AutoContext(self)
 
 
-class AutoResultMixin(AutoQMixin, resultq):
+class AutoResultMixin(AutoQMixin, ResultQMixin):
 
     '''auto balancing manipulation queue mixin'''
 
 
-class ManQMixin(scratchq):
+class ManQMixin(ScratchQMixin):
 
     '''manually balanced manipulation queue mixin'''
 
@@ -343,12 +347,12 @@ class ManQMixin(scratchq):
         return ManContext(self)
 
 
-class ManResultMixin(ManQMixin, resultq):
+class ManResultMixin(ManQMixin, ResultQMixin):
 
     '''manually balanced manipulation queue mixin'''
 
 
-class SyncQMixin(baseq):
+class SyncQMixin(BaseQMixin):
 
     '''synchronized manipulation queue'''
 
@@ -357,6 +361,6 @@ class SyncQMixin(baseq):
         return SyncContext(self)
 
 
-class SyncResultMixin(SyncQMixin, resultq):
+class SyncResultMixin(SyncQMixin, ResultQMixin):
 
     '''synchronized manipulation queue'''

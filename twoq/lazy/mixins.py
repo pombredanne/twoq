@@ -11,7 +11,7 @@ from twoq.lazy.contexts import AutoContext, ManContext
 __all__ = ['AutoQMixin', 'ManQMixin']
 
 
-class baseq(QueueingMixin):
+class BaseQMixin(QueueingMixin):
 
     '''base lazy queue'''
 
@@ -19,7 +19,7 @@ class baseq(QueueingMixin):
         # "extend" if just one argument
         incoming = iter([args[0]]) if len(args) == 1 else iter(args)
         self._scratch = None
-        super(baseq, self).__init__(incoming, iter([]))
+        super(BaseQMixin, self).__init__(incoming, iter([]))
 
     ###########################################################################
     ## queue information ######################################################
@@ -202,7 +202,7 @@ class baseq(QueueingMixin):
     _outshift = _outsync = outsync = outshift
 
 
-class resultq(baseq):
+class ResultQMixin(BaseQMixin):
 
     def end(self):
         '''return outgoing things and clear out all things'''
@@ -246,7 +246,7 @@ class resultq(baseq):
     _olast = last
 
 
-class AutoQMixin(baseq):
+class AutoQMixin(BaseQMixin):
 
     '''auto balancing queue mixin'''
 
@@ -263,12 +263,12 @@ class AutoQMixin(baseq):
         return AutoContext(self)
 
 
-class AutoResultMixin(resultq, AutoQMixin):
+class AutoResultMixin(ResultQMixin, AutoQMixin):
 
     '''auto-balancing queue mixin'''
 
 
-class ManQMixin(baseq):
+class ManQMixin(BaseQMixin):
 
     '''manually balanced manipulation queue mixin'''
 
@@ -281,6 +281,6 @@ class ManQMixin(baseq):
         return self
 
 
-class ManResultMixin(resultq, ManQMixin):
+class ManResultMixin(ResultQMixin, ManQMixin):
 
     '''manually balanced queue mixin'''
