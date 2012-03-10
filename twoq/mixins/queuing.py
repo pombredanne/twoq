@@ -2,6 +2,8 @@
 '''twoq queuing mixins'''
 
 from threading import local
+from itertools import islice
+from collections import deque
 
 __all__ = ['QueueingMixin']
 
@@ -85,4 +87,21 @@ class QueueingMixin(local):
     _owrap = wrap
 
     # aliases
-    clear = unwrap = detap
+    unwrap = detap
+
+    def ahead(self, n=None):
+        '''
+        move iterator n-steps ahead or, if n is `None`, consume entirely
+
+        @param n: number of steps to advance (default: None)
+        '''
+        # Use functions that consume iterators at C speed.
+        if n is None:
+            # feed the entire iterator into a zero-length deque
+            self.incoming = deque(self.incoming, maxlen=0)
+        else:
+            # advance to the empty slice starting at position n
+            next(islice(self.incoming, n, n), None)
+        return self
+
+    _oahead = ahead

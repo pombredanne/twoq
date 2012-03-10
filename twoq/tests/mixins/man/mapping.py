@@ -6,72 +6,6 @@ from inspect import ismodule
 from twoq.support import port
 
 
-class MMappingQMixin(object):
-
-    def test_wrap(self):
-        from stuf import stuf
-        thing = self.qclass(
-                [('a', 1), ('b', 2), ('c', 3)]
-            ).reup().wrap(stuf).map().shift().value()
-        self.assertDictEqual(thing, stuf(a=1, b=2, c=3))
-
-    def test_each(self):
-        def test(*args, **kw):
-            return sum(args) * kw['a']
-        manq = self.qclass(
-            ((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})
-        ).tap(test).each()
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEquals(manq.value(), [6, 10, 14])
-        self.assertFalse(manq.balanced)
-
-    def test_map(self):
-        manq = self.qclass(1, 2, 3).tap(lambda x: x * 3).map()
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEquals(manq.value(), [3, 6, 9])
-        self.assertFalse(manq.balanced)
-
-    def test_starmap(self):
-        manq = self.qclass(
-            (1, 2), (2, 3), (3, 4)
-        ).tap(lambda x, y: x * y).starmap()
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEquals(manq.value(), [2, 6, 12])
-        self.assertFalse(manq.balanced)
-
-    def test_items(self):
-        manq = self.qclass(
-            dict([(1, 2), (2, 3), (3, 4)]), dict([(1, 2), (2, 3), (3, 4)])
-        ).tap(lambda x, y: x * y).items()
-        self.assertFalse(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEquals(manq.end(), [2, 6, 12, 2, 6, 12])
-        self.assertTrue(manq.balanced)
-
-    def test_invoke(self):
-        manq = self.qclass([5, 1, 7], [3, 2, 1]).args(1).invoke('index')
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEquals(manq.value(), [1, 2])
-        self.assertFalse(manq.balanced)
-        manq = self.qclass([5, 1, 7], [3, 2, 1]).invoke('sort')
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEquals(manq.value(), [[1, 5, 7], [1, 2, 3]])
-        self.assertFalse(manq.balanced)
-        manq.clear()
-        self.assertTrue(manq.balanced)
-
-
 class MCopyQMixin(object):
 
     def test_copy(self):
@@ -108,46 +42,31 @@ class MCopyQMixin(object):
 class MRepeatQMixin(object):
 
     def test_range(self):
-        manq = self.qclass().range(3)
-        self.assertFalse(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEqual(manq.value(), [0, 1, 2])
-        self.assertFalse(manq.balanced)
-        manq = self.qclass().range(1, 3)
-        self.assertFalse(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEqual(manq.value(), [1, 2])
-        self.assertFalse(manq.balanced)
-        manq = self.qclass().range(1, 3, 2)
-        self.assertFalse(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEqual(manq.value(), 1)
-        self.assertFalse(manq.balanced)
+        self._false_true_false(
+            self.qclass().range(3), self.assertEqual, [0, 1, 2]
+        )
+        self._false_true_false(
+            self.qclass().range(1, 3), self.assertEqual, [1, 2],
+        )
+        self._false_true_false(
+            self.qclass().range(1, 3, 2), self.assertEqual, 1,
+        )
 
     def test_repeat(self):
-        manq = self.qclass(40, 50, 60).repeat(3)
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEqual(
-            manq.value(), [(40, 50, 60), (40, 50, 60), (40, 50, 60)],
+        self._true_true_false(
+            self.qclass(40, 50, 60).repeat(3),
+            self.assertEqual,
+            [(40, 50, 60), (40, 50, 60), (40, 50, 60)],
         )
-        self.assertFalse(manq.balanced)
 
     def test_times(self):
         def test(*args):
             return list(args)
-        manq = self.qclass(40, 50, 60).tap(test).times(3)
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEqual(
-            manq.value(), [[40, 50, 60], [40, 50, 60], [40, 50, 60]],
+        self._true_true_false(
+            self.qclass(40, 50, 60).tap(test).times(3),
+            self.assertEqual,
+            [[40, 50, 60], [40, 50, 60], [40, 50, 60]],
         )
-        self.assertFalse(manq.balanced)
 
 
 class MDelayQMixin(object):
@@ -155,43 +74,92 @@ class MDelayQMixin(object):
     def test_delay_each(self):
         def test(*args, **kw):
             return sum(args) * kw['a']
-        manq = self.qclass(
-            ((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})
-        ).tap(test).delay_each(0.5)
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEquals(manq.value(), [6, 10, 14])
-        self.assertFalse(manq.balanced)
+        self._true_true_false(
+            self.qclass(
+                ((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})
+            ).tap(test).delay_each(0.5),
+            self.assertEqual,
+            [6, 10, 14],
+        )
 
     def test_delay_map(self):
-        manq = self.qclass(1, 2, 3).tap(lambda x: x * 3).delay_map(0.1)
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEquals(manq.value(), [3, 6, 9])
-        self.assertFalse(manq.balanced)
+        self._true_true_false(
+            self.qclass(1, 2, 3).tap(lambda x: x * 3).delay_map(0.1),
+            self.assertEqual,
+            [3, 6, 9],
+        )
 
     def test_delay_invoke(self):
-        manq = self.qclass(
-            [5, 1, 7], [3, 2, 1]
-        ).args(1).delay_invoke('index', 0.5)
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEquals(manq.value(), [1, 2])
-        self.assertFalse(manq.balanced)
-        manq = self.qclass([5, 1, 7], [3, 2, 1]).delay_invoke('sort', 0.1)
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        self.assertEquals(manq.value(), [[1, 5, 7], [1, 2, 3]])
-        self.assertFalse(manq.balanced)
+        self._true_true_false(
+            self.qclass(
+                [5, 1, 7], [3, 2, 1]
+            ).args(1).delay_invoke('index', 0.5),
+            self.assertEqual,
+            [1, 2],
+        )
+        self._true_true_false(
+            self.qclass([5, 1, 7], [3, 2, 1]).delay_invoke('sort', 0.1),
+            self.assertEqual,
+            [[1, 5, 7], [1, 2, 3]],
+        )
 
 
-class MMapQMixin(MCopyQMixin, MDelayQMixin, MMappingQMixin, MRepeatQMixin):
-    
-    '''combination mixin'''
+class MMapQMixin(MCopyQMixin, MDelayQMixin, MRepeatQMixin):
+
+    def test_wrap(self):
+        from stuf import stuf
+        thing = self.qclass(
+                [('a', 1), ('b', 2), ('c', 3)]
+            ).reup().wrap(stuf).map().shift().value()
+        self.assertDictEqual(thing, stuf(a=1, b=2, c=3))
+
+    def test_each(self):
+        def test(*args, **kw):
+            return sum(args) * kw['a']
+        self._true_true_false(
+            self.qclass(
+                ((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})
+            ).tap(test).each(),
+            self.assertEqual,
+            [6, 10, 14],
+        )
+
+    def test_map(self):
+        self._true_true_false(
+            self.qclass(1, 2, 3).tap(lambda x: x * 3).map(),
+            self.assertEqual,
+            [3, 6, 9],
+        )
+
+    def test_starmap(self):
+        self._true_true_false(
+            self.qclass(
+                (1, 2), (2, 3), (3, 4)
+            ).tap(lambda x, y: x * y).starmap(),
+            self.assertEqual,
+            [2, 6, 12],
+        )
+
+    def test_items(self):
+        self._false_true_false(
+            self.qclass(
+                dict([(1, 2), (2, 3), (3, 4)]), dict([(1, 2), (2, 3), (3, 4)])
+            ).tap(lambda x, y: x * y).items(),
+            self.assertEqual,
+            [2, 6, 12, 2, 6, 12],
+        )
+
+    def test_invoke(self):
+        self._true_true_false(
+            self.qclass([5, 1, 7], [3, 2, 1]).args(1).invoke('index'),
+            self.assertEqual,
+            [1, 2],
+        )
+        self._true_true_false(
+            self.qclass([5, 1, 7], [3, 2, 1]).invoke('sort'),
+            self.assertEqual,
+            [[1, 5, 7], [1, 2, 3]]
+        )
 
 __all__ = sorted(name for name, obj in port.items(locals()) if not any([
     name.startswith('_'), ismodule(obj), name in ['ismodule', 'port']

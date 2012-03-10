@@ -8,23 +8,17 @@ except ImportError:
 #pylint: disable-msg=w0614,w0401
 from twoq.tests.mixins.man.ordering import *  # @UnusedWildImport
 from twoq.tests.mixins.man.queuing import MQMixin
+from twoq.tests.mixins.man.manning import Manning
 
 
-class TestManOrderQ(unittest.TestCase, MQMixin, MOrderQMixin):
+class TestManOrderQ(Manning, MQMixin, MOrderQMixin):
 
     def setUp(self):
         from twoq.lazy.ordering import morderq
         self.qclass = morderq
 
 
-class TestManOrderingQ(unittest.TestCase, MQMixin, MOrderingQMixin):
-
-    def setUp(self):
-        from twoq.lazy.ordering import morderingq
-        self.qclass = morderingq
-
-
-class TestManRandomQ(unittest.TestCase, MQMixin, MRandomQMixin):
+class TestManRandomQ(Manning, MQMixin, MRandomQMixin):
 
     def setUp(self):
         from twoq.lazy.ordering import mrandomq

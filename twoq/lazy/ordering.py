@@ -4,39 +4,23 @@
 from inspect import ismodule
 
 from twoq.support import port
-from twoq.mixins.ordering import OrderingMixin, RandomMixin, OrderMixin
+from twoq.mixins.ordering import RandomMixin, OrderingMixin
 
-from twoq.lazy.mixins import AutoQMixin, ManQMixin
-
-###############################################################################
-## lazy ordering queues #####################################################
-###############################################################################
-
-
-class aorderingq(AutoQMixin, OrderingMixin):
-
-    '''auto-balanced ordering queue'''
-
-orderingq = aorderingq
-
-
-class morderingq(ManQMixin, OrderingMixin):
-
-    '''manually balanced ordering queue'''
+from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
 
 ###############################################################################
 ## lazy random queues #######################################################
 ###############################################################################
 
 
-class arandomq(AutoQMixin, RandomMixin):
+class arandomq(AutoResultMixin, RandomMixin):
 
     '''auto-balanced random queue'''
 
 randomq = arandomq
 
 
-class mrandomq(ManQMixin, RandomMixin):
+class mrandomq(ManResultMixin, RandomMixin):
 
     '''manually balanced random queue'''
 
@@ -45,14 +29,14 @@ class mrandomq(ManQMixin, RandomMixin):
 ###############################################################################
 
 
-class aorderq(AutoQMixin, OrderMixin):
+class aorderq(AutoResultMixin, OrderingMixin):
 
     '''auto-balanced order queue'''
 
 orderq = aorderq
 
 
-class morderq(ManQMixin, OrderMixin):
+class morderq(ManResultMixin, OrderingMixin):
 
     '''manually balanced order queue'''
 

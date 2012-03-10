@@ -94,6 +94,9 @@ class port(object):
         return six.printf(*args, **kw)
 
 
+isstring = port.isstring
+
+
 import sys
 if not sys.version_info[0] == 2 and sys.version_info[1] < 7:
     from collections import Counter  # @UnresolvedImport

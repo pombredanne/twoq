@@ -17,13 +17,6 @@ class TestAutoOrderQ(unittest.TestCase, AQMixin, AOrderQMixin):
         self.qclass = aorderq
 
 
-class TestAutoOrderingQ(unittest.TestCase, AQMixin, AOrderingQMixin):
-
-    def setUp(self):
-        from twoq.lazy.ordering import aorderingq
-        self.qclass = aorderingq
-
-
 class TestAutoRandomQ(unittest.TestCase, AQMixin, ARandomQMixin):
 
     def setUp(self):
