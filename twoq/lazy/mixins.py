@@ -111,6 +111,10 @@ class BaseQMixin(QueueingMixin):
 
     _ooutclear = outclear
 
+    def _sclear(self):
+        self._scratch = None
+        return self
+
     ###########################################################################
     ## manipulate queues ######################################################
     ###########################################################################
@@ -167,6 +171,20 @@ class BaseQMixin(QueueingMixin):
         return self
 
     _oextend = extend
+
+    def outextend(self, things):
+        '''
+        extend right side of outgoing things with `things`
+
+        @param thing: some things
+        '''
+        self.outgoing = deque(self.outgoing)
+        self.outgoing.extend(things)
+        self.outgoing = iter(self.outgoing)
+        return self
+
+    def _sxtend(self, things):
+        self._scratch = deque(things)
 
     def extendleft(self, things):
         '''

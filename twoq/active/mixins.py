@@ -186,6 +186,15 @@ class BaseQMixin(QueueingMixin):
 
     _oinsert = insert
 
+    def outextend(self, things):
+        '''
+        extend right side of outgoing things with `things`
+
+        @param thing: some things
+        '''
+        self._outextend(things)
+        return self
+
     def extend(self, things):
         '''
         extend right side of incoming things with `things`
