@@ -1,27 +1,31 @@
 # -*- coding: utf-8 -*-
 '''twoq filtering mixins'''
 
-import operator as op
-import itertools as it
-import functools as ft
 from inspect import getmro
 from threading import local
+from itertools import tee, chain, islice
+from functools import partial, reduce as ireduce
+from operator import attrgetter, itemgetter, truth
 
 from stuf.utils import getcls
 
 from twoq import support as ct
 
 __all__ = (
-    'FilteringMixin', 'FilterMixin', 'CollectMixin', 'SetMixin', 'SliceMixin'
+    'FilterMixin', 'CollectMixin', 'SetMixin', 'SliceMixin', 'FilteringMixin',
 )
-chain_iter = it.chain.from_iterable
+chain_iter = chain.from_iterable
+_filter = ct.filter
+_filterfalse = ct.filterfalse
+_map = ct.map
+_PY3 = ct.port.PY3
 
 ###############################################################################
 ## filtering subroutines ######################################################
 ###############################################################################
 
 
-def find(call, iterable, _filter=ct.filter):
+def find(call, iterable):
     '''
     find the first `True` thing in iterator
 
@@ -33,40 +37,42 @@ def find(call, iterable, _filter=ct.filter):
         break
 
 
-def members(iterable, _get=getattr):
+def members(iterable):
     '''
     collect members of things
 
     @param thing: an iterable
     '''
+    _getattr = getattr
     for key in dir(iterable):
         try:
-            thing = _get(iterable, key)
+            thing = _getattr(iterable, key)
         except AttributeError:
             pass
         else:
             yield key, thing
 
 
-def mfilter(call, iterable, _members=members, _filter=ct.filter):
+def mfilter(call, iterable):
     '''
     filter members of things
 
     @param call: "Truth" filter
     @param iterable: an iterable
     '''
-    for i in _filter(call, _members(iterable)):
+    _members = members
+    for i in ct.filter(call, _members(iterable)):
         yield i
 
 
-def pick(names, iterable, _attrgetter=op.attrgetter):
+def pick(names, iterable):
     '''
     collect attributes of things in iterable
 
     @param names: sequence of names
     @param iterable: an iterable
     '''
-    attrfind = _attrgetter(*names)
+    attrfind = attrgetter(*names)
     for thing in iterable:
         try:
             yield attrfind(thing)
@@ -74,14 +80,14 @@ def pick(names, iterable, _attrgetter=op.attrgetter):
             pass
 
 
-def pluck(keys, iterable, _itemgetter=op.itemgetter):
+def pluck(keys, iterable):
     '''
     collect values of things in iterable
 
     @param keys: sequence of keys
     @param iterable: an iterable
     '''
-    itemfind = _itemgetter(*keys)
+    itemfind = itemgetter(*keys)
     for thing in iterable:
         try:
             yield itemfind(thing)
@@ -89,17 +95,17 @@ def pluck(keys, iterable, _itemgetter=op.itemgetter):
             pass
 
 
-def unique(iterable, key=None, _ff=ct.filterfalse, _set=set):
+def unique(iterable, key=None):
     '''
     unique things in in iterable
 
     @param iterable: an iterable
     @param key: determine uniqueness filter
     '''
-    seen = _set()
+    seen = set()
     seen_add = seen.add
     if key is None:
-        for element in _ff(seen.__contains__, iterable):
+        for element in _filterfalse(seen.__contains__, iterable):
             seen_add(element)
             yield element
     else:
@@ -115,99 +121,40 @@ def unique(iterable, key=None, _ff=ct.filterfalse, _set=set):
 ###############################################################################
 
 
-class FilteringMixin(local):
-
-    '''filter mixin'''
-
-    def compact(self, _filter=ct.filter, _truth=op.truth):
-        '''strip "untrue" things from incoming things'''
-        with self._sync as sync:
-            sync.iter(_filter(_truth, sync.iterable))
-        return self
-
-    _ocompact = compact
-
-    def filter(self, _filter=ct.filter):
-        '''incoming things for which call is `True`'''
-        with self._sync as sync:
-            sync(_filter(self._call, sync.iterable))
-        return self
-
-    _ofilter = filter
-
-    def find(self, _find=find):
-        '''first incoming thing for which call is `True`'''
-        with self._sync as sync:
-            sync(_find(self._call, self.incoming))
-        return self
-
-    _ofind = find
-
-    def partition(self, _t=it.tee, _ff=ct.filterfalse, _filter=ct.filter):
-        '''
-        split incoming things into `True` and `False` things based on results
-        of callable
-
-        @param test: a test
-        '''
-        with self._sync as sync:
-            call = self._call
-            falsy, truey = _t(sync.iterable)
-            sync(iter([list(_ff(call, falsy)), list(_filter(call, truey))]))
-        return self
-
-    _opartition = partition
-
-    def reject(self, _filterfalse=ct.filterfalse):
-        '''incoming things for which call is `False`'''
-        with self._sync as sync:
-            sync(_filterfalse(self._call, sync.iterable))
-        return self
-
-    _oreject = reject
-
-    def without(self, *things):
-        '''strip things from incoming things'''
-        with self._sync as sync:
-            sync(ct.filterfalse(lambda x: x in things, sync.iterable))
-        return self
-
-    _owithout = without
-
-
 class CollectMixin(local):
 
-    '''gathering mixin'''
+    '''collecting mixin'''
 
-    def deepmembers(self, mz=mfilter, ci=chain_iter, gc=getcls):
-        '''collect members of incoming things and their bases'''
-        _mz = ft.partial(mz, self._call)
+    def deepmembers(self):
+        '''collect object members from incoming things and their bases'''
+        _mz = partial(mfilter, self._call)
         with self._sync as sync:
-            if ct.port.PY3:
-                def _memfilters(thing, mz=_mz, gc=gc):
+            if _PY3:
+                def _memfilters(thing, mz=_mz, gc=getcls, ci=chain_iter):
                     t = lambda x: not x[0].startswith('mro')
-                    return ct.filter(
-                        t, ci(ct.map(mz, ci([getmro((gc(thing))), [thing]])))
+                    return _filter(
+                        t, ci(_map(mz, ci([getmro((gc(thing))), [thing]])))
                     )
             else:
-                def _memfilters(thing, mz=_mz, gc=gc):
-                    return ci(ct.map(mz, ci([getmro((gc(thing))), [thing]])))
-            sync(ci(ct.map(_memfilters, sync.iterable)))
+                def _memfilters(thing, mz=_mz, gc=getcls, ci=chain_iter):
+                    return ci(_map(mz, ci([getmro((gc(thing))), [thing]])))
+            sync(chain_iter(_map(_memfilters, sync.iterable)))
         return self
 
     _odeepmembers = deepmembers
 
-    def members(self, _mz=mfilter, _ci=it.chain.from_iterable):
-        '''collect members of incoming things'''
-        _mz = ft.partial(_mz, self._call)
+    def members(self):
+        '''collect object members from incoming things'''
+        call = self._call
+        _mz = partial(mfilter, call)
         with self._sync as sync:
-            sync(_ci(ct.map(_mz, sync.iterable)))
+            sync(chain_iter(_map(_mz, sync.iterable)))
         return self
 
     _omembers = members
 
     def pick(self, *names):
-        '''attributes of incoming things by attribute `*names`'''
+        '''collect object attributes from incoming things by their `*names`'''
         with self._sync as sync:
             sync(pick(names, sync.iterable))
         return self
@@ -215,7 +162,7 @@ class CollectMixin(local):
     _opick = pick
 
     def pluck(self, *keys):
-        '''items of incoming things by item `*keys`'''
+        '''collect object items from incoming things by item `*keys`'''
         with self._sync as sync:
             sync(pluck(keys, sync.iterable))
         return self
@@ -227,46 +174,77 @@ class SetMixin(local):
 
     '''set and uniqueness mixin'''
 
-    def difference(self, _reduce=ft.reduce, _set=set):
+    def difference(self):
         '''difference between incoming things'''
         with self._sync as sync:
-            sync(_reduce(
-                lambda x, y: _set(x).difference(_set(y)), sync.iterable,
-            ))
+            sync(ireduce(lambda x, y: set(x).difference(y), sync.iterable))
         return self
 
     _odifference = difference
 
-    def intersection(self, _reduce=ft.reduce, _set=set):
+    def symmetric_difference(self):
+        '''symmetric difference between incoming things'''
+        with self._sync as sync:
+            sync(ireduce(
+                lambda x, y: set(x).symmetric_difference(y), sync.iterable,
+            ))
+        return self
+
+    _osymmetric_difference = symmetric_difference
+
+    def disjointed(self):
+        '''disjoint between incoming things'''
+        with self._sync as sync:
+            sync.append(ireduce(
+                lambda x, y: set(x).isdisjoint(y), sync.iterable,
+            ))
+        return self
+
+    _disjointed = disjointed
+
+    def intersection(self):
         '''intersection between incoming things'''
         with self._sync as sync:
-            sync(_reduce(
-                lambda x, y: _set(x).intersection(_set(y)), sync.iterable,
-            ))
+            sync(ireduce(lambda x, y: set(x).intersection(y), sync.iterable))
         return self
 
     _ointersection = intersection
 
-    def union(self, _reduce=ft.reduce, _set=set):
+    def subset(self):
+        '''incoming things are subsets of incoming things'''
+        with self._sync as sync:
+            sync.append(ireduce(
+                lambda x, y: set(x).issubset(y), sync.iterable,
+            ))
+        return self
+
+    _subset = subset
+
+    def superset(self):
+        '''incoming things are supersets of incoming things'''
+        with self._sync as sync:
+            sync.append(ireduce(
+                lambda x, y: set(x).issubset(y), sync.iterable
+            ))
+        return self
+
+    _superset = superset
+
+    def union(self):
         '''union between incoming things'''
         with self._sync as sync:
-            sync(_reduce(
-                lambda x, y: _set(x).union(_set(y)), sync.iterable,
-            ))
+            sync(ireduce(lambda x, y: set(x).union(y), sync.iterable))
         return self
 
     _ounion = union
 
-    def unique(self, _unique=unique):
+    def unique(self):
         '''
         list unique incoming things, preserving order and remember all incoming
         things ever seen
-
-        unique_everseen('AAAABBBCCDAABBB') --> A B C D
-        unique_everseen('ABBCcAD', str.lower) --> A B C D
         '''
         with self._sync as sync:
-            sync.iter(_unique(sync.iterable, self._call))
+            sync.iter(unique(sync.iterable, self._call))
         return self
 
     _ounique = unique
@@ -276,62 +254,125 @@ class SliceMixin(local):
 
     '''slicing mixin'''
 
-    def nth(self, n, default=None, _next=next, _islice=it.islice):
+    def nth(self, n, default=None):
         '''
-        nth incoming thing or default thing
+        `nth` incoming thing or default thing
 
         @param n: number of things
         @param default: default thing (default: None)
         '''
         with self._sync as sync:
-            sync.append(_next(_islice(sync.iterable, n, None), default))
+            sync.append(next(islice(sync.iterable, n, None), default))
         return self
 
     _onth = nth
 
-    def initial(self, _islice=it.islice, _len=len):
+    def initial(self):
         '''all incoming things except the last thing'''
         with self._sync as sync:
-            iterable1, iterable2 = it.tee(sync.iterable)
-            sync(_islice(iterable1, _len(list(iterable2)) - 1))
+            iterable1, iterable2 = tee(sync.iterable)
+            sync(islice(iterable1, len(list(iterable2)) - 1))
         return self
 
     _oinitial = initial
 
-    def rest(self, _islice=it.islice):
+    def rest(self):
         '''all incoming things except the first thing'''
         with self._sync as sync:
-            sync(_islice(sync.iterable, 1, None))
+            sync(islice(sync.iterable, 1, None))
         return self
 
     _orest = rest
 
-    def snatch(self, n, _islice=it.islice, _len=len):
+    def snatch(self, n):
         '''
         last `n` things of incoming things
 
         @param n: number of things
         '''
         with self._sync as sync:
-            iterable1, iterable2 = it.tee(sync.iterable)
-            sync(_islice(iterable1, _len(list(iterable2)) - n, None))
+            iterable1, iterable2 = tee(sync.iterable)
+            sync(islice(iterable1, len(list(iterable2)) - n, None))
         return self
 
     _osnatch = snatch
 
-    def take(self, n, _islice=it.islice):
+    def take(self, n):
         '''
         first `n` things of incoming things
 
         @param n: number of things
         '''
         with self._sync as sync:
-            sync(_islice(sync.iterable, n))
+            sync(islice(sync.iterable, n))
         return self
 
     _otake = take
 
 
-class FilterMixin(FilteringMixin, CollectMixin, SetMixin, SliceMixin):
+class FilterMixin(local):
 
     '''filters mixin'''
+
+    def compact(self):
+        '''strip "untrue" things from incoming things'''
+        with self._sync as sync:
+            sync.iter(_filter(truth, sync.iterable))
+        return self
+
+    _ocompact = compact
+
+    def filter(self):
+        '''incoming things for which call is `True`'''
+        call = self._call
+        with self._sync as sync:
+            sync(_filter(call, sync.iterable))
+        return self
+
+    _ofilter = filter
+
+    def find(self):
+        '''first incoming thing for which call is `True`'''
+        call = self._call
+        with self._sync as sync:
+            sync(find(call, sync.iterable))
+        return self
+
+    _ofind = find
+
+    def partition(self):
+        '''
+        split incoming things into `True` and `False` things based on results
+        of call
+        '''
+        call = self._call
+        with self._sync as sync:
+            falsy, truey = tee(sync.iterable)
+            sync(iter(
+                [list(_filterfalse(call, falsy)), list(_filter(call, truey))]
+            ))
+        return self
+
+    _opartition = partition
+
+    def reject(self):
+        '''incoming things for which call is `False`'''
+        call = self._call
+        with self._sync as sync:
+            sync(_filterfalse(call, sync.iterable))
+        return self
+
+    _oreject = reject
+
+    def without(self, *things):
+        '''strip things from incoming things'''
+        with self._sync as sync:
+            sync(_filterfalse(lambda x: x in things, sync.iterable))
+        return self
+
+    _owithout = without
+
+
+class FilteringMixin(CollectMixin, SetMixin, SliceMixin, FilterMixin):
+
+    '''filtering mixin'''

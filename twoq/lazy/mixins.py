@@ -4,8 +4,6 @@
 from itertools import tee
 from collections import deque
 
-from stuf.utils import exhaust
-
 from twoq.mixins.queuing import QueueingMixin
 
 from twoq.lazy.contexts import AutoContext, ManContext
@@ -13,18 +11,15 @@ from twoq.lazy.contexts import AutoContext, ManContext
 __all__ = ['AutoQMixin', 'ManQMixin']
 
 
-class baseq(QueueingMixin):
+class BaseQMixin(QueueingMixin):
 
     '''base lazy queue'''
 
     def __init__(self, *args):
-        # extend if just one argument
-        if len(args) == 1:
-            incoming = iter([args[0]])
-        else:
-            incoming = iter(args)
+        # "extend" if just one argument
+        incoming = iter([args[0]]) if len(args) == 1 else iter(args)
         self._scratch = None
-        super(baseq, self).__init__(incoming, iter([]))
+        super(BaseQMixin, self).__init__(incoming, iter([]))
 
     ###########################################################################
     ## queue information ######################################################
@@ -43,7 +38,7 @@ class baseq(QueueingMixin):
     count = _oicount = __len__
 
     def outcount(self):
-        '''count of outgoing items'''
+        '''count of outgoing things'''
         self.outgoing, outgoing = tee(self.outgoing)
         return len(list(outgoing))
 
@@ -60,7 +55,7 @@ class baseq(QueueingMixin):
 
     def index(self, thing):
         '''
-        index of item in incoming things
+        index of thing in incoming things
 
         @param thing: some thing
         '''
@@ -68,47 +63,6 @@ class baseq(QueueingMixin):
         return list(incoming).index(thing)
 
     _oindex = index
-
-    def end(self, _l=list, _ln=len):
-        '''return outgoing things and clear'''
-        results = list(self.outgoing)
-        results = self.pop() if _ln(results) == 1 else _l(results)
-        self.clear()
-        return results
-
-    _ofinal = end
-
-    def results(self, _iterexcept=exhaust):
-        '''iterate over reversed outgoing things, clearing as it goes'''
-        return self.outgoing
-
-    _oresults = results
-
-    def value(self, _l=list, _ln=len):
-        '''return outgoing things and clear'''
-        results = list(self.outgoing)
-        results = results.pop() if _ln(results) == 1 else results
-        self.outclear()
-        return results
-
-    _ovalue = value
-
-    def first(self):
-        '''first thing among incoming things'''
-        with self._sync as sync:
-            sync.append(next(sync.iterable))
-        return self
-
-    _ofirst = first
-
-    def last(self):
-        '''last thing among incoming things'''
-        with self._sync as sync:
-            i1, _ = tee(sync.iterable)
-            sync.append(deque(i1, maxlen=1).pop())
-        return self
-
-    _olast = last
 
     ###########################################################################
     ## clear queues ###########################################################
@@ -135,8 +89,8 @@ class baseq(QueueingMixin):
     _oiremove = remove
 
     def clear(self):
-        '''clear all queues'''
-        self._call = None
+        '''clear every thing'''
+        self.detap()
         self.outclear()
         self.inclear()
         return self
@@ -144,25 +98,33 @@ class baseq(QueueingMixin):
     _oclear = clear
 
     def inclear(self):
-        '''incoming things clear'''
+        '''clear incoming things'''
         self.incoming = iter([])
         return self
 
     _oiclear = inclear
 
     def outclear(self):
-        '''incoming things clear'''
+        '''clear outgoing things'''
         self.outgoing = iter([])
         return self
 
     _ooutclear = outclear
+
+    def _sclear(self):
+        self._scratch = None
+        return self
 
     ###########################################################################
     ## manipulate queues ######################################################
     ###########################################################################
 
     def append(self, thing):
-        '''incoming things right append'''
+        '''
+        append thing to right side of incoming things
+
+        @param thing: some thing
+        '''
         self.incoming = deque(self.incoming)
         self.incoming.append(thing)
         self.incoming = iter(self.incoming)
@@ -171,7 +133,11 @@ class baseq(QueueingMixin):
     _oappend = append
 
     def appendleft(self, thing):
-        '''incoming things left append'''
+        '''
+        append `thing` to left side of incoming things
+
+        @param thing: some thing
+        '''
         self.incoming = deque(self.incoming)
         self.incoming.appendleft(thing)
         self.incoming = iter(self.incoming)
@@ -194,7 +160,11 @@ class baseq(QueueingMixin):
     _oinsert = insert
 
     def extend(self, things):
-        '''incoming things right extend'''
+        '''
+        extend right side of incoming things with `things`
+
+        @param thing: some things
+        '''
         self.incoming = deque(self.incoming)
         self.incoming.extend(things)
         self.incoming = iter(self.incoming)
@@ -202,8 +172,26 @@ class baseq(QueueingMixin):
 
     _oextend = extend
 
+    def outextend(self, things):
+        '''
+        extend right side of outgoing things with `things`
+
+        @param thing: some things
+        '''
+        self.outgoing = deque(self.outgoing)
+        self.outgoing.extend(things)
+        self.outgoing = iter(self.outgoing)
+        return self
+
+    def _sxtend(self, things):
+        self._scratch = deque(things)
+
     def extendleft(self, things):
-        '''incoming things left extend'''
+        '''
+        extend left side of incoming things with `things`
+
+        @param thing: some things
+        '''
         self.incoming = deque(self.incoming)
         self.incoming.extendleft(things)
         self.incoming = iter(self.incoming)
@@ -232,14 +220,58 @@ class baseq(QueueingMixin):
     _outshift = _outsync = outsync = outshift
 
 
-class AutoQMixin(baseq):
+class ResultQMixin(BaseQMixin):
 
-    '''auto balancing manipulation queue mixin'''
+    def end(self):
+        '''return outgoing things and clear out all things'''
+        results = list(self.outgoing)
+        results = results.pop() if len(results) == 1 else list(results)
+        self.clear()
+        return results
 
-    def reup(self, _list=list):
+    _ofinal = end
+
+    def results(self):
+        '''yield outgoing things and clear outgoing things'''
+        return self.outgoing
+
+    _oresults = results
+
+    def value(self):
+        '''return outgoing things and clear outgoing things'''
+        results = list(self.outgoing)
+        results = results.pop() if len(results) == 1 else list(results)
+        self.outclear()
+        return results
+
+    _ovalue = value
+
+    def first(self):
+        '''first incoming thing'''
+        with self._sync as sync:
+            sync.append(next(sync.iterable))
+        return self
+
+    _ofirst = first
+
+    def last(self):
+        '''last incoming thing'''
+        with self._sync as sync:
+            i1, _ = tee(sync.iterable)
+            sync.append(deque(i1, maxlen=1).pop())
+        return self
+
+    _olast = last
+
+
+class AutoQMixin(BaseQMixin):
+
+    '''auto balancing queue mixin'''
+
+    def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
         with self._sync as _sync:
-            _sync.append(_list(self.incoming))
+            _sync.append(list(self.incoming))
         return self
 
     _oreup = reup
@@ -249,7 +281,12 @@ class AutoQMixin(baseq):
         return AutoContext(self)
 
 
-class ManQMixin(baseq):
+class AutoResultMixin(ResultQMixin, AutoQMixin):
+
+    '''auto-balancing queue mixin'''
+
+
+class ManQMixin(BaseQMixin):
 
     '''manually balanced manipulation queue mixin'''
 
@@ -257,6 +294,11 @@ class ManQMixin(baseq):
     def _sync(self):
         return ManContext(self)
 
-    def reup(self, _list=list):
+    def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
         return self
+
+
+class ManResultMixin(ResultQMixin, ManQMixin):
+
+    '''manually balanced queue mixin'''
