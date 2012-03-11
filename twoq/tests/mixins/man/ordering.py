@@ -13,24 +13,24 @@ class MRandomQMixin(object):
         self.assertFalse(manq.balanced)
         manq.sync()
         self.assertTrue(manq.balanced)
-        manq.value()
-        self.assertFalse(manq.balanced)
+        manq.end()
+        self.assertTrue(manq.balanced)
 
     def test_sample(self):
         manq = self.qclass(1, 2, 3, 4, 5, 6).sample(3)
         self.assertFalse(manq.balanced)
         manq.sync()
         self.assertTrue(manq.balanced)
-        manq.value()
-        self.assertFalse(manq.balanced)
+        manq.end()
+        self.assertTrue(manq.balanced)
 
     def test_shuffle(self):
         manq = self.qclass(1, 2, 3, 4, 5, 6).shuffle()
         self.assertTrue(manq.balanced)
         manq.sync()
         self.assertTrue(manq.balanced)
-        manq.value()
-        self.assertFalse(manq.balanced)
+        manq.end()
+        self.assertTrue(manq.balanced)
 
 
 class MOrderQMixin(MRandomQMixin):

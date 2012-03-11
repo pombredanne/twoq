@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 '''active twoq mixins'''
 
+from threading import local
 from collections import deque
 from bisect import bisect_right
 
@@ -287,7 +288,7 @@ class ScratchQMixin(BaseQMixin):
         self._spopleft = self._scratch.popleft
 
 
-class ResultQMixin(BaseQMixin):
+class ResultQMixin(local):
 
     def end(self):
         '''return outgoing things and clear out all things'''
@@ -297,7 +298,7 @@ class ResultQMixin(BaseQMixin):
         self.clear()
         return results
 
-    _ofinal = end
+    _oend = end
 
     def results(self):
         '''yield outgoing things and clear outgoing things'''
@@ -342,7 +343,7 @@ class AutoQMixin(ScratchQMixin):
         return AutoContext(self)
 
 
-class AutoResultMixin(AutoQMixin, ResultQMixin):
+class AutoResultMixin(AutoQMixin, BaseQMixin, ResultQMixin):
 
     '''auto balancing manipulation queue mixin'''
 
@@ -356,7 +357,7 @@ class ManQMixin(ScratchQMixin):
         return ManContext(self)
 
 
-class ManResultMixin(ManQMixin, ResultQMixin):
+class ManResultMixin(ManQMixin, BaseQMixin, ResultQMixin):
 
     '''manually balanced manipulation queue mixin'''
 
@@ -370,6 +371,6 @@ class SyncQMixin(BaseQMixin):
         return SyncContext(self)
 
 
-class SyncResultMixin(SyncQMixin, ResultQMixin):
+class SyncResultMixin(SyncQMixin, BaseQMixin, ResultQMixin):
 
     '''synchronized manipulation queue'''
