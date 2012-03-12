@@ -9,7 +9,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
-install_requires = ['stuf>=0.8.6']
+install_requires = ['stuf>=0.8.6', 'distribute>=0.6.25']
 if sys.version_info[0] == 2 and sys.version_info[1] < 7:
     install_requires.extend(['ordereddict', 'unittest2'])
 
