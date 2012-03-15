@@ -95,6 +95,7 @@ class port(object):
 
 
 isstring = port.isstring
+isunicode = port.isunicode
 
 
 import sys
