@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 '''twoq support'''
 
+from itertools import chain
+
 from stuf import six
 # pylint: disable-msg=f0401,w0611
 from stuf.six.moves import (
@@ -9,6 +11,8 @@ from stuf.six.moves import (
 
 __all__ = ['port']
 items = six.items
+chain_iter = chain.from_iterable
+range = xrange
 
 
 class port(object):
@@ -95,6 +99,7 @@ class port(object):
 
 
 isstring = port.isstring
+isunicode = port.isunicode
 
 
 import sys
@@ -104,7 +109,7 @@ else:
     import heapq
     from collections import Mapping
     from operator import itemgetter
-    from itertools import chain, repeat, starmap
+    from itertools import repeat, starmap
 
     class Counter(dict):
 

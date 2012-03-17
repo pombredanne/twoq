@@ -3,22 +3,17 @@
 
 from inspect import getmro
 from threading import local
-from itertools import tee, chain, islice
+from itertools import tee, islice
 from functools import partial, reduce as ireduce
 from operator import attrgetter, itemgetter, truth
 
-from stuf.utils import getcls
-
-from twoq import support as ct
+from stuf.six import PY3
+from stuf.utils import getcls, ifilter, imap
+from twoq.support import chain_iter, filterfalse
 
 __all__ = (
     'FilterMixin', 'CollectMixin', 'SetMixin', 'SliceMixin', 'FilteringMixin',
 )
-chain_iter = chain.from_iterable
-_filter = ct.filter
-_filterfalse = ct.filterfalse
-_map = ct.map
-_PY3 = ct.port.PY3
 
 ###############################################################################
 ## filtering subroutines ######################################################
@@ -32,7 +27,7 @@ def find(call, iterable):
     @param call: "Truth" filter
     @param iterable: an iterable
     '''
-    for thing in _filter(call, iterable):
+    for thing in ifilter(call, iterable):
         yield thing
         break
 
@@ -61,7 +56,7 @@ def mfilter(call, iterable):
     @param iterable: an iterable
     '''
     _members = members
-    for i in ct.filter(call, _members(iterable)):
+    for i in ifilter(call, _members(iterable)):
         yield i
 
 
@@ -105,7 +100,7 @@ def unique(iterable, key=None):
     seen = set()
     seen_add = seen.add
     if key is None:
-        for element in _filterfalse(seen.__contains__, iterable):
+        for element in filterfalse(seen.__contains__, iterable):
             seen_add(element)
             yield element
     else:
@@ -129,16 +124,16 @@ class CollectMixin(local):
         '''collect object members from incoming things and their bases'''
         _mz = partial(mfilter, self._call)
         with self._sync as sync:
-            if _PY3:
+            if PY3:
                 def _memfilters(thing, mz=_mz, gc=getcls, ci=chain_iter):
                     t = lambda x: not x[0].startswith('mro')
-                    return _filter(
-                        t, ci(_map(mz, ci([getmro((gc(thing))), [thing]])))
+                    return ifilter(
+                        t, ci(imap(mz, ci([getmro((gc(thing))), [thing]])))
                     )
             else:
                 def _memfilters(thing, mz=_mz, gc=getcls, ci=chain_iter):
-                    return ci(_map(mz, ci([getmro((gc(thing))), [thing]])))
-            sync(chain_iter(_map(_memfilters, sync.iterable)))
+                    return ci(imap(mz, ci([getmro((gc(thing))), [thing]])))
+            sync(chain_iter(imap(_memfilters, sync.iterable)))
         return self
 
     _odeepmembers = deepmembers
@@ -148,7 +143,7 @@ class CollectMixin(local):
         call = self._call
         _mz = partial(mfilter, call)
         with self._sync as sync:
-            sync(chain_iter(_map(_mz, sync.iterable)))
+            sync(chain_iter(imap(_mz, sync.iterable)))
         return self
 
     _omembers = members
@@ -317,7 +312,7 @@ class FilterMixin(local):
     def compact(self):
         '''strip "untrue" things from incoming things'''
         with self._sync as sync:
-            sync.iter(_filter(truth, sync.iterable))
+            sync.iter(ifilter(truth, sync.iterable))
         return self
 
     _ocompact = compact
@@ -326,7 +321,7 @@ class FilterMixin(local):
         '''incoming things for which call is `True`'''
         call = self._call
         with self._sync as sync:
-            sync(_filter(call, sync.iterable))
+            sync(ifilter(call, sync.iterable))
         return self
 
     _ofilter = filter
@@ -349,7 +344,7 @@ class FilterMixin(local):
         with self._sync as sync:
             falsy, truey = tee(sync.iterable)
             sync(iter(
-                [list(_filterfalse(call, falsy)), list(_filter(call, truey))]
+                [list(filterfalse(call, falsy)), list(ifilter(call, truey))]
             ))
         return self
 
@@ -359,7 +354,7 @@ class FilterMixin(local):
         '''incoming things for which call is `False`'''
         call = self._call
         with self._sync as sync:
-            sync(_filterfalse(call, sync.iterable))
+            sync(filterfalse(call, sync.iterable))
         return self
 
     _oreject = reject
@@ -367,7 +362,7 @@ class FilterMixin(local):
     def without(self, *things):
         '''strip things from incoming things'''
         with self._sync as sync:
-            sync(_filterfalse(lambda x: x in things, sync.iterable))
+            sync(filterfalse(lambda x: x in things, sync.iterable))
         return self
 
     _owithout = without

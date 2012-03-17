@@ -9,7 +9,7 @@ from twoq.support import port
 class AMathQMixin(object):
 
     def test_max(self):
-        self.assertEqual(self.qclass(1, 2, 4).max().value(), 4)
+        self.assertEqual(self.qclass(1, 2, 4).max().end(), 4)
         from stuf import stuf
         stooges = [
             stuf(name='moe', age=40),
@@ -17,58 +17,58 @@ class AMathQMixin(object):
             stuf(name='curly', age=60),
         ]
         self.assertEqual(
-            stuf(self.qclass(*stooges).tap(lambda x: x.age).max().value()),
+            stuf(self.qclass(*stooges).tap(lambda x: x.age).max().end()),
             stuf(name='curly', age=60),
         )
 
     def test_min(self):
-        self.assertEqual(self.qclass(10, 5, 100, 2, 1000).min().value(), 2)
+        self.assertEqual(self.qclass(10, 5, 100, 2, 1000).min().end(), 2)
         self.assertEqual(
-            self.qclass(10, 5, 100, 2, 1000).tap(lambda x: x).min().value(), 2,
+            self.qclass(10, 5, 100, 2, 1000).tap(lambda x: x).min().end(), 2,
         )
 
     def test_minmax(self):
-        self.assertEqual(self.qclass(1, 2, 4).minmax().value(), [1, 4])
+        self.assertEqual(self.qclass(1, 2, 4).minmax().end(), [1, 4])
         self.assertEqual(
-            self.qclass(10, 5, 100, 2, 1000).minmax().value(), [2, 1000],
+            self.qclass(10, 5, 100, 2, 1000).minmax().end(), [2, 1000],
         )
 
     def test_median(self):
-        self.assertEqual(self.qclass(4, 5, 7, 2, 1).median().value(), 4)
-        self.assertEqual(self.qclass(4, 5, 7, 2, 1, 8).median().value(), 4.5)
+        self.assertEqual(self.qclass(4, 5, 7, 2, 1).median().end(), 4)
+        self.assertEqual(self.qclass(4, 5, 7, 2, 1, 8).median().end(), 4.5)
 
     def test_mode(self):
         self.assertEqual(
-            self.qclass(11, 3, 5, 11, 7, 3, 11).mode().value(), 11,
+            self.qclass(11, 3, 5, 11, 7, 3, 11).mode().end(), 11,
         )
 
     def test_uncommon(self):
         self.assertEqual(
-            self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon().value(), 7,
+            self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon().end(), 7,
         )
 
     def test_frequency(self):
         self.assertEqual(
-            self.qclass(11, 3, 5, 11, 7, 3, 11).frequency().value(),
+            self.qclass(11, 3, 5, 11, 7, 3, 11).frequency().end(),
             [(11, 3), (3, 2), (5, 1), (7, 1)]
         )
 
     def test_statrange(self):
-        self.assertEqual(self.qclass(3, 5, 7, 3, 11).statrange().value(), 8)
+        self.assertEqual(self.qclass(3, 5, 7, 3, 11).statrange().end(), 8)
 
     def test_sum(self):
-        self.assertEqual(self.qclass(1, 2, 3).sum().value(), 6)
-        self.assertEqual(self.qclass(1, 2, 3).sum(1).value(), 7)
+        self.assertEqual(self.qclass(1, 2, 3).sum().end(), 6)
+        self.assertEqual(self.qclass(1, 2, 3).sum(1).end(), 7)
 
     def test_fsum(self):
         self.assertEqual(
-            self.qclass(.1, .1, .1, .1, .1, .1, .1, .1, .1, .1).fsum().value(),
+            self.qclass(.1, .1, .1, .1, .1, .1, .1, .1, .1, .1).fsum().end(),
             1.0,
         )
 
     def test_average(self):
         self.assertEqual(
-            self.qclass(10, 40, 45).average().value(), 31.666666666666668,
+            self.qclass(10, 40, 45).average().end(), 31.666666666666668,
         )
 
 
@@ -76,23 +76,23 @@ class ATruthQMixin(object):
 
     def test_all(self):
         self.assertFalse(
-            self.qclass(True, 1, None, 'yes').tap(bool).all().value()
+            self.qclass(True, 1, None, 'yes').tap(bool).all().end()
         )
 
     def test_any(self):
         self.assertTrue(
-            self.qclass(None, 0, 'yes', False).tap(bool).any().value()
+            self.qclass(None, 0, 'yes', False).tap(bool).any().end()
         )
 
     def test_include(self):
-        self.assertTrue(self.qclass(1, 2, 3).contains(3).value())
+        self.assertTrue(self.qclass(1, 2, 3).contains(3).end())
 
     def test_quantify(self):
         self.assertEqual(
-            self.qclass(True, 1, None, 'yes').tap(bool).quantify().value(), 3,
+            self.qclass(True, 1, None, 'yes').tap(bool).quantify().end(), 3,
         )
         self.assertEqual(
-            self.qclass(None, 0, 'yes', False).tap(bool).quantify().value(), 1,
+            self.qclass(None, 0, 'yes', False).tap(bool).quantify().end(), 1,
         )
 
 
@@ -100,12 +100,12 @@ class AReduceQMixin(AMathQMixin, ATruthQMixin):
 
     def test_smash(self):
         self.assertEqual(
-            self.qclass([[1, [2], [3, [[4]]]]]).smash().value(), [1, 2, 3, 4],
+            self.qclass([[1, [2], [3, [[4]]]]]).smash().end(), [1, 2, 3, 4],
         )
 
     def test_merge(self):
         self.assertEqual(
-            self.qclass([4, 5, 6], [1, 2, 3]).merge().value(),
+            self.qclass([4, 5, 6], [1, 2, 3]).merge().end(),
             [1, 2, 3, 4, 5, 6],
         )
 
@@ -113,36 +113,36 @@ class AReduceQMixin(AMathQMixin, ATruthQMixin):
         self.assertEqual(
             self.qclass(
                 'moe', 30, True, 'larry', 40, False, 'curly', 50, 1, 1,
-            ).pairwise().value(),
+            ).pairwise().end(),
             [('moe', 30), (30, True), (True, 'larry'), ('larry', 40),
             (40, False), (False, 'curly'), ('curly', 50), (50, 1), (1, 1)]
         )
 
     def test_reduce(self):
         self.assertEqual(
-            self.qclass(1, 2, 3).tap(lambda x, y: x + y).reduce().value(), 6,
+            self.qclass(1, 2, 3).tap(lambda x, y: x + y).reduce().end(), 6,
         )
         self.assertEqual(
-            self.qclass(1, 2, 3).tap(lambda x, y: x + y).reduce(1).value(), 7,
+            self.qclass(1, 2, 3).tap(lambda x, y: x + y).reduce(1).end(), 7,
         )
 
     def test_reduce_right(self):
         self.assertEqual(
             self.qclass([0, 1], [2, 3], [4, 5]).tap(
                 lambda x, y: x + y
-            ).reduce_right().value(), [4, 5, 2, 3, 0, 1],
+            ).reduce_right().end(), [4, 5, 2, 3, 0, 1],
         )
         self.assertEqual(
             self.qclass([0, 1], [2, 3], [4, 5]).tap(
                 lambda x, y: x + y
-            ).reduce_right([0, 0]).value(), [4, 5, 2, 3, 0, 1, 0, 0],
+            ).reduce_right([0, 0]).end(), [4, 5, 2, 3, 0, 1, 0, 0],
         )
 
     def test_roundrobin(self):
         self.assertEqual(
             self.qclass(
                 ['moe', 'larry', 'curly'], [30, 40, 50], [True, False, False]
-            ).roundrobin().value(),
+            ).roundrobin().end(),
             ['moe', 30, True, 'larry', 40, False, 'curly', 50, False],
         )
 
@@ -150,7 +150,7 @@ class AReduceQMixin(AMathQMixin, ATruthQMixin):
         self.assertEqual(
             self.qclass(
                 ['moe', 'larry', 'curly'], [30, 40, 50], [True, False, False]
-            ).zip().value(),
+            ).zip().end(),
             [('moe', 30, True), ('larry', 40, False), ('curly', 50, False)],
         )
 

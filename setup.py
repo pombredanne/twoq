@@ -9,23 +9,23 @@ try:
 except ImportError:
     from distutils.core import setup
 
-install_requires = ['stuf>=0.8.6']
+install_requires = ['stuf>=0.8.7', 'distribute>=0.6.25']
 if sys.version_info[0] == 2 and sys.version_info[1] < 7:
     install_requires.extend(['ordereddict', 'unittest2'])
 
 setup(
     name='twoq',
-    version='0.2.1',
-    description='iterator chaining, underscored by two-headed queues',
+    version='0.2.2',
+    description='iterator chaining, underscored by a two-headed queue',
     long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'r').read(),
     author='L. C. Rees',
     url='https://bitbucket.org/lcrees/twoq/',
     author_email='lcrees@gmail.com',
     license='MIT',
-    packages=['twoq', 'twoq.mixins', 'twoq.active'],
+    packages=['twoq', 'twoq.mixins', 'twoq.active', 'twoq.lazy'],
     test_suite='twoq.tests',
     zip_safe=False,
-    keywords='queue generator utility iterator',
+    keywords='queue generator utility iterator functional programming',
     install_requires=install_requires,
     classifiers=[
         'Development Status :: 3 - Alpha',
