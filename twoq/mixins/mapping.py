@@ -9,14 +9,13 @@ from operator import methodcaller
 from itertools import starmap, chain, repeat
 
 from stuf.six import items
-from twoq import support as ct
+from stuf.utils import imap
+from twoq.support import range
+from twoq.support import chain_iter
 
 __all__ = (
     'DelayMixin', 'CopyMixin', 'RepeatMixin', 'MapMixin', 'MappingMixin',
 )
-chain_iter = chain.from_iterable
-_map = ct.map
-_xrange = ct.xrange
 
 ###############################################################################
 ## mapping subroutines ########################################################
@@ -111,7 +110,7 @@ class DelayMixin(local):
             caller=methodcaller(name, *self._args, **self._kw),
         )
         with self._sync as sync:
-            sync(_map(_call, sync.iterable))
+            sync(imap(_call, sync.iterable))
         return self
 
     _odelay_invoke = delay_invoke
@@ -124,10 +123,10 @@ class DelayMixin(local):
         '''
         _call = partial(delay_map, wait=wait, caller=self._call)
         with self._sync as sync:
-            sync(_map(_call, sync.iterable))
+            sync(imap(_call, sync.iterable))
         return self
 
-    _odelay_map = delay_map
+    _odelayimap = delay_map
 
 
 class CopyMixin(local):
@@ -137,7 +136,7 @@ class CopyMixin(local):
     def copy(self):
         '''copy each incoming thing'''
         with self._sync as sync:
-            sync(_map(copy, sync.iterable))
+            sync(imap(copy, sync.iterable))
         return self
 
     _ocopy = copy
@@ -145,7 +144,7 @@ class CopyMixin(local):
     def deepcopy(self):
         '''copy each incoming thing deeply'''
         with self._sync as sync:
-            sync(_map(deepcopy, sync.iterable))
+            sync(imap(deepcopy, sync.iterable))
         return self
 
     _odeepcopy = deepcopy
@@ -173,9 +172,9 @@ class RepeatMixin(local):
         '''
         with self._sync as sync:
             if stop:
-                sync(_xrange(start, stop, step))
+                sync(range(start, stop, step))
             else:
-                sync(_xrange(start))
+                sync(range(start))
         return self
 
     _orange = range
@@ -234,7 +233,7 @@ class MapMixin(local):
             invoke, caller=methodcaller(name, *self._args, **self._kw),
         )
         with self._sync as sync:
-            sync(_map(_call, sync.iterable))
+            sync(imap(_call, sync.iterable))
         return self
 
     _oinvoke = invoke
@@ -243,7 +242,7 @@ class MapMixin(local):
         '''invoke call on each mapping to get key, value pairs'''
         call = self._call
         with self._sync as sync:
-            sync(starmap(call, chain_iter(_map(items, sync.iterable))))
+            sync(starmap(call, chain_iter(imap(items, sync.iterable))))
         return self
 
     _ostarmap = items
@@ -252,7 +251,7 @@ class MapMixin(local):
         '''invoke call on each incoming thing'''
         call = self._call
         with self._sync as sync:
-            sync(_map(call, sync.iterable))
+            sync(imap(call, sync.iterable))
         return self
 
     _omap = map

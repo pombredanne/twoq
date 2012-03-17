@@ -36,28 +36,28 @@ class BaseQMixin(QueueingMixin):
         ## incoming things ####################################################
         #######################################################################
         # incoming things right append
-        self._inappend = self.incoming.append
+        self._inappend = self.__inappend = self.incoming.append
         # incoming things left append
-        self._inappendleft = self.incoming.appendleft
+        self._inappendleft = self.__inappendleft = self.incoming.appendleft
         # incoming things clear
-        self._inclear = self.incoming.clear
+        self._inclear = self.__inclear = self.incoming.clear
         # incoming things right extend
-        self._inextend = self.incoming.extend
+        self._inextend = self.__inextend = self.incoming.extend
         # incoming things left extend
-        self._inextendleft = self.incoming.extendleft
+        self._inextendleft = self.__inextendleft = self.incoming.extendleft
         #######################################################################
         ## outgoing things ####################################################
         #######################################################################
         # outgoing things right append
-        self._outappend = self.outgoing.append
+        self._outappend = self.__outappend = self.outgoing.append
         # outgoing things right extend
-        self._outextend = self.outgoing.extend
+        self._outextend = self.__outextend = self.outgoing.extend
         # outgoing things clear
-        self._outclear = self.outgoing.clear
+        self._outclear = self.__outclear = self.outgoing.clear
         # outgoing things right pop
-        self.pop = self.outgoing.pop
+        self.pop = self.__pop = self.outgoing.pop
         # outgoing things left pop
-        self.popleft = self.outgoing.popleft
+        self.popleft = self.__popleft = self.outgoing.popleft
 
     ###########################################################################
     ## queue information ######################################################
@@ -126,22 +126,22 @@ class BaseQMixin(QueueingMixin):
     def clear(self):
         '''clear every thing'''
         self.detap()
-        self._outclear()
-        self._inclear()
+        self.__outclear()
+        self.__inclear()
         return self
 
     _oclear = clear
 
     def inclear(self):
         '''clear incoming things'''
-        self._inclear()
+        self.__inclear()
         return self
 
     _oiclear = inclear
 
     def outclear(self):
         '''clear outgoing things'''
-        self._oclear()
+        self.__outclear()
         return self
 
     _ooutclear = outclear
@@ -156,7 +156,7 @@ class BaseQMixin(QueueingMixin):
 
         @param thing: some thing
         '''
-        self._inappend(thing)
+        self.__inappend(thing)
         return self
 
     _oappend = append
@@ -167,7 +167,7 @@ class BaseQMixin(QueueingMixin):
 
         @param thing: some thing
         '''
-        self._inappendleft(thing)
+        self.__inappendleft(thing)
         return self
 
     _oappendleft = appendleft
@@ -193,7 +193,7 @@ class BaseQMixin(QueueingMixin):
 
         @param thing: some things
         '''
-        self._outextend(things)
+        self.__outextend(things)
         return self
 
     def extend(self, things):
@@ -202,7 +202,7 @@ class BaseQMixin(QueueingMixin):
 
         @param thing: some things
         '''
-        self._inextend(things)
+        self.__inextend(things)
         return self
 
     _oextend = extend
@@ -213,7 +213,7 @@ class BaseQMixin(QueueingMixin):
 
         @param thing: some things
         '''
-        self._inextendleft(things)
+        self.__inextendleft(things)
         return self
 
     _oextendleft = extendleft
@@ -232,7 +232,7 @@ class BaseQMixin(QueueingMixin):
 
     def shift(self):
         '''shift outgoing things to incoming things'''
-        self._inextend(self.outgoing)
+        self.__inextend(self.outgoing)
         return self
 
     _oshift = shift
@@ -242,9 +242,9 @@ class BaseQMixin(QueueingMixin):
         shift outgoing things to incoming things, clearing incoming things
         '''
         # clear incoming things
-        self._inclear()
+        self.__inclear()
         # extend incoming things with outgoing things
-        self._inextend(self.outgoing)
+        self.__inextend(self.outgoing)
         return self
 
     _osync = sync
@@ -252,7 +252,7 @@ class BaseQMixin(QueueingMixin):
     def outshift(self):
         '''shift incoming things to outgoing things'''
         # extend incoming things with outgoing things
-        self._outextend(self.incoming)
+        self.__outextend(self.incoming)
         return self
 
     _outshift = outshift
@@ -262,9 +262,9 @@ class BaseQMixin(QueueingMixin):
         shift incoming things to outgoing things, clearing outgoing things
         '''
         # clear incoming things
-        self._outclear()
+        self.__outclear()
         # extend incoming things with outgoing things
-        self._outextend(self.incoming)
+        self.__outextend(self.incoming)
         return self
 
     _outsync = outsync
@@ -302,7 +302,7 @@ class ResultQMixin(local):
 
     def results(self):
         '''yield outgoing things and clear outgoing things'''
-        for thing in iterexcept(self.outgoing.popleft, IndexError):
+        for thing in iterexcept(self.popleft, IndexError):
             yield thing
 
     _oresults = results

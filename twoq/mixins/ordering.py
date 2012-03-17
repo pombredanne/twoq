@@ -5,11 +5,10 @@ from threading import local
 from itertools import groupby
 from random import choice, shuffle, sample
 
-from twoq import support as ct
+from stuf.utils import imap
+from twoq.support import zip_longest
 
 __all__ = ('OrderMixin', 'RandomMixin', 'OrderingMixin')
-_map = ct.map
-_zip_longest = ct.zip_longest
 
 
 class RandomMixin(local):
@@ -56,11 +55,11 @@ class OrderMixin(local):
         call = self._call
         with self._sync as sync:
             if call is None:
-                sync(_map(
+                sync(imap(
                     lambda x: [x[0], list(x[1])], groupby(sync.iterable)
                 ))
             else:
-                sync(_map(
+                sync(imap(
                     lambda x: [x[0], list(x[1])], groupby(sync.iterable, call),
                 ))
         return self
@@ -76,7 +75,7 @@ class OrderMixin(local):
         @param fill: fill thing (default: None)
         '''
         with self._sync as sync:
-            sync(_zip_longest(fillvalue=fill, *[iter(sync.iterable)] * n))
+            sync(zip_longest(fillvalue=fill, *[iter(sync.iterable)] * n))
         return self
 
     _ogrouper = grouper
