@@ -9,9 +9,12 @@ from twoq.support import port
 class MSliceQMixin(object):
 
     def test_first(self):
-        self._false_true_false(
-            self.qclass(5, 4, 3, 2, 1).first(), self.assertEqual, 5,
-        )
+        manq = self.qclass(5, 4, 3, 2, 1).first()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEqual(manq.value(), 5)
+        self.assertFalse(manq.balanced)
 
     def test_nth(self):
         self._false_true_false(
@@ -22,9 +25,12 @@ class MSliceQMixin(object):
         )
 
     def test_last(self):
-        self._false_true_false(
-            self.qclass(5, 4, 3, 2, 1).last(), self.assertEqual, 1,
-        )
+        manq = self.qclass(5, 4, 3, 2, 1).last()
+        self.assertFalse(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        self.assertEqual(manq.value(), 1)
+        self.assertFalse(manq.balanced)
 
     def test_initial(self):
         self._false_true_false(

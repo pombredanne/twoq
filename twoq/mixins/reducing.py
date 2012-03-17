@@ -9,12 +9,10 @@ from operator import truediv, contains
 from itertools import cycle, tee, islice
 from functools import partial, reduce as ireduce
 
-from twoq import support as ct
+from stuf.utils import imap
+from twoq.support import Counter, isstring, zip
 
 __all__ = ('MathMixin', 'TruthMixin', 'ReduceMixin', 'ReducingMixin')
-Counter = ct.Counter
-_zip = zip
-_map = ct.map
 
 ###############################################################################
 ## reducing subroutines #######################################################
@@ -46,11 +44,11 @@ def smash(iterable):
 
     @param iterable: an iterable
     '''
-    isstring = ct.port.isstring
+    _isstring = isstring
     _Iterable = Iterable
     _smash = smash
     for i in iterable:
-        if isinstance(i, _Iterable) and not isstring(i):
+        if isinstance(i, _Iterable) and not _isstring(i):
             for j in _smash(i):
                 yield j
         else:
@@ -180,7 +178,7 @@ class TruthMixin(local):
         '''if `all` incoming things are `True`'''
         call = self._call
         with self._sync as sync:
-            sync.append(all(_map(call, sync.iterable)))
+            sync.append(all(imap(call, sync.iterable)))
         return self
 
     _oall = all
@@ -189,7 +187,7 @@ class TruthMixin(local):
         '''if `any` incoming things are `True`'''
         call = self._call
         with self._sync as sync:
-            sync.append(any(_map(call, sync.iterable)))
+            sync.append(any(imap(call, sync.iterable)))
         return self
 
     _oany = any
@@ -210,7 +208,7 @@ class TruthMixin(local):
         '''how many times call is `True` for incoming things'''
         call = self._call
         with self._sync as sync:
-            sync.append(sum(_map(call, sync.iterable)))
+            sync.append(sum(imap(call, sync.iterable)))
         return self
 
     _oquantify = quantify
@@ -241,7 +239,7 @@ class ReduceMixin(local):
         with self._sync as sync:
             a, b = tee(sync.iterable)
             next(b, None)
-            sync(_zip(a, b))
+            sync(zip(a, b))
         return self
 
     _opairwise = pairwise
@@ -294,7 +292,7 @@ class ReduceMixin(local):
         position
         '''
         with self._sync as sync:
-            sync(_zip(*sync.iterable))
+            sync(zip(*sync.iterable))
         return self
 
     _ozip = zip

@@ -178,10 +178,12 @@ class BaseQMixin(QueueingMixin):
 
         @param thing: some things
         '''
-        self.outgoing = deque(self.outgoing)
-        self.outgoing.extend(things)
-        self.outgoing = iter(self.outgoing)
+        outgoing = deque(self.outgoing)
+        outgoing.extend(things)
+        self.outgoing = iter(outgoing)
         return self
+
+    _ooutextend = outextend
 
     def _sxtend(self, things):
         self._scratch = deque(things)
