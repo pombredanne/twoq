@@ -10,7 +10,7 @@ from twoq.tests.mixins.auto.mapping import *  # @UnusedWildImport
 from twoq.tests.mixins.auto.queuing import AQMixin
 
 
-class TestAutoMap(AQMixin, AMapQMixin):
+class TestAutoMap(unittest.TestCase, AQMixin, AMapQMixin):
 
     def setUp(self):
         from twoq.active.mapping import amapq
@@ -29,6 +29,7 @@ class TestAutoDelayQ(unittest.TestCase, AQMixin, ADelayQMixin):
     def setUp(self):
         from twoq.active.mapping import adelayq
         self.qclass = adelayq
+
 
 if __name__ == '__main__':
     unittest.main()

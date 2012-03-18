@@ -18,3 +18,5 @@ src/
 static/
 media/
 *.orig
+syntax: glob
+.tox/*
