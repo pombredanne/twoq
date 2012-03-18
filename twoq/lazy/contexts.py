@@ -6,47 +6,47 @@ from itertools import tee
 __all__ = ('AutoContext', 'ManContext')
 
 
-class Context(object):
+class ManContext(object):
 
-    '''base context manager'''
+    '''manual sync context manager'''
 
-    def __init__(self, queue):
+    def __init__(self, queue, inq='incoming', outq='outgoing', tmp='_scratch'):
         '''
         init
 
         @param queue: queue
         '''
-        super(Context, self).__init__()
+        super(ManContext, self).__init__()
         self._queue = queue
-
-    def __call__(self, args):
-        self._queue.outgoing = args
-
-    def iter(self, args):
-        self._queue.outgoing = iter(args)
-
-    def append(self, args):
-        self._queue.outgoing = iter([args])
-
-
-class ManContext(Context):
-
-    '''manual sync context manager'''
+        self._inq = inq
+        self._outq = outq
+        self._iterable = tmp
 
     def __enter__(self):
-        # clear outgoing _queue
-        self._queue.outgoing = None
-        # extend scratch _queue with incoming things
-        self._queue._scratch, self._queue.incoming = tee(self._queue.incoming)
+        # clear outgoing queue
+        setattr(self._queue, self._outq, None)
+        # extend scratch queue with incoming queue
+        tmp, inq = tee(getattr(self._queue, self._inq))
+        setattr(self._queue, self._iterable, tmp)
+        setattr(self._queue, self._inq, inq)
         return self
 
     def __exit__(self, t, v, e):
-        # clear scratch _queue
+        # clear scratch queue
         self._queue._scratch = None
 
     @property
     def iterable(self):
-        return self._queue._scratch
+        return getattr(self._queue, self._iterable)
+
+    def __call__(self, args):
+        setattr(self._queue, self._outq, args)
+
+    def iter(self, args):
+        setattr(self._queue, self._outq, iter(args))
+
+    def append(self, args):
+        setattr(self._queue, self._outq, iter([args]))
 
 
 class AutoContext(ManContext):
@@ -54,7 +54,9 @@ class AutoContext(ManContext):
     '''auto sync context manager'''
 
     def __exit__(self, t, v, e):
-        # clear scratch _queue
-        self._queue._scratch = None
-        # extend incoming items with outgoing items
-        self._queue.incoming, self._queue.outgoing = tee(self._queue.outgoing)
+        # clear scratch queue
+        setattr(self._queue, self._iterable, None)
+        # extend incoming queue with outgoing queue
+        outq, inq = tee(getattr(self._queue, self._outq))
+        setattr(self._queue, self._outq, outq)
+        setattr(self._queue, self._inq, inq)

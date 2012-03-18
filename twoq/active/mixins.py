@@ -9,9 +9,9 @@ from stuf.utils import iterexcept
 
 from twoq.mixins.queuing import QueueingMixin
 
-from twoq.active.contexts import AutoContext, ManContext, SyncContext
+from twoq.active.contexts import AutoContext, ManContext
 
-__all__ = ('AutoQMixin', 'ManQMixin', 'SyncQMixin')
+__all__ = ('AutoQMixin', 'ManQMixin')
 
 
 class BaseQMixin(QueueingMixin):
@@ -224,8 +224,8 @@ class BaseQMixin(QueueingMixin):
 
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
-        with self._sync as _sync:
-            _sync.append(list(self.incoming))
+        with self._sync() as sync:
+            sync.append(list(self.incoming))
         return self
 
     _oreup = reup
@@ -319,7 +319,7 @@ class ResultQMixin(local):
 
     def first(self):
         '''first incoming thing'''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync.append(sync.iterable.popleft())
         return self
 
@@ -327,7 +327,7 @@ class ResultQMixin(local):
 
     def last(self):
         '''last incoming thing'''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync.append(sync.iterable.pop())
         return self
 
@@ -338,9 +338,8 @@ class AutoQMixin(ScratchQMixin):
 
     '''auto balancing manipulation queue mixin'''
 
-    @property
-    def _sync(self):
-        return AutoContext(self)
+    def _sync(self, inq='incoming', outq='outgoing', tmp='_scratch'):
+        return AutoContext(self, inq, outq, tmp)
 
 
 class AutoResultMixin(AutoQMixin, BaseQMixin, ResultQMixin):
@@ -352,25 +351,10 @@ class ManQMixin(ScratchQMixin):
 
     '''manually balanced manipulation queue mixin'''
 
-    @property
-    def _sync(self):
-        return ManContext(self)
+    def _sync(self, inq='incoming', outq='outgoing', tmp='_scratch'):
+        return ManContext(self, inq, outq, tmp)
 
 
 class ManResultMixin(ManQMixin, BaseQMixin, ResultQMixin):
 
     '''manually balanced manipulation queue mixin'''
-
-
-class SyncQMixin(BaseQMixin):
-
-    '''synchronized manipulation queue'''
-
-    @property
-    def _sync(self):
-        return SyncContext(self)
-
-
-class SyncResultMixin(SyncQMixin, BaseQMixin, ResultQMixin):
-
-    '''synchronized manipulation queue'''

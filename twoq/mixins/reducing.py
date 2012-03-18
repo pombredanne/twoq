@@ -65,7 +65,7 @@ class MathMixin(local):
 
     def average(self):
         '''average of all incoming things'''
-        with self._sync as sync:
+        with self._sync() as sync:
             iterable1, iterable2 = tee(sync.iterable)
             sync.append(truediv(sum(iterable1, 0.0), len(list(iterable2))))
         return self
@@ -74,7 +74,7 @@ class MathMixin(local):
 
     def fsum(self):
         '''add incoming things together'''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync.append(fsum(sync.iterable))
         return self
 
@@ -83,7 +83,7 @@ class MathMixin(local):
     def max(self):
         '''find maximum thing in incoming things using call as key function'''
         call = self._call
-        with self._sync as sync:
+        with self._sync() as sync:
             if call is None:
                 sync.append(max(sync.iterable))
             else:
@@ -94,7 +94,7 @@ class MathMixin(local):
 
     def median(self):
         '''mean of all incoming things'''
-        with self._sync as sync:
+        with self._sync() as sync:
             i = list(sorted(sync.iterable))
             e = truediv(len(i) - 1, 2)
             p = int(e)
@@ -106,7 +106,7 @@ class MathMixin(local):
     def min(self):
         '''find minimum thing in incoming things using call as key function'''
         call = self._call
-        with self._sync as sync:
+        with self._sync() as sync:
             if call is None:
                 sync.append(min(sync.iterable))
             else:
@@ -117,7 +117,7 @@ class MathMixin(local):
 
     def minmax(self):
         '''minimum and maximum things among all incoming things'''
-        with self._sync as sync:
+        with self._sync() as sync:
             iterable1, iterable2 = tee(sync.iterable)
             sync(iter([min(iterable1), max(iterable2)]))
         return self
@@ -126,7 +126,7 @@ class MathMixin(local):
 
     def mode(self):
         '''mode of all incoming things'''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync.append(Counter(sync.iterable).most_common(1)[0][0])
         return self
 
@@ -134,7 +134,7 @@ class MathMixin(local):
 
     def uncommon(self):
         '''least common incoming thing'''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync.append(Counter(sync.iterable).most_common()[:-2:-1][0][0])
         return self
 
@@ -142,7 +142,7 @@ class MathMixin(local):
 
     def frequency(self):
         '''frequency of each incoming thing'''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync.append(Counter(sync.iterable).most_common())
         return self
 
@@ -150,7 +150,7 @@ class MathMixin(local):
 
     def statrange(self):
         '''statistical range of all incoming things'''
-        with self._sync as sync:
+        with self._sync() as sync:
             iterz = list(sorted(sync.iterable))
             sync.append(iterz[-1] - iterz[0])
         return self
@@ -163,7 +163,7 @@ class MathMixin(local):
 
         @param start: starting number (default: 0)
         '''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync.append(sum(sync.iterable, start))
         return self
 
@@ -177,7 +177,7 @@ class TruthMixin(local):
     def all(self):
         '''if `all` incoming things are `True`'''
         call = self._call
-        with self._sync as sync:
+        with self._sync() as sync:
             sync.append(all(imap(call, sync.iterable)))
         return self
 
@@ -186,7 +186,7 @@ class TruthMixin(local):
     def any(self):
         '''if `any` incoming things are `True`'''
         call = self._call
-        with self._sync as sync:
+        with self._sync() as sync:
             sync.append(any(imap(call, sync.iterable)))
         return self
 
@@ -198,7 +198,7 @@ class TruthMixin(local):
 
         @param thing: some thing
         '''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync.append(contains(sync.iterable, thing))
         return self
 
@@ -207,7 +207,7 @@ class TruthMixin(local):
     def quantify(self):
         '''how many times call is `True` for incoming things'''
         call = self._call
-        with self._sync as sync:
+        with self._sync() as sync:
             sync.append(sum(imap(call, sync.iterable)))
         return self
 
@@ -220,7 +220,7 @@ class ReduceMixin(local):
 
     def merge(self):
         '''flatten nested but ordered incoming things'''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(merge(*sync.iterable))
         return self
 
@@ -228,7 +228,7 @@ class ReduceMixin(local):
 
     def smash(self):
         '''flatten deeply nested incoming things'''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(smash(sync.iterable))
         return self
 
@@ -236,7 +236,7 @@ class ReduceMixin(local):
 
     def pairwise(self):
         '''every two incoming things as a tuple'''
-        with self._sync as sync:
+        with self._sync() as sync:
             a, b = tee(sync.iterable)
             next(b, None)
             sync(zip(a, b))
@@ -252,7 +252,7 @@ class ReduceMixin(local):
         @param initial: initial thing (default: None)
         '''
         call = self._call
-        with self._sync as sync:
+        with self._sync() as sync:
             if initial:
                 sync.append(ireduce(call, sync.iterable, initial))
             else:
@@ -269,7 +269,7 @@ class ReduceMixin(local):
         @param initial: initial thing (default: None)
         '''
         call = self._call
-        with self._sync as sync:
+        with self._sync() as sync:
             if initial:
                 sync(ireduce(lambda x, y: call(y, x), sync.iterable, initial))
             else:
@@ -280,7 +280,7 @@ class ReduceMixin(local):
 
     def roundrobin(self):
         '''interleave incoming things into one thing'''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(roundrobin(sync.iterable))
         return self
 
@@ -291,7 +291,7 @@ class ReduceMixin(local):
         smash incoming things into one single thing, pairing things by iterable
         position
         '''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(zip(*sync.iterable))
         return self
 
