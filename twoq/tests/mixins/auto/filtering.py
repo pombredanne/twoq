@@ -123,7 +123,7 @@ class ACollectQMixin(object):
             stuf(name='curly', age=60)
         ]
         self.assertEqual(
-            self.qclass(*stooges).pluck('name').end(), 
+            self.qclass(*stooges).pluck('name').end(),
             ['moe', 'larry', 'curly'],
         )
         self.assertEqual(
