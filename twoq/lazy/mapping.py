@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 '''twoq lazy mapping queues'''
 
-from inspect import ismodule
-
-from twoq.support import port
 from twoq.mixins.mapping import (
     DelayMixin, CopyMixin, RepeatMixin, MappingMixin)
 
@@ -72,7 +69,3 @@ mapq = amapq
 class mmapq(ManResultMixin, MappingMixin):
 
     '''manually balanced map queue'''
-
-__all__ = sorted(name for name, obj in port.items(locals()) if not any([
-    name.startswith('_'), ismodule(obj),
-]))

@@ -15,114 +15,78 @@ __all__ = (
     'FilterMixin', 'CollectMixin', 'SetMixin', 'SliceMixin', 'FilteringMixin',
 )
 
-###############################################################################
-## filtering subroutines ######################################################
-###############################################################################
-
-
-def find(call, iterable):
-    '''
-    find the first `True` thing in iterator
-
-    @param call: "Truth" filter
-    @param iterable: an iterable
-    '''
-    for thing in ifilter(call, iterable):
-        yield thing
-        break
-
-
-def members(iterable):
-    '''
-    collect members of things
-
-    @param thing: an iterable
-    '''
-    _getattr = getattr
-    for key in dir(iterable):
-        try:
-            thing = _getattr(iterable, key)
-        except AttributeError:
-            pass
-        else:
-            yield key, thing
-
-
-def mfilter(call, iterable):
-    '''
-    filter members of things
-
-    @param call: "Truth" filter
-    @param iterable: an iterable
-    '''
-    _members = members
-    for i in ifilter(call, _members(iterable)):
-        yield i
-
-
-def pick(names, iterable):
-    '''
-    collect attributes of things in iterable
-
-    @param names: sequence of names
-    @param iterable: an iterable
-    '''
-    attrfind = attrgetter(*names)
-    for thing in iterable:
-        try:
-            yield attrfind(thing)
-        except AttributeError:
-            pass
-
-
-def pluck(keys, iterable):
-    '''
-    collect values of things in iterable
-
-    @param keys: sequence of keys
-    @param iterable: an iterable
-    '''
-    itemfind = itemgetter(*keys)
-    for thing in iterable:
-        try:
-            yield itemfind(thing)
-        except (IndexError, KeyError, TypeError):
-            pass
-
-
-def unique(iterable, key=None):
-    '''
-    unique things in in iterable
-
-    @param iterable: an iterable
-    @param key: determine uniqueness filter
-    '''
-    seen = set()
-    seen_add = seen.add
-    if key is None:
-        for element in filterfalse(seen.__contains__, iterable):
-            seen_add(element)
-            yield element
-    else:
-        for element in iterable:
-            k = key(element)
-            if k not in seen:
-                seen_add(k)
-                yield element
-
-
-###############################################################################
-## filter mixins ##############################################################
-###############################################################################
-
 
 class CollectMixin(local):
 
     '''collecting mixin'''
 
+    @staticmethod
+    def _pick(names, iterable):
+        '''
+        collect attributes of things in iterable
+
+        @param names: sequence of names
+        @param iterable: an iterable
+        '''
+        attrfind = attrgetter(*names)
+        for thing in iterable:
+            try:
+                yield attrfind(thing)
+            except AttributeError:
+                pass
+
+    __o_pick = _o_pick = _pick
+
+    @staticmethod
+    def _members(iterable):
+        '''
+        collect members of things
+
+        @param thing: an iterable
+        '''
+        for key in dir(iterable):
+            try:
+                thing = getattr(iterable, key)
+            except AttributeError:
+                pass
+            else:
+                yield key, thing
+
+    __o_members = _o_members = _members
+
+    @classmethod
+    def _mfilter(cls, call, iterable):
+        '''
+        filter members of things
+
+        @param call: "Truth" filter
+        @param iterable: an iterable
+        '''
+        for i in ifilter(call, cls.__o_members(iterable)):
+            yield i
+
+    __o_mfilter = _o_mfilter = _mfilter
+
+    @staticmethod
+    def _pluck(keys, iterable):
+        '''
+        collect values of things in iterable
+
+        @param keys: sequence of keys
+        @param iterable: an iterable
+        '''
+        itemfind = itemgetter(*keys)
+        for thing in iterable:
+            try:
+                yield itemfind(thing)
+            except (IndexError, KeyError, TypeError):
+                pass
+
+    __o_pluck = _o_pluck = _pluck
+
     def deepmembers(self):
         '''collect object members from incoming things and their bases'''
-        _mz = partial(mfilter, self._call)
+        _mz = partial(self.__o_mfilter, self._call)
         with self._sync() as sync:
             if PY3:
                 def _memfilters(thing, mz=_mz, gc=getcls, ci=chain_iter):
@@ -141,7 +105,7 @@ class CollectMixin(local):
     def members(self):
         '''collect object members from incoming things'''
         call = self._call
-        _mz = partial(mfilter, call)
+        _mz = partial(self.__o_mfilter, call)
         with self._sync() as sync:
             sync(chain_iter(imap(_mz, sync.iterable)))
         return self
@@ -151,7 +115,7 @@ class CollectMixin(local):
     def pick(self, *names):
         '''collect object attributes from incoming things by their `*names`'''
         with self._sync() as sync:
-            sync(pick(names, sync.iterable))
+            sync(self.__o_pick(names, sync.iterable))
         return self
 
     _opick = pick
@@ -159,7 +123,7 @@ class CollectMixin(local):
     def pluck(self, *keys):
         '''collect object items from incoming things by item `*keys`'''
         with self._sync() as sync:
-            sync(pluck(keys, sync.iterable))
+            sync(self.__o_pluck(keys, sync.iterable))
         return self
 
     _opluck = pluck
@@ -168,6 +132,29 @@ class CollectMixin(local):
 class SetMixin(local):
 
     '''set and uniqueness mixin'''
+    
+    @staticmethod
+    def _unique(iterable, key=None):
+        '''
+        unique things in in iterable
+    
+        @param iterable: an iterable
+        @param key: determine uniqueness filter
+        '''
+        seen = set()
+        seen_add = seen.add
+        if key is None:
+            for element in filterfalse(seen.__contains__, iterable):
+                seen_add(element)
+                yield element
+        else:
+            for element in iterable:
+                k = key(element)
+                if k not in seen:
+                    seen_add(k)
+                    yield element
+                    
+    __o_unique = _o_unique = _unique
 
     def difference(self):
         '''difference between incoming things'''
@@ -239,7 +226,7 @@ class SetMixin(local):
         things ever seen
         '''
         with self._sync() as sync:
-            sync.iter(unique(sync.iterable, self._call))
+            sync.iter(self.__o_unique(sync.iterable, self._call))
         return self
 
     _ounique = unique
@@ -308,6 +295,20 @@ class SliceMixin(local):
 class FilterMixin(local):
 
     '''filters mixin'''
+    
+    @staticmethod
+    def _find(call, iterable):
+        '''
+        find the first `True` thing in iterator
+    
+        @param call: "Truth" filter
+        @param iterable: an iterable
+        '''
+        for thing in ifilter(call, iterable):
+            yield thing
+            break
+        
+    _o_find = __o_find = _find
 
     def compact(self):
         '''strip "untrue" things from incoming things'''
@@ -330,7 +331,7 @@ class FilterMixin(local):
         '''first incoming thing for which call is `True`'''
         call = self._call
         with self._sync() as sync:
-            sync(find(call, sync.iterable))
+            sync(self.__o_find(call, sync.iterable))
         return self
 
     _ofind = find

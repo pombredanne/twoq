@@ -14,50 +14,6 @@ from twoq.support import Counter, isstring, zip
 
 __all__ = ('MathMixin', 'TruthMixin', 'ReduceMixin', 'ReducingMixin')
 
-###############################################################################
-## reducing subroutines #######################################################
-###############################################################################
-
-
-def roundrobin(iterable):
-    '''
-    interleave things in iterable into one thing e.g.
-
-    @param iterable: an iterable
-    '''
-    pending = len(tee(iterable, 1))
-    _cycle = cycle
-    _islice = islice
-    nexts = _cycle(partial(next, iter(i)) for i in iterable)
-    while pending:
-        try:
-            for nextz in nexts:
-                yield nextz()
-        except StopIteration:
-            pending -= 1
-            nexts = _cycle(_islice(nexts, pending))
-
-
-def smash(iterable):
-    '''
-    flatten deeply nested iterable
-
-    @param iterable: an iterable
-    '''
-    _isstring = isstring
-    _Iterable = Iterable
-    _smash = smash
-    for i in iterable:
-        if isinstance(i, _Iterable) and not _isstring(i):
-            for j in _smash(i):
-                yield j
-        else:
-            yield i
-
-###############################################################################
-## reducing mixins ############################################################
-###############################################################################
-
 
 class MathMixin(local):
 
@@ -218,6 +174,46 @@ class ReduceMixin(local):
 
     '''reduce mixin'''
 
+    @staticmethod
+    def _roundrobin(iterable):
+        '''
+        interleave things in iterable into one thing e.g.
+
+        @param iterable: an iterable
+        '''
+        pending = len(tee(iterable, 1))
+        _cycle = cycle
+        _islice = islice
+        nexts = _cycle(partial(next, iter(i)) for i in iterable)
+        while pending:
+            try:
+                for nextz in nexts:
+                    yield nextz()
+            except StopIteration:
+                pending -= 1
+                nexts = _cycle(_islice(nexts, pending))
+
+    _o_roundrobin = __o_roundrobin = _roundrobin
+
+    @classmethod
+    def _smash(cls, iterable):
+        '''
+        flatten deeply nested iterable
+
+        @param iterable: an iterable
+        '''
+        _isstring = isstring
+        _Iterable = Iterable
+        _smash = cls._smash
+        for i in iterable:
+            if isinstance(i, _Iterable) and not _isstring(i):
+                for j in _smash(i):
+                    yield j
+            else:
+                yield i
+
+    _o_smash = __o_smash = _smash
+
     def merge(self):
         '''flatten nested but ordered incoming things'''
         with self._sync() as sync:
@@ -229,7 +225,7 @@ class ReduceMixin(local):
     def smash(self):
         '''flatten deeply nested incoming things'''
         with self._sync() as sync:
-            sync(smash(sync.iterable))
+            sync(self.__o_smash(sync.iterable))
         return self
 
     _osmash = flatten = smash
@@ -281,7 +277,7 @@ class ReduceMixin(local):
     def roundrobin(self):
         '''interleave incoming things into one thing'''
         with self._sync() as sync:
-            sync(roundrobin(sync.iterable))
+            sync(self.__o_roundrobin(sync.iterable))
         return self
 
     _oroundrobin = roundrobin

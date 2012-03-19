@@ -10,76 +10,60 @@ from itertools import starmap, chain, repeat
 
 from stuf.six import items
 from stuf.utils import imap
-from twoq.support import range
-from twoq.support import chain_iter
+from twoq.support import chain_iter, range
 
 __all__ = (
     'DelayMixin', 'CopyMixin', 'RepeatMixin', 'MapMixin', 'MappingMixin',
 )
 
-###############################################################################
-## mapping subroutines ########################################################
-###############################################################################
-
-
-def invoke(thing, caller=None):
-    '''
-    invoke method on object but return object instead of call result if the
-    call returns None
-
-    @param thing: some thing
-    @param caller: a callable (default: None)
-    '''
-    results = caller(thing)
-    return thing if results is None else results
-
-
-def delay_each(x, y, wait=0, caller=None):
-    '''
-    invoke `caller` with passed arguments, keywords after a delay
-
-    @param x: positional arguments
-    @param y: keywork arguments
-    @param wait: time in seconds to delay (default: 0)
-    @param caller: a callable (default: None)
-    '''
-    time.sleep(wait)
-    return caller(*x, **y)
-
-
-def delay_invoke(x, wait=0, caller=None):
-    '''
-    invoke method on object after a delay but return object instead of call
-    result if the call returns None
-
-    @param x: some thing
-    @param wait: time in seconds to delay (default: 0)
-    @param caller: a callable (default: None)
-    '''
-    time.sleep(wait)
-    results = caller(x)
-    return x if results is None else results
-
-
-def delay_map(x, wait=None, caller=None):
-    '''
-    invoke call on thing after a delay
-
-    @param wait: time in seconds to delay (default: 0)
-    @param caller: a callable (default: None)
-    '''
-    time.sleep(wait)
-    return caller(x)
-
-
-###############################################################################
-## map mixins #################################################################
-###############################################################################
-
 
 class DelayMixin(local):
 
     '''delayed map mixin'''
+
+    @staticmethod
+    def _delay_each(x, y, wait=0, caller=None):
+        '''
+        invoke `caller` with passed arguments, keywords after a delay
+
+        @param x: positional arguments
+        @param y: keywork arguments
+        @param wait: time in seconds to delay (default: 0)
+        @param caller: a callable (default: None)
+        '''
+        time.sleep(wait)
+        return caller(*x, **y)
+
+    _o_delay_each = _delay_each
+
+    @staticmethod
+    def _delay_invoke(x, wait=0, caller=None):
+        '''
+        invoke method on object after a delay but return object instead of call
+        result if the call returns None
+
+        @param x: some thing
+        @param wait: time in seconds to delay (default: 0)
+        @param caller: a callable (default: None)
+        '''
+        time.sleep(wait)
+        results = caller(x)
+        return x if results is None else results
+
+    _o_delay_invoke = _delay_invoke
+
+    @staticmethod
+    def _delay_map(x, wait=None, caller=None):
+        '''
+        invoke call on thing after a delay
+
+        @param wait: time in seconds to delay (default: 0)
+        @param caller: a callable (default: None)
+        '''
+        time.sleep(wait)
+        return caller(x)
+
+    _o_delay_map = _delay_map
 
     def delay_each(self, wait):
         '''
@@ -88,7 +72,7 @@ class DelayMixin(local):
 
         @param wait: time in seconds
         '''
-        _delay = partial(delay_each, wait=wait, caller=self._call)
+        _delay = partial(self._delay_each, wait=wait, caller=self._call)
         with self._sync() as sync:
             sync(starmap(_delay, sync.iterable))
         return self
@@ -105,7 +89,7 @@ class DelayMixin(local):
         @param wait: time in seconds
         '''
         _call = partial(
-            delay_invoke,
+            self._delay_invoke,
             wait=wait,
             caller=methodcaller(name, *self._args, **self._kw),
         )
@@ -121,7 +105,7 @@ class DelayMixin(local):
 
         @param wait: time in seconds
         '''
-        _call = partial(delay_map, wait=wait, caller=self._call)
+        _call = partial(self._delay_map, wait=wait, caller=self._call)
         with self._sync() as sync:
             sync(imap(_call, sync.iterable))
         return self
@@ -213,6 +197,20 @@ class MapMixin(local):
 
     '''mapping mixin'''
 
+    @staticmethod
+    def _invoke(thing, caller=None):
+        '''
+        invoke method on object but return object instead of call result if the
+        call returns None
+
+        @param thing: some thing
+        @param caller: a callable (default: None)
+        '''
+        results = caller(thing)
+        return thing if results is None else results
+
+    _o_invoke = _invoke
+
     def each(self):
         '''invoke call with passed arguments, keywords in incoming things'''
         call = self._call
@@ -230,7 +228,7 @@ class MapMixin(local):
         @param name: name of method
         '''
         _call = partial(
-            invoke, caller=methodcaller(name, *self._args, **self._kw),
+            self._invoke, caller=methodcaller(name, *self._args, **self._kw),
         )
         with self._sync() as sync:
             sync(imap(_call, sync.iterable))
