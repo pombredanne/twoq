@@ -10,7 +10,7 @@ from twoq.tests.mixins.auto.mapping import *  # @UnusedWildImport
 from twoq.tests.mixins.auto.queuing import AQMixin
 
 
-class TestAutoMap(AQMixin, AMapQMixin):
+class TestAutoMap(unittest.TestCase, AQMixin, AMapQMixin):
 
     def setUp(self):
         from twoq.lazy.mapping import amapq

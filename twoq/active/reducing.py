@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 '''twoq active reducing queues'''
 
-from inspect import ismodule
-
-from twoq.support import port
 from twoq.mixins.reducing import MathMixin, TruthMixin, ReducingMixin
 
-from twoq.active.mixins import AutoResultMixin, ManResultMixin, SyncResultMixin
+from twoq.active.mixins import AutoResultMixin, ManResultMixin
 
 ###############################################################################
 ## active math queues #########################################################
@@ -24,11 +21,6 @@ class mmathq(ManResultMixin, MathMixin):
 
     '''manually balanced math queue'''
 
-
-class smathq(SyncResultMixin, MathMixin):
-
-    '''autosynchronized math queue'''
-
 ###############################################################################
 ## active truth queues ####E###################################################
 ###############################################################################
@@ -45,11 +37,6 @@ class mtruthq(ManResultMixin, TruthMixin):
 
     '''manually balanced truth queue'''
 
-
-class struthq(SyncResultMixin, TruthMixin):
-
-    '''autosynchronized truth queue'''
-
 ###############################################################################
 ## reduce queues ##############################################################
 ###############################################################################
@@ -65,13 +52,3 @@ reduceq = areduceq
 class mreduceq(ManResultMixin, ReducingMixin):
 
     '''manually balanced reduce queue'''
-
-
-class sreduceq(SyncResultMixin, ReducingMixin):
-
-    '''autosynchronized reduce queue'''
-
-__all__ = sorted(name for name, obj in port.items(locals()) if not any([
-    name.startswith('_'), ismodule(obj),
-]))
-del ismodule

@@ -18,9 +18,7 @@ class TestManMap(Manning, MQMixin, MMapQMixin):
         self.qclass = mmapq
 
 
-class TestManRepeatQ(
-    Manning, MQMixin, MRepeatQMixin
-):
+class TestManRepeatQ(Manning, MQMixin, MRepeatQMixin):
 
     def setUp(self):
         from twoq.active.mapping import mrepeatq

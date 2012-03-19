@@ -6,9 +6,9 @@ from twoq.mixins.ordering import OrderingMixin as OrderMixin
 from twoq.mixins.reducing import ReducingMixin as ReduceMixin
 from twoq.mixins.filtering import FilteringMixin as FilterMixin
 
-from twoq.active.mixins import AutoResultMixin, ManResultMixin, SyncResultMixin
+from twoq.active.mixins import AutoResultMixin, ManResultMixin
 
-__all__ = ('autoq', 'manq', 'syncq', 'twoq')
+__all__ = ('autoq', 'manq')
 
 
 class autoq(AutoResultMixin, FilterMixin, MapMixin, ReduceMixin, OrderMixin):
@@ -19,11 +19,6 @@ class autoq(AutoResultMixin, FilterMixin, MapMixin, ReduceMixin, OrderMixin):
 class manq(ManResultMixin, FilterMixin, MapMixin, ReduceMixin, OrderMixin):
 
     '''manually balanced manipulation queue'''
-
-
-class syncq(SyncResultMixin, FilterMixin, MapMixin, ReduceMixin, OrderMixin):
-
-    '''autosyncing manipulation queue'''
 
 
 twoq = autoq
