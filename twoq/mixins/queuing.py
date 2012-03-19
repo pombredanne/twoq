@@ -30,10 +30,31 @@ class QueueingMixin(local):
         self.incoming = incoming
         # outgoing queue
         self.outgoing = outgoing
+        # labels
+        self._inq = 'incoming'
+        self._outq = 'outgoing'
+        self._tmpq = '_scratch'
 
     def __iter__(self):
         '''outgoing things iterator'''
         return iter(self.outgoing)
+
+    def swap(self, inq='incoming', outq='outgoing', tmpq='_scratch'):
+        '''
+        swap queues
+
+        @param inq: incoming queue (default: 'incoming')
+        @param outq: outcoming queue (default: 'outcoming')
+        @param tmpq: temporary queue (default: '_scratch')
+        '''
+        self._inq = inq
+        self._outq = outq
+        self._tmpq = tmpq
+        return self
+
+    def unswap(self):
+        '''restore queues to default'''
+        return self.swap()
 
     ###########################################################################
     ## queue management #######################################################

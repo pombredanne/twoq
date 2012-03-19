@@ -89,7 +89,7 @@ class DelayMixin(local):
         @param wait: time in seconds
         '''
         _delay = partial(delay_each, wait=wait, caller=self._call)
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(starmap(_delay, sync.iterable))
         return self
 
@@ -109,7 +109,7 @@ class DelayMixin(local):
             wait=wait,
             caller=methodcaller(name, *self._args, **self._kw),
         )
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(imap(_call, sync.iterable))
         return self
 
@@ -122,7 +122,7 @@ class DelayMixin(local):
         @param wait: time in seconds
         '''
         _call = partial(delay_map, wait=wait, caller=self._call)
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(imap(_call, sync.iterable))
         return self
 
@@ -135,7 +135,7 @@ class CopyMixin(local):
 
     def copy(self):
         '''copy each incoming thing'''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(imap(copy, sync.iterable))
         return self
 
@@ -143,7 +143,7 @@ class CopyMixin(local):
 
     def deepcopy(self):
         '''copy each incoming thing deeply'''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(imap(deepcopy, sync.iterable))
         return self
 
@@ -156,7 +156,7 @@ class RepeatMixin(local):
 
     def padnone(self):
         '''incoming things and then `None` indefinitely'''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync.iter(chain(sync.iterable, repeat(None)))
         return self
 
@@ -170,7 +170,7 @@ class RepeatMixin(local):
         @param stop: number to stop with (default: 0)
         @param step: number of steps to advance per iteration (default: 1)
         '''
-        with self._sync as sync:
+        with self._sync() as sync:
             if stop:
                 sync(range(start, stop, step))
             else:
@@ -185,7 +185,7 @@ class RepeatMixin(local):
 
         @param n: number of times to repeat
         '''
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(repeat(tuple(sync.iterable), n))
         return self
 
@@ -199,7 +199,7 @@ class RepeatMixin(local):
             (default: None)
         '''
         call = self._call
-        with self._sync as sync:
+        with self._sync() as sync:
             if n is None:
                 sync(starmap(call, repeat(list(sync.iterable))))
             else:
@@ -216,7 +216,7 @@ class MapMixin(local):
     def each(self):
         '''invoke call with passed arguments, keywords in incoming things'''
         call = self._call
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(starmap(lambda x, y: call(*x, **y), sync.iterable))
         return self
 
@@ -232,7 +232,7 @@ class MapMixin(local):
         _call = partial(
             invoke, caller=methodcaller(name, *self._args, **self._kw),
         )
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(imap(_call, sync.iterable))
         return self
 
@@ -241,7 +241,7 @@ class MapMixin(local):
     def items(self):
         '''invoke call on each mapping to get key, value pairs'''
         call = self._call
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(starmap(call, chain_iter(imap(items, sync.iterable))))
         return self
 
@@ -250,7 +250,7 @@ class MapMixin(local):
     def map(self):
         '''invoke call on each incoming thing'''
         call = self._call
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(imap(call, sync.iterable))
         return self
 
@@ -259,7 +259,7 @@ class MapMixin(local):
     def starmap(self):
         '''invoke call on each sequence of incoming things'''
         call = self._call
-        with self._sync as sync:
+        with self._sync() as sync:
             sync(starmap(call, sync.iterable))
         return self
 
