@@ -12,7 +12,7 @@ install_requires = ['stuf>=0.8.8']
 
 setup(
     name='twoq',
-    version='0.2.3',
+    version='0.3.0',
     description='iterator chaining, underscored by a two-headed queue',
     long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'r').read(),
     author='L. C. Rees',
