@@ -339,7 +339,7 @@ class AutoQMixin(ScratchQMixin):
     '''auto balancing manipulation queue mixin'''
 
     def _sync(self):
-        return AutoContext(self, self._inq, self._outq, self._tmp)
+        return AutoContext(self, self._inq, self._outq, self._tmpq)
 
 
 class AutoResultMixin(AutoQMixin, BaseQMixin, ResultQMixin):
@@ -352,7 +352,7 @@ class ManQMixin(ScratchQMixin):
     '''manually balanced manipulation queue mixin'''
 
     def _sync(self):
-        return ManContext(self, self._inq, self._outq, self._tmp)
+        return ManContext(self, self._inq, self._outq, self._tmpq)
 
 
 class ManResultMixin(ManQMixin, BaseQMixin, ResultQMixin):

@@ -279,7 +279,7 @@ class AutoQMixin(BaseQMixin):
     _oreup = reup
 
     def _sync(self):
-        return AutoContext(self, self._inq, self._outq, self._tmp)
+        return AutoContext(self, self._inq, self._outq, self._tmpq)
 
 
 class AutoResultMixin(ResultQMixin, AutoQMixin):
@@ -292,7 +292,7 @@ class ManQMixin(BaseQMixin):
     '''manually balanced manipulation queue mixin'''
 
     def _sync(self):
-        return ManContext(self, self._inq, self._outq, self._tmp)
+        return ManContext(self, self._inq, self._outq, self._tmpq)
 
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
