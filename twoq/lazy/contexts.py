@@ -10,24 +10,24 @@ class ManContext(object):
 
     '''manual sync context manager'''
 
-    def __init__(self, queue, inq='incoming', outq='outgoing', tmp='_scratch'):
+    def __init__(self, q, inq='incoming', outq='outgoing', tmpq='_scratch'):
         '''
         init
 
         @param queue: queue
         '''
         super(ManContext, self).__init__()
-        self._queue = queue
+        self._queue = q
         self._inq = inq
         self._outq = outq
-        self._iterable = tmp
+        self._iterable = tmpq
 
     def __enter__(self):
         # clear outgoing queue
         setattr(self._queue, self._outq, None)
         # extend scratch queue with incoming queue
-        tmp, inq = tee(getattr(self._queue, self._inq))
-        setattr(self._queue, self._iterable, tmp)
+        tmpq, inq = tee(getattr(self._queue, self._inq))
+        setattr(self._queue, self._iterable, tmpq)
         setattr(self._queue, self._inq, inq)
         return self
 

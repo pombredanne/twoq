@@ -8,20 +8,20 @@ class ManContext(object):
 
     '''manual sync context manager'''
 
-    def __init__(self, queue, inq='incoming', outq='outgoing', tmp='_scratch'):
+    def __init__(self, q, inq='incoming', outq='outgoing', tmpq='_scratch'):
         '''
         init
 
         @param queue: queue
         '''
         super(ManContext, self).__init__()
-        _inq = getattr(queue, inq)
-        _outq = getattr(queue, outq)
+        _inq = getattr(q, inq)
+        _outq = getattr(q, outq)
         self._outextend = _outq.extend
         self._outappend = _outq.append
         self._outclear = _outq.clear
         self._inq = _inq
-        self._iterable = getattr(queue, tmp)
+        self._iterable = getattr(q, tmpq)
         self._sxtend = self._iterable.extend
         self._sappend = self._iterable.append
         self._sclear = self._iterable.clear
@@ -57,16 +57,16 @@ class AutoContext(ManContext):
 
     '''auto sync context manager'''
 
-    def __init__(self, queue, inq='incoming', outq='outgoing', tmp='_scratch'):
+    def __init__(self, q, inq='incoming', outq='outgoing', tmpq='_scratch'):
         '''
         init
 
         @param queue: queue
         '''
-        super(AutoContext, self).__init__(queue, inq, outq, tmp)
+        super(AutoContext, self).__init__(q, inq, outq, tmpq)
         self._inclear = self._inq.clear
         self._inextend = self._inq.extend
-        self._outq = queue.outgoing
+        self._outq = q.outgoing
 
     def __exit__(self, t, v, e):
         # clear scratch queue
