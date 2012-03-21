@@ -5,7 +5,7 @@ from threading import local
 from collections import deque
 from bisect import bisect_right
 
-from stuf.utils import iterexcept
+from stuf.utils import iterexcept, lazy
 
 from twoq.mixins.queuing import QueueingMixin
 
@@ -58,6 +58,23 @@ class BaseQMixin(QueueingMixin):
         self.pop = self.__pop = self.outgoing.pop
         # outgoing things left pop
         self.popleft = self.__popleft = self.outgoing.popleft
+        #######################################################################
+        ## scratch queue ######################################################
+        #######################################################################
+        self._scratch = deque()
+        # outgoing things right append
+        self._sappend = self._scratch.append
+        # outgoing things right extend
+        self._sxtend = self._scratch.extend
+        # scratch clear
+        self._sclear = self._scratch.clear
+        # scratch pop left
+        self._spopleft = self._scratch.popleft
+
+    @lazy
+    def _read(self):
+        '''read-only queue'''
+        return deque()
 
     ###########################################################################
     ## queue information ######################################################
@@ -66,12 +83,12 @@ class BaseQMixin(QueueingMixin):
     def __contains__(self, thing):
         return thing in self.incoming
 
-    _oicontains = __contains__
+    _o_contains = __contains__
 
     def __len__(self):
         return len(self.incoming)
 
-    count = _oicount = __len__
+    count = _o_count = __len__
 
     def outcount(self):
         '''count of outgoing things'''
@@ -106,7 +123,7 @@ class BaseQMixin(QueueingMixin):
         incoming.popleft()
         incoming.rotate(index)
 
-    _oidelitem = __delitem__
+    _o_delitem = __delitem__
 
     def remove(self, thing):
         '''
@@ -121,7 +138,7 @@ class BaseQMixin(QueueingMixin):
         incoming.rotate(position)
         return self
 
-    _oiremove = remove
+    _oremove = remove
 
     def clear(self):
         '''clear every thing'''
@@ -145,6 +162,14 @@ class BaseQMixin(QueueingMixin):
         return self
 
     _ooutclear = outclear
+
+    def _readclear(self):
+        '''clear read-only queue'''
+        self._read.clear()
+        self._read.extend(self._incoming)
+        return self
+
+    _o_readclear = _readclear
 
     ###########################################################################
     ## manipulate queues ######################################################
@@ -270,28 +295,10 @@ class BaseQMixin(QueueingMixin):
     _outsync = outsync
 
 
-class ScratchQMixin(BaseQMixin):
-
-    def __init__(self, *args):
-        super(ScratchQMixin, self).__init__(*args)
-        #######################################################################
-        ## scratch queue ######################################################
-        #######################################################################
-        self._scratch = deque()
-        # outgoing things right append
-        self._sappend = self._scratch.append
-        # outgoing things right extend
-        self._sxtend = self._scratch.extend
-        # scratch clear
-        self._sclear = self._scratch.clear
-        # scratch pop left
-        self._spopleft = self._scratch.popleft
-
-
 class ResultQMixin(local):
 
     def end(self):
-        '''return outgoing things and clear out all things'''
+        '''return outgoing things and clear everything'''
         results = self.pop() if len(
             self.outgoing
         ) == 1 else list(self.outgoing)
@@ -301,7 +308,7 @@ class ResultQMixin(local):
     _oend = end
 
     def results(self):
-        '''yield outgoing things and clear outgoing things'''
+        '''yield outgoing things, clearing outgoing things as it iterates'''
         for thing in iterexcept(self.popleft, IndexError):
             yield thing
 
@@ -333,28 +340,51 @@ class ResultQMixin(local):
 
     _olast = last
 
+    def peek(self):
+        '''results of read-only mode'''
+        return self._read[0] if len(
+            self._read
+        ) == 1 else list(self._read)
 
-class AutoQMixin(ScratchQMixin):
+    _opeek = peek
 
-    '''auto balancing manipulation queue mixin'''
 
-    def _sync(self):
-        return AutoContext(self, self._inq, self._outq, self._tmpq)
+class AutoQMixin(BaseQMixin):
+
+    '''auto-balancing queue mixin'''
+
+    _default_context = _context = AutoContext
+    _alt_context = ManContext
+
+    def ro(self):
+        '''enter read-only mode'''
+        # swap context
+        _context = self._alt_context
+        return self._oro()
+
+    _aread_only = ro
+
+    def rw(self):
+        '''enter read/write mode'''
+        # swap context
+        _context = self._default_context
+        return self._owriteable()
+
+    _aread_write = rw
 
 
 class AutoResultMixin(AutoQMixin, BaseQMixin, ResultQMixin):
 
-    '''auto balancing manipulation queue mixin'''
+    '''auto-balancing manipulation queue (with results extractor) mixin'''
 
 
-class ManQMixin(ScratchQMixin):
+class ManQMixin(BaseQMixin):
 
-    '''manually balanced manipulation queue mixin'''
+    '''manually balanced queue mixin'''
 
-    def _sync(self):
-        return ManContext(self, self._inq, self._outq, self._tmpq)
+    _context = ManContext
 
 
 class ManResultMixin(ManQMixin, BaseQMixin, ResultQMixin):
 
-    '''manually balanced manipulation queue mixin'''
+    '''manually balanced queue (with results extractor) mixin'''
