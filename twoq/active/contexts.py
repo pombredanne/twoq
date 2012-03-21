@@ -65,15 +65,6 @@ class TwoArmContext(Context):
         self._queue.extend(self._iterable)
         self._iterable.clear()
 
-    def __call__(self, args):
-        self._iterable.extend(args)
-
-    def iter(self, args):
-        self._iterable.extend(iter(args))
-
-    def append(self, args):
-        self._iterable.append(args)
-
     @property
     def iterable(self):
         return breakcount(self._queue.popleft, len(self._iterable))
@@ -90,38 +81,31 @@ class ManContext(object):
         @param queue: queue
         '''
         super(ManContext, self).__init__()
-        _inq = getattr(q, inq)
-        _outq = getattr(q, outq)
-        self._outextend = _outq.extend
-        self._outappend = _outq.append
-        self._outclear = _outq.clear
-        self._inq = _inq
+        self._inq = getattr(q, inq)
+        self._outq = getattr(q, outq)
         self._iterable = getattr(q, tmpq)
-        self._sxtend = self._iterable.extend
-        self._sappend = self._iterable.append
-        self._sclear = self._iterable.clear
 
     def __enter__(self):
         # clear scratch queue
-        self._sclear()
+        self._iterable.clear()
         # clear outgoing queue
-        self._outclear()
+        self._outq.clear()
         # extend scratch queue with incoming things
-        self._sxtend(self._inq)
+        self._iterable.extend(self._inq)
         return self
 
     def __exit__(self, t, v, e):
         # clear scratch queue
-        self._sclear()
+        self._iterable.clear()
 
     def __call__(self, args):
-        self._outextend(args)
+        self._outq.extend(args)
 
     def iter(self, args):
-        self._outextend(iter(args))
+        self._outq.extend(iter(args))
 
     def append(self, args):
-        self._outappend(args)
+        self._outq.append(args)
 
     @property
     def iterable(self):
@@ -132,21 +116,10 @@ class AutoContext(ManContext):
 
     '''auto-synchronization context manager'''
 
-    def __init__(self, q, inq='incoming', outq='outgoing', tmpq='_scratch'):
-        '''
-        init
-
-        @param queue: queue
-        '''
-        super(AutoContext, self).__init__(q, inq, outq, tmpq)
-        self._inclear = self._inq.clear
-        self._inextend = self._inq.extend
-        self._outq = q.outgoing
-
     def __exit__(self, t, v, e):
         # clear scratch queue
-        self._sclear()
+        self._iterable.clear()
         # clear incoming items
-        self._inclear()
+        self._inq.clear()
         # extend incoming items with outgoing items
-        self._inextend(self._outq)
+        self._inq.extend(self._outq)

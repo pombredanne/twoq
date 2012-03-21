@@ -26,15 +26,11 @@ class MathMixin(local):
             sync.append(truediv(sum(iterable1, 0.0), len(list(iterable2))))
         return self
 
-    _oaverage = average
-
     def fsum(self):
         '''add incoming things together'''
         with self._sync as sync:
             sync.append(fsum(sync.iterable))
         return self
-
-    _ofsum = average
 
     def max(self):
         '''find maximum thing in incoming things using call as key function'''
@@ -46,8 +42,6 @@ class MathMixin(local):
                 sync.append(max(sync.iterable, key=call))
         return self
 
-    _omax = max
-
     def median(self):
         '''mean of all incoming things'''
         with self._sync as sync:
@@ -56,8 +50,6 @@ class MathMixin(local):
             p = int(e)
             sync.append(i[p] if e % 2 == 0 else truediv(i[p] + i[p + 1], 2))
         return self
-
-    _omedian = median
 
     def min(self):
         '''find minimum thing in incoming things using call as key function'''
@@ -69,8 +61,6 @@ class MathMixin(local):
                 sync.append(min(sync.iterable, key=call))
         return self
 
-    _omin = min
-
     def minmax(self):
         '''minimum and maximum things among all incoming things'''
         with self._sync as sync:
@@ -78,15 +68,11 @@ class MathMixin(local):
             sync(iter([min(iterable1), max(iterable2)]))
         return self
 
-    _minmax = minmax
-
     def mode(self):
         '''mode of all incoming things'''
         with self._sync as sync:
             sync.append(Counter(sync.iterable).most_common(1)[0][0])
         return self
-
-    _omode = mode
 
     def uncommon(self):
         '''least common incoming thing'''
@@ -94,15 +80,11 @@ class MathMixin(local):
             sync.append(Counter(sync.iterable).most_common()[:-2:-1][0][0])
         return self
 
-    _ouncommon = uncommon
-
     def frequency(self):
         '''frequency of each incoming thing'''
         with self._sync as sync:
             sync.append(Counter(sync.iterable).most_common())
         return self
-
-    _ofrequency = frequency
 
     def statrange(self):
         '''statistical range of all incoming things'''
@@ -110,8 +92,6 @@ class MathMixin(local):
             iterz = list(sorted(sync.iterable))
             sync.append(iterz[-1] - iterz[0])
         return self
-
-    _ostatrange = statrange
 
     def sum(self, start=0):
         '''
@@ -122,8 +102,6 @@ class MathMixin(local):
         with self._sync as sync:
             sync.append(sum(sync.iterable, start))
         return self
-
-    _osum = sum
 
 
 class TruthMixin(local):
@@ -137,16 +115,12 @@ class TruthMixin(local):
             sync.append(all(imap(call, sync.iterable)))
         return self
 
-    _oall = all
-
     def any(self):
         '''if `any` incoming things are `True`'''
         call = self._call
         with self._sync as sync:
             sync.append(any(imap(call, sync.iterable)))
         return self
-
-    _oany = any
 
     def contains(self, thing):
         '''
@@ -158,16 +132,12 @@ class TruthMixin(local):
             sync.append(contains(sync.iterable, thing))
         return self
 
-    _ocontains = contains
-
     def quantify(self):
         '''how many times call is `True` for incoming things'''
         call = self._call
         with self._sync as sync:
             sync.append(sum(imap(call, sync.iterable)))
         return self
-
-    _oquantify = quantify
 
 
 class ReduceMixin(local):
@@ -193,8 +163,6 @@ class ReduceMixin(local):
                 pending -= 1
                 nexts = _cycle(_islice(nexts, pending))
 
-    _o_roundrobin = __o_roundrobin = _roundrobin
-
     @classmethod
     def _smash(cls, iterable):
         '''
@@ -212,23 +180,19 @@ class ReduceMixin(local):
             else:
                 yield i
 
-    _o_smash = __o_smash = _smash
-
     def merge(self):
         '''flatten nested but ordered incoming things'''
         with self._sync as sync:
             sync(merge(*sync.iterable))
         return self
 
-    _omerge = merge
-
     def smash(self):
         '''flatten deeply nested incoming things'''
         with self._sync as sync:
-            sync(self.__o_smash(sync.iterable))
+            sync(self._smash(sync.iterable))
         return self
 
-    _osmash = flatten = smash
+    flatten = smash
 
     def pairwise(self):
         '''every two incoming things as a tuple'''
@@ -237,8 +201,6 @@ class ReduceMixin(local):
             next(b, None)
             sync(zip(a, b))
         return self
-
-    _opairwise = pairwise
 
     def reduce(self, initial=None):
         '''
@@ -255,8 +217,6 @@ class ReduceMixin(local):
                 sync.append(ireduce(call, sync.iterable))
         return self
 
-    _oreduce = reduce
-
     def reduce_right(self, initial=None):
         '''
         reduce incoming things to one thing from right side of incoming things
@@ -272,15 +232,11 @@ class ReduceMixin(local):
                 sync(ireduce(lambda x, y: call(y, x), sync.iterable))
         return self
 
-    _oreduce_right = reduce_right
-
     def roundrobin(self):
         '''interleave incoming things into one thing'''
         with self._sync as sync:
-            sync(self.__o_roundrobin(sync.iterable))
+            sync(self._roundrobin(sync.iterable))
         return self
-
-    _oroundrobin = roundrobin
 
     def zip(self):
         '''
@@ -290,8 +246,6 @@ class ReduceMixin(local):
         with self._sync as sync:
             sync(zip(*sync.iterable))
         return self
-
-    _ozip = zip
 
 
 class ReducingMixin(MathMixin, TruthMixin, ReduceMixin):

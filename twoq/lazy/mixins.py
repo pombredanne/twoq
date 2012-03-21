@@ -30,20 +30,14 @@ class BaseQMixin(QueueingMixin):
         self.incoming, incoming = tee(self.incoming)
         return value in list(incoming)
 
-    _o_contains = __contains__
-
     def __len__(self):
         self.incoming, incoming = tee(self.incoming)
         return len(list(incoming))
-
-    count = _o_count = __len__
 
     def outcount(self):
         '''count of outgoing things'''
         self.outgoing, outgoing = tee(self.outgoing)
         return len(list(outgoing))
-
-    _ooutcount = outcount
 
     @property
     def balanced(self):
@@ -51,8 +45,6 @@ class BaseQMixin(QueueingMixin):
         self.incoming, incoming = tee(self.incoming)
         self.outgoing, outgoing = tee(self.outgoing)
         return len(list(outgoing)) == len(list(incoming))
-
-    _obalanced = balanced
 
     def index(self, thing):
         '''
@@ -63,8 +55,6 @@ class BaseQMixin(QueueingMixin):
         self.incoming, incoming = tee(self.incoming)
         return list(incoming).index(thing)
 
-    _oindex = index
-
     ###########################################################################
     ## clear queues ###########################################################
     ###########################################################################
@@ -73,8 +63,6 @@ class BaseQMixin(QueueingMixin):
         self.incoming = list(self.incoming)
         del self.incoming[index]
         self.incoming = iter(self.incoming)
-
-    _o_delitem = __delitem__
 
     def remove(self, thing):
         '''
@@ -87,8 +75,6 @@ class BaseQMixin(QueueingMixin):
         self.incoming = iter(self.incoming)
         return self
 
-    _oiremove = remove
-
     def clear(self):
         '''clear every thing'''
         self.detap()
@@ -96,36 +82,21 @@ class BaseQMixin(QueueingMixin):
         self.inclear()
         return self
 
-    _oclear = clear
-
     def inclear(self):
         '''clear incoming things'''
         self.incoming = iter([])
         return self
-
-    _oiclear = inclear
 
     def outclear(self):
         '''clear outgoing things'''
         self.outgoing = iter([])
         return self
 
-    _ooutclear = outclear
-
-    def _sclear(self):
-        '''clear scratch queue'''
-        self._scratch = None
-        return self
-
-    _o_sclear = _sclear
-
     def _readclear(self):
         '''clear read-only queue'''
         self._read = None
         self._read, self._incoming = tee(self.incoming)
         return self
-
-    _o_readclear = _readclear
 
     ###########################################################################
     ## manipulate queues ######################################################
@@ -142,8 +113,6 @@ class BaseQMixin(QueueingMixin):
         self.incoming = iter(self.incoming)
         return self
 
-    _oappend = append
-
     def appendleft(self, thing):
         '''
         append `thing` to left side of incoming things
@@ -154,8 +123,6 @@ class BaseQMixin(QueueingMixin):
         self.incoming.appendleft(thing)
         self.incoming = iter(self.incoming)
         return self
-
-    _oappendleft = appendleft
 
     def insert(self, index, value):
         '''
@@ -169,8 +136,6 @@ class BaseQMixin(QueueingMixin):
         self.incoming = iter(self.incoming)
         return self
 
-    _oinsert = insert
-
     def extend(self, things):
         '''
         extend right side of incoming things with `things`
@@ -181,8 +146,6 @@ class BaseQMixin(QueueingMixin):
         self.incoming.extend(things)
         self.incoming = iter(self.incoming)
         return self
-
-    _oextend = extend
 
     def outextend(self, things):
         '''
@@ -195,19 +158,6 @@ class BaseQMixin(QueueingMixin):
         self.outgoing = iter(outgoing)
         return self
 
-    _ooutextend = outextend
-
-    def _sxtend(self, things):
-        '''
-        extend left side of scratch queue with `things`
-
-        @param thing: some things
-        '''
-        self._scratch = deque(things)
-        return self
-
-    _o_sxtend = _sxtend
-
     def extendleft(self, things):
         '''
         extend left side of incoming things with `things`
@@ -219,8 +169,6 @@ class BaseQMixin(QueueingMixin):
         self.incoming = iter(self.incoming)
         return self
 
-    _oextendleft = extendleft
-
     ###########################################################################
     ## balance queues #########################################################
     ###########################################################################
@@ -230,14 +178,14 @@ class BaseQMixin(QueueingMixin):
         self.outgoing, self.incoming = tee(self.outgoing)
         return self
 
-    _oshift = _osync = sync = shift
+    sync = shift
 
     def outshift(self):
         '''shift incoming things to outgoing things'''
         self.outgoing, self.incoming = tee(self.incoming)
         return self
 
-    _outshift = _outsync = outsync = outshift
+    outsync = outshift
 
 
 class ResultQMixin(BaseQMixin):
@@ -249,13 +197,9 @@ class ResultQMixin(BaseQMixin):
         self.clear()
         return results
 
-    _ofinal = end
-
     def results(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
         return self.outgoing
-
-    _oresults = results
 
     def value(self):
         '''return outgoing things and clear outgoing things'''
@@ -264,15 +208,11 @@ class ResultQMixin(BaseQMixin):
         self.outclear()
         return results
 
-    _ovalue = value
-
     def first(self):
         '''first incoming thing'''
         with self._sync as sync:
             sync.append(next(sync.iterable))
         return self
-
-    _ofirst = first
 
     def last(self):
         '''last incoming thing'''
@@ -281,14 +221,10 @@ class ResultQMixin(BaseQMixin):
             sync.append(deque(i1, maxlen=1).pop())
         return self
 
-    _olast = last
-
     def peek(self):
         '''see results of read-only mode'''
         measure, results = tee(self._read)
         return list(results)[0] if len(measure) == 1 else list(results)
-
-    _opeek = peek
 
 
 class AutoQMixin(BaseQMixin):
@@ -304,23 +240,17 @@ class AutoQMixin(BaseQMixin):
         _context = self._alt_context
         return self._oro()
 
-    _aread_only = ro
-
     def rw(self):
         '''enter read/write mode'''
         # swap context
         _context = self._default_context
         return self._orw()
 
-    _aread_write = rw
-
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
         with self._sync as _sync:
             _sync.append(list(self.incoming))
         return self
-
-    _oreup = reup
 
 
 class AutoResultMixin(ResultQMixin, AutoQMixin):
@@ -337,8 +267,6 @@ class ManQMixin(BaseQMixin):
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
         return self
-
-    _oreup = reup
 
 
 class ManResultMixin(ResultQMixin, ManQMixin):

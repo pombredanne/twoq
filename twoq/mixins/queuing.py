@@ -45,8 +45,9 @@ class QueueingMixin(local):
 
     def ahead(self, n=None):
         '''
-        move incoming things iterator `n`-steps ahead or, if `n` is `None`,
-        consume entirely
+        move iterator for incoming things `n`-steps ahead
+
+        If `n` is `None`, consume entirely.
 
         @param n: number of steps to advance incoming things (default: None)
         '''
@@ -58,8 +59,6 @@ class QueueingMixin(local):
             # advance to the empty slice starting at position `n`
             next(islice(self.incoming, n, n), None)
         return self
-
-    _oahead = ahead
 
     ###########################################################################
     ## queue rotation #########################################################
@@ -78,32 +77,24 @@ class QueueingMixin(local):
         self._tmpq = tmpq
         return self
 
-    _oswap = __swap = swap
-
     def unswap(self):
         '''rotate queues to default'''
-        return self.__swap()
+        return self.swap()
 
     @property
     def _sync(self):
         '''synchronization context'''
         return self._context(self, self._inq, self._outq, self._tmpq)
 
-    _o_sync = _sync
-
     def ro(self):
         '''enter read-only mode'''
         self._o_readclear()
-        return self.__swap(inq='_read', outq='_read')
-
-    _oro = ro
+        return self.swap(inq='_read', outq='_read')
 
     def rw(self):
         '''enter read/write mode'''
         self._o_readclear()
-        return self.__swap()
-
-    _orw = rw
+        return self.swap()
 
     ###########################################################################
     ## current callable management ############################################
@@ -116,8 +107,6 @@ class QueueingMixin(local):
         # set keyword arguemnts
         self._kw = kw
         return self
-
-    _oargs = args
 
     def tap(self, call):
         '''
@@ -133,8 +122,6 @@ class QueueingMixin(local):
         self._call = call
         return self
 
-    _otap = tap
-
     def detap(self):
         '''clear current callable'''
         # reset postitional arguments
@@ -145,16 +132,12 @@ class QueueingMixin(local):
         self._call = None
         return self
 
-    _odetap = detap
-
     def wrap(self, call):
         '''build current callable from factory'''
         def factory(*args, **kw):
             return call(*args, **kw)
         self._call = factory
         return self
-
-    _owrap = wrap
 
     # aliases
     unwrap = detap
