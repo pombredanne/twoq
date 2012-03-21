@@ -6,18 +6,7 @@ from stuf.utils import breakcount
 __all__ = ('AutoContext', 'ManContext')
 
 
-class OneArmContext(object):
-
-    '''one arm context manager'''
-
-    def __init__(self, queue, q='incoming'):
-        '''
-        init
-
-        @param queue: queue
-        '''
-        super(OneArmContext, self).__init__()
-        self._iterable = getattr(queue, q)
+class Context(object):
 
     def __enter__(self):
         return self
@@ -31,12 +20,26 @@ class OneArmContext(object):
     def append(self, args):
         self._iterable.append(args)
 
+
+class OneArmContext(Context):
+
+    '''one arm context manager'''
+
+    def __init__(self, queue, q='incoming'):
+        '''
+        init
+
+        @param queue: queue
+        '''
+        super(OneArmContext, self).__init__()
+        self._iterable = getattr(queue, q)
+
     @property
     def iterable(self):
         return breakcount(self._iterable.popleft, len(self._iterable))
 
 
-class TwoArmContext(object):
+class TwoArmContext(Context):
 
     '''two arm context manager'''
 
@@ -73,7 +76,7 @@ class TwoArmContext(object):
 
     @property
     def iterable(self):
-        return self._incoming
+        return breakcount(self._queue.popleft, len(self._iterable))
 
 
 class ManContext(object):
