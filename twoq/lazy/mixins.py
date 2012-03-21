@@ -268,7 +268,7 @@ class ResultQMixin(BaseQMixin):
 
     def first(self):
         '''first incoming thing'''
-        with self._sync() as sync:
+        with self._sync as sync:
             sync.append(next(sync.iterable))
         return self
 
@@ -276,7 +276,7 @@ class ResultQMixin(BaseQMixin):
 
     def last(self):
         '''last incoming thing'''
-        with self._sync() as sync:
+        with self._sync as sync:
             i1, _ = tee(sync.iterable)
             sync.append(deque(i1, maxlen=1).pop())
         return self
@@ -316,7 +316,7 @@ class AutoQMixin(BaseQMixin):
 
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
-        with self._sync() as _sync:
+        with self._sync as _sync:
             _sync.append(list(self.incoming))
         return self
 

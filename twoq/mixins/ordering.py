@@ -17,7 +17,7 @@ class RandomMixin(local):
 
     def choice(self):
         '''random choice of/from incoming things'''
-        with self._sync() as sync:
+        with self._sync as sync:
             sync.append(choice(list(sync.iterable)))
         return self
 
@@ -29,7 +29,7 @@ class RandomMixin(local):
 
         @param n: number of incoming things
         '''
-        with self._sync() as sync:
+        with self._sync as sync:
             sync(sample(list(sync.iterable), n))
         return self
 
@@ -37,7 +37,7 @@ class RandomMixin(local):
 
     def shuffle(self):
         '''randomly order incoming things'''
-        with self._sync() as sync:
+        with self._sync as sync:
             iterable = list(sync.iterable)
             shuffle(iterable)
             sync(iterable)
@@ -53,7 +53,7 @@ class OrderMixin(local):
     def group(self):
         '''group incoming things using call for key function'''
         call = self._call
-        with self._sync() as sync:
+        with self._sync as sync:
             if call is None:
                 sync(imap(
                     lambda x: [x[0], list(x[1])], groupby(sync.iterable)
@@ -74,7 +74,7 @@ class OrderMixin(local):
         @param n: number of things
         @param fill: fill thing (default: None)
         '''
-        with self._sync() as sync:
+        with self._sync as sync:
             sync(zip_longest(fillvalue=fill, *[iter(sync.iterable)] * n))
         return self
 
@@ -82,7 +82,7 @@ class OrderMixin(local):
 
     def reverse(self):
         '''reverse incoming things'''
-        with self._sync() as sync:
+        with self._sync as sync:
             sync(reversed(list(sync.iterable)))
         return self
 
@@ -91,7 +91,7 @@ class OrderMixin(local):
     def sort(self):
         '''sort incoming things using call for key function'''
         call = self._call
-        with self._sync() as sync:
+        with self._sync as sync:
             if self._call is None:
                 sync(sorted(sync.iterable))
             else:

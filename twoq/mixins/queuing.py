@@ -84,6 +84,7 @@ class QueueingMixin(local):
         '''rotate queues to default'''
         return self.__swap()
 
+    @property
     def _sync(self):
         '''synchronization context'''
         return self._context(self, self._inq, self._outq, self._tmpq)
