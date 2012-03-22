@@ -109,8 +109,8 @@ class MMapQMixin(MCopyQMixin, MDelayQMixin, MRepeatQMixin):
     def test_wrap(self):
         from stuf import stuf
         thing = self.qclass(
-            [('a', 1), ('b', 2), ('c', 3)]
-        ).wrap(stuf).map().shift().end()
+            ('a', 1), ('b', 2), ('c', 3)
+        ).reup().wrap(stuf).map().shift().end()
         self.assertDictEqual(thing, stuf(a=1, b=2, c=3), thing)
 
     def test_each(self):

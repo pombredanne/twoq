@@ -66,12 +66,66 @@ class QueueingMixin(local):
             next(islice(self.incoming, n, n), None)
         return self
 
+    ###########################################################################
+    ## manipulate queues ######################################################
+    ###########################################################################
+
     def clear(self):
         '''clear every thing'''
         self.detap()
         self.outclear()
         self.inclear()
         return self
+
+    def append(self, thing):
+        '''
+        append thing to right side of incoming things
+
+        @param thing: some thing
+        '''
+        with self.ctx1()._sync as sync:
+            sync.append(thing)
+        return self.unswap()
+
+    def appendleft(self, thing):
+        '''
+        append `thing` to left side of incoming things
+
+        @param thing: some thing
+        '''
+        with self.ctx1()._sync as sync:
+            sync.appendleft(thing)
+        return self.unswap()
+
+    def outextend(self, things):
+        '''
+        extend right side of outgoing things with `things`
+
+        @param thing: some things
+        '''
+        with self.ctx1('outgoing')._sync as sync:
+            sync(things)
+        return self.unswap()
+
+    def extend(self, things):
+        '''
+        extend right side of incoming things with `things`
+
+        @param thing: some things
+        '''
+        with self.ctx1()._sync as sync:
+            sync(things)
+        return self.unswap()
+
+    def extendleft(self, things):
+        '''
+        extend left side of incoming things with `things`
+
+        @param thing: some things
+        '''
+        with self.ctx1()._sync as sync:
+            sync.extendleft(things)
+        return self.unswap()
 
     ###########################################################################
     ## queue rotation #########################################################
@@ -95,12 +149,33 @@ class QueueingMixin(local):
         self._workq = workq
         self._outq = outq
         self._inq = inq
-        self._context = self._4arm
+        self._context = self._3arm
         return self
 
-    def autoctx(self):
-        '''switch to autoctx-synchronizing context manager'''
+    def ctx4(self, **kw):
+        '''switch to four-armed context manager'''
+        self._context = self._4arm
+        # incoming queue
+        self._inq = kw.get('inq', 'incoming')
+        # outcoming queue
+        self._outq = kw.get('outq', 'outgoing')
+        # work queue
+        self._workq = kw.get('workq', '_work')
+        # utility queue
+        self._utilq = kw.get('utilq', '_util')
+        return self
+
+    def autoctx(self, **kw):
+        '''switch to auto-synchronizing context manager'''
         self._context = self._auto
+        # incoming queue
+        self._inq = kw.get('inq', 'incoming')
+        # outcoming queue
+        self._outq = kw.get('outq', 'outgoing')
+        # work queue
+        self._workq = kw.get('workq', '_work')
+        # utility queue
+        self._utilq = kw.get('utilq', '_util')
         return self
 
     def swap(self, **kw):
@@ -130,6 +205,12 @@ class QueueingMixin(local):
             workq=self._workq,
             utilq=self._utilq,
         )
+
+    def reup(self):
+        '''put incoming things in incoming things as one incoming thing'''
+        with self.ctx1()._sync as sync:
+            sync.append(list(sync.iterable))
+        return self.unswap()
 
     ###########################################################################
     ## current callable management ############################################
@@ -178,15 +259,15 @@ class ResultMixin(local):
 
     def end(self):
         '''return outgoing things and clear everything'''
-        results = list(self.outgoing)
-        results = results.pop() if len(results) == 1 else results
+        results, measure = tee(self.outgoing)
+        results = next(results) if len(list(measure)) == 1 else list(results)
         self.clear()
         return results
 
     def value(self):
         '''return outgoing things and clear outgoing things'''
-        results = list(self.outgoing)
-        results = results.pop() if len(results) == 1 else results
+        results, measure = tee(self.outgoing)
+        results = next(results) if len(list(measure)) == 1 else list(results)
         self.outclear()
         return results
 

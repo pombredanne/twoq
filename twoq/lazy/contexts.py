@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq lazy contexts'''
 
-from itertools import tee
+from itertools import tee, chain
 
 __all__ = (
     'AutoContext', 'FourArmedContext', 'OneArmedContext', 'TwoArmedContext',
@@ -11,6 +11,13 @@ __all__ = (
 
 class Context(object):
 
+    def _chain(self, thing):
+        setattr(
+            self._queue,
+            self._utilq,
+            chain(thing, getattr(self._queue, self._utilq)),
+        )
+
     @property
     def iterable(self):
         '''iterable object'''
@@ -18,15 +25,31 @@ class Context(object):
 
     def __call__(self, args):
         '''extend work queue with `args` wrapped in iterator'''
-        setattr(self._queue, self._utilq, args)
+        self._chain(args)
 
     def iter(self, args):
         '''extend work queue with `args` wrapped in iterator'''
-        setattr(self._queue, self._utilq, iter(args))
+        self._chain(iter(args))
 
     def append(self, args):
         '''append `args` to work queue'''
-        setattr(self._queue, self._utilq, iter([args]))
+        self._chain(iter([args]))
+
+    def appendleft(self, thing):
+        '''
+        append `thing` to left side of incoming things
+
+        @param thing: some thing
+        '''
+        self._chain(iter([thing]))
+
+    def extendleft(self, things):
+        '''
+        extend left side of incoming things with `things`
+
+        @param thing: some things
+        '''
+        self._chain(reversed(things))
 
 
 class OneArmedContext(Context):
@@ -47,6 +70,9 @@ class OneArmedContext(Context):
     def __enter__(self):
         return self
 
+    def __exit__(self, e, v, b):
+        self
+
 
 class TwoArmedContext(OneArmedContext):
 
@@ -66,9 +92,9 @@ class TwoArmedContext(OneArmedContext):
 
     def __enter__(self):
         # clear work queue
-        setattr(self._queue, self._workq, None)
+        setattr(self._queue, self._workq, iter([]))
         # clear utility queue
-        setattr(self._queue, self._utilq, None)
+        setattr(self._queue, self._utilq, iter([]))
         # extend scratch queue with incoming queue
         workq, outq = tee(getattr(self._queue, self._outq))
         setattr(self._queue, self._workq, workq)
@@ -79,9 +105,9 @@ class TwoArmedContext(OneArmedContext):
         # set outgoing queue
         setattr(self._queue, self._outq, getattr(self._queue, self._utilq))
         # clear work queue
-        setattr(self._queue, self._workq, None)
+        setattr(self._queue, self._workq, iter([]))
         # clear utility queue
-        setattr(self._queue, self._utilq, None)
+        setattr(self._queue, self._utilq, iter([]))
 
 
 class ThreeArmedContext(TwoArmedContext):
@@ -104,9 +130,9 @@ class ThreeArmedContext(TwoArmedContext):
 
     def __enter__(self):
         # clear outgoing queue
-        setattr(self._queue, self._outq, None)
+        setattr(self._queue, self._outq, iter([]))
         # clear utility queue
-        setattr(self._queue, self._utilq, None)
+        setattr(self._queue, self._utilq, iter([]))
         # extend work queue with incoming queue
         tmpq, inq = tee(getattr(self._queue, self._inq))
         setattr(self._queue, self._workq, tmpq)
@@ -117,9 +143,9 @@ class ThreeArmedContext(TwoArmedContext):
         # set outgoing queue
         setattr(self._queue, self._outq, getattr(self._queue, self._utilq))
         # clear work queue
-        setattr(self._queue, self._workq, None)
+        setattr(self._queue, self._workq, iter([]))
         # clear utility queue
-        setattr(self._queue, self._utilq, None)
+        setattr(self._queue, self._utilq, iter([]))
 
 
 class FourArmedContext(ThreeArmedContext):
@@ -146,6 +172,6 @@ class AutoContext(FourArmedContext):
         setattr(self._queue, self._outq, outq)
         setattr(self._queue, self._inq, inq)
         # clear work queue
-        setattr(self._queue, self._workq, None)
+        setattr(self._queue, self._workq, iter([]))
         # clear utility queue
-        setattr(self._queue, self._utilq, None)
+        setattr(self._queue, self._utilq, iter([]))
