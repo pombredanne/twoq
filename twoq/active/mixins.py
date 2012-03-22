@@ -3,13 +3,12 @@
 
 from collections import deque
 
-from stuf.utils import iterexcept, lazy
+from stuf.utils import lazy
 
 from twoq.mixins.queuing import QueueingMixin, ResultMixin
 
 from twoq.active.contexts import (
-    AutoContext, OneArmedContext, FourArmedContext, TwoArmedContext,
-    ThreeArmedContext)
+    AutoContext, OneArmContext, FourArmContext, TwoArmContext, ThreeArmContext)
 
 __all__ = ('AutoQMixin', 'ManQMixin')
 
@@ -19,14 +18,13 @@ class BaseQMixin(QueueingMixin):
     '''base active queue'''
 
     def __init__(self, *args):
-        # extend if just one argument
         incoming = deque(args[0]) if len(args) == 1 else deque(args)
-        self._1arm = OneArmedContext
-        self._2arm = TwoArmedContext
-        self._3arm = ThreeArmedContext
-        self._4arm = FourArmedContext
-        self._auto = AutoContext
         super(BaseQMixin, self).__init__(incoming, deque())
+        self._1arm = OneArmContext
+        self._2arm = TwoArmContext
+        self._3arm = ThreeArmContext
+        self._4arm = FourArmContext
+        self._auto = AutoContext
 
     @lazy
     def _util(self):
@@ -38,14 +36,8 @@ class BaseQMixin(QueueingMixin):
         ''''work queue'''
         return deque()
 
-    ###########################################################################
-    ## queue information ######################################################
-    ###########################################################################
-
     def __len__(self):
         return len(self.incoming)
-
-    count = __len__
 
     def outcount(self):
         '''count of outgoing things'''
@@ -55,14 +47,6 @@ class BaseQMixin(QueueingMixin):
     def balanced(self):
         '''if queues are balanced'''
         return len(self.outgoing) == len(self.incoming)
-
-
-class ResultQMixin(ResultMixin):
-
-    def results(self):
-        '''yield outgoing things, clearing outgoing things as it iterates'''
-        for thing in iterexcept(self.outgoing.popleft, IndexError):
-            yield thing
 
 
 class AutoQMixin(BaseQMixin):
@@ -76,14 +60,14 @@ class ManQMixin(BaseQMixin):
 
     '''manually balanced queue mixin'''
 
-    _default_context = FourArmedContext
+    _default_context = FourArmContext
 
 
-class AutoResultMixin(AutoQMixin, ResultQMixin):
+class AutoResultMixin(AutoQMixin, ResultMixin):
 
     '''auto-balancing manipulation queue (with results extractor) mixin'''
 
 
-class ManResultMixin(ManQMixin, ResultQMixin):
+class ManResultMixin(ManQMixin, ResultMixin):
 
     '''manually balanced queue (with results extractor) mixin'''

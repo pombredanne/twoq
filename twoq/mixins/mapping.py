@@ -12,9 +12,7 @@ from stuf.six import items
 from stuf.utils import imap
 from twoq.support import chain_iter, range
 
-__all__ = (
-    'DelayMixin', 'CopyMixin', 'RepeatMixin', 'MapMixin', 'MappingMixin',
-)
+__all__ = ('DelayMixin', 'RepeatMixin', 'MapMixin', 'MappingMixin')
 
 
 class DelayMixin(local):
@@ -101,20 +99,15 @@ class DelayMixin(local):
         return self
 
 
-class CopyMixin(local):
+class RepeatMixin(local):
 
-    '''copy mixin'''
+    '''repetition mixin'''
 
     def copy(self):
         '''copy each incoming thing '''
         with self._sync as sync:
             sync(imap(deepcopy, sync.iterable))
         return self
-
-
-class RepeatMixin(local):
-
-    '''repetition mixin'''
 
     def padnone(self):
         '''incoming things and then `None` indefinitely'''
@@ -222,6 +215,6 @@ class MapMixin(local):
         return self
 
 
-class MappingMixin(DelayMixin, CopyMixin, RepeatMixin, MapMixin):
+class MappingMixin(DelayMixin, RepeatMixin, MapMixin):
 
     '''mapping mixin'''

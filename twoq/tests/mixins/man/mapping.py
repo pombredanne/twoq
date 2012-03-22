@@ -6,24 +6,6 @@ from inspect import ismodule
 from twoq.support import port
 
 
-class MCopyQMixin(object):
-
-    def test_copy(self):
-        testlist = [[1, [2, 3]], [4, [5, 6]]]
-        manq = self.qclass(testlist).copy()
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        newlist = manq.end()
-        self.assertFalse(newlist is testlist)
-        self.assertListEqual(newlist, testlist)
-        self.assertFalse(newlist[0] is testlist[0])
-        self.assertListEqual(newlist[0], testlist[0])
-        self.assertFalse(newlist[1] is testlist[1])
-        self.assertListEqual(newlist[1], testlist[1])
-#        self.assertFalse(manq.balanced)
-
-
 class MRepeatQMixin(object):
 
     def test_range(self):
@@ -52,6 +34,21 @@ class MRepeatQMixin(object):
             self.assertEqual,
             [[40, 50, 60], [40, 50, 60], [40, 50, 60]],
         )
+
+    def test_copy(self):
+        testlist = [[1, [2, 3]], [4, [5, 6]]]
+        manq = self.qclass(testlist).copy()
+        self.assertTrue(manq.balanced)
+        manq.sync()
+        self.assertTrue(manq.balanced)
+        newlist = manq.end()
+        self.assertFalse(newlist is testlist)
+        self.assertListEqual(newlist, testlist)
+        self.assertFalse(newlist[0] is testlist[0])
+        self.assertListEqual(newlist[0], testlist[0])
+        self.assertFalse(newlist[1] is testlist[1])
+        self.assertListEqual(newlist[1], testlist[1])
+#        self.assertFalse(manq.balanced)
 
 
 class MDelayQMixin(object):
@@ -89,7 +86,7 @@ class MDelayQMixin(object):
         )
 
 
-class MMapQMixin(MCopyQMixin, MDelayQMixin, MRepeatQMixin):
+class MMapQMixin(MDelayQMixin, MRepeatQMixin):
 
     def test_wrap(self):
         from stuf import stuf

@@ -4,12 +4,14 @@
 from itertools import tee, chain
 
 __all__ = (
-    'AutoContext', 'FourArmedContext', 'OneArmedContext', 'TwoArmedContext',
-    'ThreeArmedContext',
+    'AutoContext', 'FourArmContext', 'OneArmContext', 'TwoArmContext',
+    'ThreeArmContext',
 )
 
 
 class Context(object):
+
+    '''base context manager'''
 
     def _chain(self, thing):
         setattr(
@@ -56,7 +58,7 @@ class Context(object):
         setattr(self._queue, self._utilq, iter([]))
 
 
-class OneArmedContext(Context):
+class OneArmContext(Context):
 
     '''one armed context manager'''
 
@@ -66,7 +68,7 @@ class OneArmedContext(Context):
 
         @param queue: queue
         '''
-        super(OneArmedContext, self).__init__()
+        super(OneArmContext, self).__init__()
         self._queue = queue
         # work/utility queue attribute name
         self._workq = self._utilq = kw.get('workq', 'incoming')
@@ -78,7 +80,7 @@ class OneArmedContext(Context):
         self
 
 
-class TwoArmedContext(OneArmedContext):
+class TwoArmContext(OneArmContext):
 
     '''two armed context manager'''
 
@@ -88,7 +90,7 @@ class TwoArmedContext(OneArmedContext):
 
         @param queue: queue
         '''
-        super(TwoArmedContext, self).__init__(queue)
+        super(TwoArmContext, self).__init__(queue)
         # work/utility queue attribute name
         self._workq = self._utilq = kw.get('workq', '_work')
         # outgoing queue attribute name
@@ -114,7 +116,7 @@ class TwoArmedContext(OneArmedContext):
         setattr(self._queue, self._utilq, iter([]))
 
 
-class ThreeArmedContext(TwoArmedContext):
+class ThreeArmContext(TwoArmContext):
 
     '''three armed context manager'''
 
@@ -124,7 +126,7 @@ class ThreeArmedContext(TwoArmedContext):
 
         @param queue: queue collections
         '''
-        super(ThreeArmedContext, self).__init__(queue)
+        super(ThreeArmContext, self).__init__(queue)
         # incoming queue attribute name
         self._inq = kw.get('inq', 'incoming')
         # outgoing queue attribute name
@@ -152,7 +154,7 @@ class ThreeArmedContext(TwoArmedContext):
         setattr(self._queue, self._utilq, iter([]))
 
 
-class FourArmedContext(ThreeArmedContext):
+class FourArmContext(ThreeArmContext):
 
     '''four armed context manager'''
 
@@ -162,11 +164,11 @@ class FourArmedContext(ThreeArmedContext):
 
         @param queue: queue collections
         '''
-        super(FourArmedContext, self).__init__(queue, **kw)
+        super(FourArmContext, self).__init__(queue, **kw)
         self._utilq = kw.get('utilq', '_util')
 
 
-class AutoContext(FourArmedContext):
+class AutoContext(FourArmContext):
 
     '''auto-synchronized context manager'''
 

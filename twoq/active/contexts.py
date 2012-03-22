@@ -3,11 +3,6 @@
 
 from stuf.utils import breakcount, iterexcept
 
-__all__ = (
-    'AutoContext', 'FourArmedContext', 'OneArmedContext', 'TwoArmedContext',
-    'ThreeArmedContext',
-)
-
 
 class Context(object):
 
@@ -51,7 +46,7 @@ class Context(object):
         self._utilq.clear()
 
 
-class OneArmedContext(Context):
+class OneArmContext(Context):
 
     '''one armed context manager'''
 
@@ -61,7 +56,7 @@ class OneArmedContext(Context):
 
         @param queue: queue collection
         '''
-        super(OneArmedContext, self).__init__()
+        super(OneArmContext, self).__init__()
         # work/utility queue attribute name
         self._workq = self._utilq = getattr(queue, kw.get('workq', 'incoming'))
 
@@ -72,7 +67,7 @@ class OneArmedContext(Context):
         pass
 
 
-class TwoArmedContext(Context):
+class TwoArmContext(Context):
 
     '''two armed context manager'''
 
@@ -82,7 +77,7 @@ class TwoArmedContext(Context):
 
         @param queue: queue collections
         '''
-        super(TwoArmedContext, self).__init__()
+        super(TwoArmContext, self).__init__()
         # outgoing queue attribute name
         self._outq = getattr(queue, kw.get('outq', 'incoming'))
         # work/utility queue attribute name
@@ -104,7 +99,7 @@ class TwoArmedContext(Context):
         self._workq.clear()
 
 
-class ThreeArmedContext(Context):
+class ThreeArmContext(Context):
 
     '''three armed context manager'''
 
@@ -114,7 +109,7 @@ class ThreeArmedContext(Context):
 
         @param queue: queue collections
         '''
-        super(ThreeArmedContext, self).__init__()
+        super(ThreeArmContext, self).__init__()
         # incoming queue attribute name
         self._inq = getattr(queue, kw.get('inq', 'incoming'))
         # outgoing queue attribute name
@@ -143,7 +138,7 @@ class ThreeArmedContext(Context):
         return iterexcept(self._workq.popleft, IndexError)
 
 
-class FourArmedContext(ThreeArmedContext):
+class FourArmContext(ThreeArmContext):
 
     '''four armed context manager'''
 
@@ -153,12 +148,12 @@ class FourArmedContext(ThreeArmedContext):
 
         @param queue: queue collections
         '''
-        super(FourArmedContext, self).__init__(queue, **kw)
+        super(FourArmContext, self).__init__(queue, **kw)
         # utility queue attribute name (default: '_utilq')
         self._utilq = getattr(queue, kw.get('utilq', '_util'))
 
 
-class AutoContext(FourArmedContext):
+class AutoContext(FourArmContext):
 
     '''auto-synchronizing four armed context manager'''
 

@@ -6,8 +6,7 @@ from itertools import tee
 from twoq.mixins.queuing import QueueingMixin, ResultMixin
 
 from twoq.lazy.contexts import (
-    AutoContext, OneArmedContext, FourArmedContext, TwoArmedContext,
-    ThreeArmedContext)
+    AutoContext, OneArmContext, FourArmContext, TwoArmContext, ThreeArmContext)
 
 __all__ = ['AutoQMixin', 'ManQMixin']
 
@@ -17,26 +16,19 @@ class BaseQMixin(QueueingMixin):
     '''base lazy queue'''
 
     def __init__(self, *args):
-        # "extend" if just one argument
         incoming = iter([args[0]]) if len(args) == 1 else iter(args)
         self._work = iter([])
         self._util = iter([])
-        self._1arm = OneArmedContext
-        self._2arm = TwoArmedContext
-        self._3arm = ThreeArmedContext
-        self._4arm = FourArmedContext
+        self._1arm = OneArmContext
+        self._2arm = TwoArmContext
+        self._3arm = ThreeArmContext
+        self._4arm = FourArmContext
         self._auto = AutoContext
         super(BaseQMixin, self).__init__(incoming, iter([]))
-
-    ###########################################################################
-    ## queue information ######################################################
-    ###########################################################################
 
     def __len__(self):
         self.incoming, incoming = tee(self.incoming)
         return len(list(incoming))
-
-    count = __len__
 
     def outcount(self):
         '''count of outgoing things'''
@@ -51,13 +43,6 @@ class BaseQMixin(QueueingMixin):
         return len(list(outgoing)) == len(list(incoming))
 
 
-class ResultQMixin(ResultMixin):
-
-    def results(self):
-        '''yield outgoing things, clearing outgoing things as it iterates'''
-        return self.outgoing
-
-
 class AutoQMixin(BaseQMixin):
 
     '''auto-balancing queue mixin'''
@@ -65,18 +50,18 @@ class AutoQMixin(BaseQMixin):
     _default_context = AutoContext
 
 
-class AutoResultMixin(ResultQMixin, AutoQMixin):
-
-    '''auto-balancing queue (with results extraction) mixin'''
-
-
 class ManQMixin(BaseQMixin):
 
     '''manually balanced queue mixin'''
 
-    _default_context = FourArmedContext
+    _default_context = FourArmContext
 
 
-class ManResultMixin(ResultQMixin, ManQMixin):
+class AutoResultMixin(ResultMixin, AutoQMixin):
+
+    '''auto-balancing queue (with results extraction) mixin'''
+
+
+class ManResultMixin(ResultMixin, ManQMixin):
 
     '''manually balanced queue (with results extraction) mixin'''
