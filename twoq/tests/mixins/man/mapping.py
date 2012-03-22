@@ -9,23 +9,8 @@ from twoq.support import port
 class MCopyQMixin(object):
 
     def test_copy(self):
-        testlist = [[1, 2, 3], [4, 5, 6]]
-        manq = self.qclass(testlist).copy()
-        self.assertTrue(manq.balanced)
-        manq.sync()
-        self.assertTrue(manq.balanced)
-        newlist = manq.end()
-        self.assertFalse(newlist is testlist)
-        self.assertListEqual(newlist, testlist)
-        self.assertTrue(newlist[0] is testlist[0])
-        self.assertListEqual(newlist[0], testlist[0])
-        self.assertTrue(newlist[1] is testlist[1])
-        self.assertListEqual(newlist[1], testlist[1])
-#        self.assertFalse(manq.balanced)
-
-    def test_deepcopy(self):
         testlist = [[1, [2, 3]], [4, [5, 6]]]
-        manq = self.qclass(testlist).deepcopy()
+        manq = self.qclass(testlist).copy()
         self.assertTrue(manq.balanced)
         manq.sync()
         self.assertTrue(manq.balanced)

@@ -67,8 +67,32 @@ class QueueingMixin(local):
         return self
 
     ###########################################################################
-    ## manipulate queues ######################################################
+    ## clear queues ###########################################################
     ###########################################################################
+
+    def inclear(self):
+        '''clear incoming things'''
+        with self.ctx1()._sync as sync:
+            sync.clear()
+        return self
+
+    def outclear(self):
+        '''clear outgoing things'''
+        with self.ctx1('outgoing')._sync as sync:
+            sync.clear()
+        return self
+
+    def _wclear(self):
+        '''clear work queue'''
+        with self.ctx1('_work')._sync as sync:
+            sync.clear()
+        return self
+
+    def _uclear(self):
+        '''clear utility queue'''
+        with self.ctx1('_util')._sync as sync:
+            sync.clear()
+        return self
 
     def clear(self):
         '''clear every thing'''
@@ -76,6 +100,10 @@ class QueueingMixin(local):
         self.outclear()
         self.inclear()
         return self
+
+    ###########################################################################
+    ## manipulate queues ######################################################
+    ###########################################################################
 
     def append(self, thing):
         '''
@@ -211,6 +239,22 @@ class QueueingMixin(local):
         with self.ctx1()._sync as sync:
             sync.append(list(sync.iterable))
         return self.unswap()
+
+    def shift(self):
+        '''shift outgoing things to incoming things'''
+        with self.autoctx(inq='outgoing', outq='incoming')._sync as sync:
+            sync(sync.iterable)
+        return self
+
+    sync = shift
+
+    def outshift(self):
+        '''shift incoming things to outgoing things'''
+        with self.autoctx()._sync as sync:
+            sync(sync.iterable)
+        return self
+
+    outsync = outshift
 
     ###########################################################################
     ## current callable management ############################################

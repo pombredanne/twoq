@@ -4,7 +4,7 @@
 import time
 from threading import local
 from functools import partial
-from copy import copy, deepcopy
+from copy import deepcopy
 from operator import methodcaller
 from itertools import starmap, chain, repeat
 
@@ -106,13 +106,7 @@ class CopyMixin(local):
     '''copy mixin'''
 
     def copy(self):
-        '''copy each incoming thing'''
-        with self._sync as sync:
-            sync(imap(copy, sync.iterable))
-        return self
-
-    def deepcopy(self):
-        '''copy each incoming thing deeply'''
+        '''copy each incoming thing '''
         with self._sync as sync:
             sync(imap(deepcopy, sync.iterable))
         return self

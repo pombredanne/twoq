@@ -50,48 +50,6 @@ class BaseQMixin(QueueingMixin):
         self.outgoing, outgoing = tee(self.outgoing)
         return len(list(outgoing)) == len(list(incoming))
 
-    ###########################################################################
-    ## clear queues ###########################################################
-    ###########################################################################
-
-    def inclear(self):
-        '''clear incoming things'''
-        self.incoming = iter([])
-        return self
-
-    def outclear(self):
-        '''clear outgoing things'''
-        self.outgoing = iter([])
-        return self
-
-    def _wclear(self):
-        '''clear work queue'''
-        self._work = iter([])
-        return self
-
-    def _uclear(self):
-        '''clear utility queue'''
-        self._util = iter([])
-        return self
-
-    ###########################################################################
-    ## balance queues #########################################################
-    ###########################################################################
-
-    def shift(self):
-        '''shift outgoing things to incoming things'''
-        self.outgoing, self.incoming = tee(self.outgoing)
-        return self
-
-    sync = shift
-
-    def outshift(self):
-        '''shift incoming things to outgoing things'''
-        self.outgoing, self.incoming = tee(self.incoming)
-        return self
-
-    outsync = outshift
-
 
 class ResultQMixin(ResultMixin):
 

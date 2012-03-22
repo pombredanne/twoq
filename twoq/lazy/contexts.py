@@ -51,6 +51,10 @@ class Context(object):
         '''
         self._chain(reversed(things))
 
+    def clear(self):
+        '''clear queue'''
+        setattr(self._queue, self._utilq, iter([]))
+
 
 class OneArmedContext(Context):
 

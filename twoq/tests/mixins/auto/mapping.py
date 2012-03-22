@@ -9,18 +9,8 @@ from twoq.support import port
 class ACopyQMixin(object):
 
     def test_copy(self):
-        testlist = [[1, 2, 3], [4, 5, 6]]
-        newlist = self.qclass(testlist).copy().end()
-        self.assertFalse(newlist is testlist)
-        self.assertListEqual(newlist, testlist)
-        self.assertTrue(newlist[0] is testlist[0])
-        self.assertListEqual(newlist[0], testlist[0])
-        self.assertTrue(newlist[1] is testlist[1])
-        self.assertListEqual(newlist[1], testlist[1])
-
-    def test_deepcopy(self):
         testlist = [[1, [2, 3]], [4, [5, 6]]]
-        newlist = self.qclass(testlist).deepcopy().end()
+        newlist = self.qclass(testlist).copy().end()
         self.assertFalse(newlist is testlist)
         self.assertListEqual(newlist, testlist)
         self.assertFalse(newlist[0] is testlist[0])

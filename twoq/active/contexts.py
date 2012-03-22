@@ -46,6 +46,10 @@ class Context(object):
         '''left side extend from work queue'''
         self._utilq.extendleft(thing)
 
+    def clear(self):
+        '''clear queue'''
+        self._utilq.clear()
+
 
 class OneArmedContext(Context):
 
