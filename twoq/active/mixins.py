@@ -193,7 +193,7 @@ class BaseQMixin(QueueingMixin):
 
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
-        with self.ctx2()._sync as sync:
+        with self.ctx1()._sync as sync:
             sync.append(list(sync.iterable))
         return self.unswap()
 

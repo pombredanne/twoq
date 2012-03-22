@@ -40,11 +40,11 @@ class Context(object):
 
     def appendleft(self, thing):
         '''left side append from work queue'''
-        self._workq.appendleft(thing)
+        self._utilq.appendleft(thing)
 
     def extendleft(self, thing):
         '''left side extend from work queue'''
-        self._workq.extendleft(thing)
+        self._utilq.extendleft(thing)
 
 
 class OneArmedContext(Context):
@@ -68,7 +68,7 @@ class OneArmedContext(Context):
         pass
 
 
-class TwoArmedContext(OneArmedContext):
+class TwoArmedContext(Context):
 
     '''two armed context manager'''
 
@@ -78,10 +78,11 @@ class TwoArmedContext(OneArmedContext):
 
         @param queue: queue collections
         '''
-        kw['workq'] = kw.pop('workq', '_workq')
-        super(TwoArmedContext, self).__init__(queue, **kw)
-        # outgoing queue attribute name (default: 'incoming')
+        super(TwoArmedContext, self).__init__()
+        # outgoing queue attribute name
         self._outq = getattr(queue, kw.get('outq', 'incoming'))
+        # work/utility queue attribute name
+        self._workq = self._utilq = getattr(queue, kw.get('workq', '_workq'))
 
     def __enter__(self):
         # clear work queue
@@ -99,7 +100,7 @@ class TwoArmedContext(OneArmedContext):
         self._workq.clear()
 
 
-class ThreeArmedContext(TwoArmedContext):
+class ThreeArmedContext(Context):
 
     '''three armed context manager'''
 
@@ -109,10 +110,13 @@ class ThreeArmedContext(TwoArmedContext):
 
         @param queue: queue collections
         '''
-        kw['outq'] = kw.pop('outq', 'outgoing')
-        super(ThreeArmedContext, self).__init__(queue, **kw)
-        # incoming queue attribute name (default: 'incoming')
+        super(ThreeArmedContext, self).__init__()
+        # incoming queue attribute name
         self._inq = getattr(queue, kw.get('inq', 'incoming'))
+        # outgoing queue attribute name
+        self._outq = getattr(queue, kw.get('outq', 'outgoing'))
+        # work/utility queue attribute name
+        self._workq = self._utilq = getattr(queue, kw.get('workq', '_workq'))
 
     def __enter__(self):
         # clear work queue
