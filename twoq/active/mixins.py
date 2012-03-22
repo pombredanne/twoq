@@ -10,7 +10,7 @@ from stuf.utils import iterexcept, lazy
 from twoq.mixins.queuing import QueueingMixin
 
 from twoq.active.contexts import (
-    AutoContext, ManContext, OneArmContext, TwoArmContext)
+    AutoContext, FourArmedContext, TwoArmedContext, ThreeArmedContext)
 
 __all__ = ('AutoQMixin', 'ManQMixin')
 
@@ -18,11 +18,6 @@ __all__ = ('AutoQMixin', 'ManQMixin')
 class BaseQMixin(QueueingMixin):
 
     '''base active queue'''
-
-    _onearm = OneArmContext
-    _twoarm = TwoArmContext
-    _auto = AutoContext
-    _man = ManContext
 
     def __init__(self, *args):
         '''
@@ -37,13 +32,20 @@ class BaseQMixin(QueueingMixin):
             incoming.append(args[0])
         else:
             incoming.extend(args)
+        self._2arm = TwoArmedContext
+        self._3arm = ThreeArmedContext
+        self._4arm = FourArmedContext
+        self._auto = AutoContext
         super(BaseQMixin, self).__init__(incoming, deque())
-        # work queue
-        self._scratch = deque()
 
     @lazy
-    def _read(self):
-        '''read-only queue'''
+    def _util(self):
+        '''utility queue'''
+        return deque()
+
+    @lazy
+    def _work(self):
+        ''''work queue'''
         return deque()
 
     ###########################################################################
@@ -113,10 +115,15 @@ class BaseQMixin(QueueingMixin):
         self.outgoing.clear()
         return self
 
-    def _readclear(self):
-        '''clear read-only queue'''
-        self._read.clear()
-        self._read.extend(self._incoming)
+    def _uclear(self):
+        '''clear utility queue'''
+        self._util.clear()
+        self._util.extend(self.incoming)
+        return self
+
+    def _wclear(self):
+        '''clear work queue'''
+        self._work.clear()
         return self
 
     ###########################################################################
@@ -208,7 +215,6 @@ class BaseQMixin(QueueingMixin):
 
     def outshift(self):
         '''shift incoming things to outgoing things'''
-        # extend incoming things with outgoing things
         self.outgoing.extend(self.incoming)
         return self
 
@@ -227,8 +233,8 @@ class ResultQMixin(local):
 
     def end(self):
         '''return outgoing things and clear everything'''
-        outgoing = self.outgoing
-        results = outgoing.pop() if len(outgoing) == 1 else list(outgoing)
+        results = list(self.outgoing)
+        results = results.pop() if len(results) == 1 else results
         self.clear()
         return results
 
@@ -239,51 +245,37 @@ class ResultQMixin(local):
 
     def value(self):
         '''return outgoing things and clear outgoing things'''
-        outgoing = self.outgoing
-        results = outgoing.pop() if len(outgoing) == 1 else list(outgoing)
-        outgoing.clear()
+        results = list(self.outgoing)
+        results = results.pop() if len(results) == 1 else results
+        self.outclear()
         return results
 
     def first(self):
         '''first incoming thing'''
         with self._sync as sync:
-            sync.append(sync.iterable.popleft())
+            sync.append(sync.popleft())
         return self
 
     def last(self):
         '''last incoming thing'''
         with self._sync as sync:
-            sync.append(sync.iterable.pop())
+            sync.append(sync.pop())
         return self
 
     def peek(self):
-        '''results of read-only mode'''
-        return self._read[0] if len(
-            self._read
-        ) == 1 else list(self._read)
+        '''results in read-only mode'''
+        results = list(self._util)
+        return results[0] if len(results) == 1 else results
 
 
 class AutoQMixin(BaseQMixin):
 
     '''auto-balancing queue mixin'''
 
-    _default_context = _context = AutoContext
-    _alt_context = ManContext
-
-    def ro(self):
-        '''enter read-only mode'''
-        # swap context
-        _context = self._alt_context
-        return self._oro()
-
-    def rw(self):
-        '''enter read/write mode'''
-        # swap context
-        _context = self._default_context
-        return self._owriteable()
+    _default_context = AutoContext
 
 
-class AutoResultMixin(AutoQMixin, BaseQMixin, ResultQMixin):
+class AutoResultMixin(AutoQMixin, ResultQMixin):
 
     '''auto-balancing manipulation queue (with results extractor) mixin'''
 
@@ -292,9 +284,9 @@ class ManQMixin(BaseQMixin):
 
     '''manually balanced queue mixin'''
 
-    _default_context = _context = ManContext
+    _default_context = FourArmedContext
 
 
-class ManResultMixin(ManQMixin, BaseQMixin, ResultQMixin):
+class ManResultMixin(ManQMixin, ResultQMixin):
 
     '''manually balanced queue (with results extractor) mixin'''

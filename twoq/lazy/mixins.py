@@ -6,7 +6,8 @@ from collections import deque
 
 from twoq.mixins.queuing import QueueingMixin
 
-from twoq.lazy.contexts import AutoContext, ManContext
+from twoq.lazy.contexts import (
+    AutoContext, TwoArmedContext, FourArmedContext, ThreeArmedContext)
 
 __all__ = ['AutoQMixin', 'ManQMixin']
 
@@ -18,8 +19,12 @@ class BaseQMixin(QueueingMixin):
     def __init__(self, *args):
         # "extend" if just one argument
         incoming = iter([args[0]]) if len(args) == 1 else iter(args)
-        self._scratch = None
-        self._read = None
+        self._work = None
+        self._util = None
+        self._2arm = TwoArmedContext
+        self._3arm = ThreeArmedContext
+        self._4arm = FourArmedContext
+        self._auto = AutoContext
         super(BaseQMixin, self).__init__(incoming, iter([]))
 
     ###########################################################################
@@ -92,10 +97,10 @@ class BaseQMixin(QueueingMixin):
         self.outgoing = iter([])
         return self
 
-    def _readclear(self):
+    def _uclear(self):
         '''clear read-only queue'''
-        self._read = None
-        self._read, self._incoming = tee(self.incoming)
+        self._util = None
+        self._util, self._incoming = tee(self.incoming)
         return self
 
     ###########################################################################
@@ -223,7 +228,7 @@ class ResultQMixin(BaseQMixin):
 
     def peek(self):
         '''see results of read-only mode'''
-        measure, results = tee(self._read)
+        measure, results = tee(self._util)
         return list(results)[0] if len(measure) == 1 else list(results)
 
 
@@ -231,25 +236,12 @@ class AutoQMixin(BaseQMixin):
 
     '''auto-balancing queue mixin'''
 
-    _default_context = _context = AutoContext
-    _alt_context = ManContext
-
-    def ro(self):
-        '''enter read-only mode'''
-        # swap context
-        _context = self._alt_context
-        return self._oro()
-
-    def rw(self):
-        '''enter read/write mode'''
-        # swap context
-        _context = self._default_context
-        return self._orw()
+    _default_context = AutoContext
 
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
-        with self._sync as _sync:
-            _sync.append(list(self.incoming))
+        with self._sync as sync:
+            sync.append(list(self.incoming))
         return self
 
 
@@ -262,7 +254,7 @@ class ManQMixin(BaseQMixin):
 
     '''manually balanced queue mixin'''
 
-    _context = ManContext
+    _default_context = FourArmedContext
 
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''

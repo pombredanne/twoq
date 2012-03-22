@@ -30,10 +30,16 @@ class QueueingMixin(local):
         self.incoming = incoming
         # outgoing queue
         self.outgoing = outgoing
-        # labels
+        # queue pointers -> incoming queue label
         self._inq = 'incoming'
+        # queue pointers -> outgoing queue label
         self._outq = 'outgoing'
-        self._tmpq = '_scratch'
+        # queue pointers -> work queue label
+        self._workq = '_work'
+        # queue pointers -> utility queue label
+        self._utilq = '_util'
+        # context pointers -> default context manager
+        self._context = self._default_context
 
     ###########################################################################
     ## queue iteration ########################################################
@@ -64,37 +70,53 @@ class QueueingMixin(local):
     ## queue rotation #########################################################
     ###########################################################################
 
-    def swap(self, inq='incoming', outq='outgoing', tmpq='_scratch'):
-        '''
-        swap queues
+    def two(self):
+        '''switch to two-armed context manager'''
+        self._context = self._2arm
+        return self
 
-        @param inq: incoming queue (default: 'incoming')
-        @param outq: outcoming queue (default: 'outcoming')
-        @param tmpq: temporary queue (default: '_scratch')
-        '''
-        self._inq = inq
-        self._outq = outq
-        self._tmpq = tmpq
+    def three(self):
+        '''switch to three-armed context manager'''
+        self._context = self._3arm
+        return self
+
+    def four(self):
+        '''switch to four-armed context manager'''
+        self._context = self._4arm
+        return self
+
+    def auto(self):
+        '''switch to auto-synchrinizing context manager'''
+        self._context = self._auto
+        return self
+
+    def swap(self, **kw):
+        '''swap queues'''
+        # incoming queue (default: 'incoming')
+        self._inq = kw.get('inq', 'incoming')
+        # outcoming queue (default: 'outcoming')
+        self._outq = kw.get('outq', 'outgoing')
+        # work queue (default: '_work')
+        self._workq = kw.get('workq', '_work')
+        # utility queue (default: '_util')
+        self._utilq = kw.get('utilq', '_util')
         return self
 
     def unswap(self):
         '''rotate queues to default'''
+        self._context = self._default_context
         return self.swap()
 
     @property
     def _sync(self):
         '''synchronization context'''
-        return self._context(self, self._inq, self._outq, self._tmpq)
-
-    def ro(self):
-        '''enter read-only mode'''
-        self._o_readclear()
-        return self.swap(inq='_read', outq='_read')
-
-    def rw(self):
-        '''enter read/write mode'''
-        self._o_readclear()
-        return self.swap()
+        return self._context(
+            self,
+            inq=self._inq,
+            outq=self._outq,
+            workq=self._workq,
+            utilq=self._utilq,
+        )
 
     ###########################################################################
     ## current callable management ############################################
@@ -105,7 +127,7 @@ class QueueingMixin(local):
         # set positional arguments
         self._args = args
         # set keyword arguemnts
-        self._kw = kw
+        self._kw.update(kw)
         return self
 
     def tap(self, call):
@@ -114,11 +136,8 @@ class QueueingMixin(local):
 
         @param call: a call
         '''
-        # reset postitional arguments
-        self._args = ()
-        # reset keyword arguments
-        self._kw = {}
-        # add the callable
+        self.detap()
+        # set current callable
         self._call = call
         return self
 
@@ -127,7 +146,7 @@ class QueueingMixin(local):
         # reset postitional arguments
         self._args = ()
         # reset keyword arguments
-        self._kw = {}
+        self._kw.clear()
         # reset callable
         self._call = None
         return self
@@ -136,8 +155,7 @@ class QueueingMixin(local):
         '''build current callable from factory'''
         def factory(*args, **kw):
             return call(*args, **kw)
-        self._call = factory
-        return self
+        return self.tap(factory)
 
-    # aliases
+    # alias
     unwrap = detap

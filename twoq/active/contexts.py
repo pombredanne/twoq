@@ -1,125 +1,151 @@
 # -*- coding: utf-8 -*-
 '''twoq active contexts'''
 
-from stuf.utils import breakcount
+from stuf.utils import breakcount, iterexcept
 
-__all__ = ('AutoContext', 'ManContext')
+__all__ = (
+    'AutoContext', 'FourArmedContext', 'TwoArmedContext', 'ThreeArmedContext',
+)
 
 
 class Context(object):
 
-    def __enter__(self):
-        return self
+    '''context manager baseline'''
 
     def __call__(self, args):
-        self._iterable.extend(args)
-
-    def iter(self, args):
-        self._iterable.extend(iter(args))
-
-    def append(self, args):
-        self._iterable.append(args)
-
-
-class OneArmContext(Context):
-
-    '''one arm context manager'''
-
-    def __init__(self, queue, q='incoming'):
-        '''
-        init
-
-        @param queue: queue
-        '''
-        super(OneArmContext, self).__init__()
-        self._iterable = getattr(queue, q)
+        '''extend work queue with `args`'''
+        self._utilq.extend(args)
 
     @property
     def iterable(self):
-        return breakcount(self._iterable.popleft, len(self._iterable))
+        '''iterable object'''
+        return iterexcept(self._workq.popleft, IndexError)
+
+    def iter(self, args):
+        '''extend work queue with `args` wrapped in iterator'''
+        self._utilq.extend(iter(args))
+
+    def append(self, args):
+        '''append `args` to work queue'''
+        self._utilq.append(args)
+
+    def pop(self):
+        '''right side `pop` from work queue'''
+        return self._workq.pop()
+
+    def popleft(self):
+        '''left-side pop from work queue'''
+        return self._workq.popleft()
 
 
-class TwoArmContext(Context):
+class TwoArmedContext(Context):
 
-    '''two arm context manager'''
+    '''two armed context manager'''
 
-    def __init__(self, queue, q='incoming', tmpq='_scratch'):
+    def __init__(self, queue, **kw):
         '''
         init
 
-        @param queue: queue
+        @param queue: queue collection
         '''
-        super(ManContext, self).__init__()
-        self._queue = getattr(queue, q)
-        self._iterable = getattr(queue, tmpq)
+        super(TwoArmedContext, self).__init__()
+        # work/utility queue attribute name (default: 'incoming')
+        self._workq = self._utilq = getattr(queue, kw.get('workq', 'incoming'))
 
     def __enter__(self):
-        # clear outgoing queue
-        self._iterable.clear()
+        return self
+
+    @property
+    def iterable(self):
+        '''`iterator'''
+        return breakcount(self._workq.popleft, len(self._workq))
+
+
+class ThreeArmedContext(Context):
+
+    '''three armed context manager'''
+
+    def __init__(self, queue, **kw):
+        '''
+        init
+
+        @param queue: queue collections
+        '''
+        super(ThreeArmedContext, self).__init__()
+        # work/utility queue attribute name (default: '_workq')
+        self._workq = self._utilq = getattr(queue, kw.get('workq', '_work'))
+        # outgoing queue attribute name (default: 'incoming')
+        self._outq = getattr(queue, kw.get('outq', 'incoming'))
+
+    def __enter__(self):
+        # clear work queue
+        self._workq.clear()
+        # extend work queue with outgoing queue
+        self._workq.extend(self._outq)
         return self
 
     def __exit__(self, t, v, e):
-        # clear incoming items
-        self._queue.clear()
-        # extend incoming items with outgoing items
-        self._queue.extend(self._iterable)
-        self._iterable.clear()
-
-    @property
-    def iterable(self):
-        return breakcount(self._queue.popleft, len(self._iterable))
-
-
-class ManContext(object):
-
-    '''manual synchronization context manager'''
-
-    def __init__(self, q, inq='incoming', outq='outgoing', tmpq='_scratch'):
-        '''
-        init
-
-        @param queue: queue
-        '''
-        super(ManContext, self).__init__()
-        self._inq = getattr(q, inq)
-        self._outq = getattr(q, outq)
-        self._iterable = getattr(q, tmpq)
-
-    def __enter__(self):
-        # clear scratch queue
-        self._iterable.clear()
         # clear outgoing queue
         self._outq.clear()
-        # extend scratch queue with incoming things
-        self._iterable.extend(self._inq)
-        return self
-
-    def __exit__(self, t, v, e):
-        # clear scratch queue
-        self._iterable.clear()
-
-    def __call__(self, args):
-        self._outq.extend(args)
-
-    def iter(self, args):
-        self._outq.extend(iter(args))
-
-    def append(self, args):
-        self._outq.append(args)
+        # extend outgoing queue with utility queue
+        self._outq.extend(self._utilq)
+        # clear work queue
+        self._workq.clear()
 
     @property
     def iterable(self):
-        return self._iterable
+        '''iterable object'''
+        return iterexcept(self._workq.popleft, IndexError)
 
 
-class AutoContext(ManContext):
+class FourArmedContext(Context):
 
-    '''auto-synchronization context manager'''
+    '''four armed context manager'''
+
+    def __init__(self, queue, **kw):
+        '''
+        init
+
+        @param queue: queue collections
+        '''
+        super(FourArmedContext, self).__init__()
+        # outgoing queue attribute name (default: 'outgoing')
+        self._outq = getattr(queue, kw.get('outq', 'outgoing'))
+        # incoming queue attribute name (default: 'incoming')
+        self._inq = getattr(queue, kw.get('inq', 'incoming'))
+        # work queue attribute name (default: '_workq')
+        self._workq = getattr(queue, kw.get('workq', '_work'))
+        # utility queue attribute name (default: '_utilq')
+        self._utilq = getattr(queue, kw.get('utilq', '_util'))
+
+    def __enter__(self):
+        # clear work queue
+        self._workq.clear()
+        # extend work queue with incoming queue
+        self._workq.extend(self._inq)
+        return self
 
     def __exit__(self, t, v, e):
-        # clear scratch queue
-        self._iterable.clear()
-        # clear incoming items
+        # clear outgoing queue
+        self._outq.clear()
+        # extend outgoing queue with utility queue
+        self._outq.extend(self._utilq)
+        # clear utility queue
+        self._utilq.clear()
+
+
+class AutoContext(FourArmedContext):
+
+    '''auto-synchronizing four armed context manager'''
+
+    def __exit__(self, t, v, e):
+        # clear incoming queue
         self._inq.clear()
-        # extend incoming items with outgoing items
-        self._inq.extend(self._outq)
+        # clear outgoing queue
+        self._outq.clear()
+        # extend outgoing queue with outgoing queue
+        self._outq.extend(self._utilq)
+        # extend incoming queue with outgoing queue
+        self._inq.extend(self._utilq)
+        # clear utility queue
+        self._utilq.clear()
