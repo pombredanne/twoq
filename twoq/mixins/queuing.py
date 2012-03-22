@@ -2,8 +2,8 @@
 '''twoq queuing mixins'''
 
 from threading import local
-from itertools import islice
 from collections import deque
+from itertools import islice, tee
 
 __all__ = ['QueueingMixin']
 
@@ -66,39 +66,52 @@ class QueueingMixin(local):
             next(islice(self.incoming, n, n), None)
         return self
 
+    def clear(self):
+        '''clear every thing'''
+        self.detap()
+        self.outclear()
+        self.inclear()
+        return self
+
     ###########################################################################
     ## queue rotation #########################################################
     ###########################################################################
 
-    def two(self):
+    def ctx1(self, workq='incoming'):
+        '''switch to ctx1-armed context manager'''
+        self._workq = workq
+        self._context = self._1arm
+        return self
+
+    def ctx2(self, workq='_work', outq='incoming'):
         '''switch to two-armed context manager'''
+        self._workq = workq
+        self._outq = outq
         self._context = self._2arm
         return self
 
-    def three(self):
+    def ctx3(self, workq='_work', outq='outgoing', inq='incoming'):
         '''switch to three-armed context manager'''
-        self._context = self._3arm
-        return self
-
-    def four(self):
-        '''switch to four-armed context manager'''
+        self._workq = workq
+        self._outq = outq
+        self._inq = inq
         self._context = self._4arm
         return self
 
-    def auto(self):
-        '''switch to auto-synchrinizing context manager'''
+    def autoctx(self):
+        '''switch to autoctx-synchronizing context manager'''
         self._context = self._auto
         return self
 
     def swap(self, **kw):
         '''swap queues'''
-        # incoming queue (default: 'incoming')
+        # incoming queue
         self._inq = kw.get('inq', 'incoming')
-        # outcoming queue (default: 'outcoming')
+        # outcoming queue
         self._outq = kw.get('outq', 'outgoing')
-        # work queue (default: '_work')
+        # work queue
         self._workq = kw.get('workq', '_work')
-        # utility queue (default: '_util')
+        # utility queue
         self._utilq = kw.get('utilq', '_util')
         return self
 
@@ -159,3 +172,38 @@ class QueueingMixin(local):
 
     # alias
     unwrap = detap
+
+
+class ResultMixin(local):
+
+    def end(self):
+        '''return outgoing things and clear everything'''
+        results = list(self.outgoing)
+        results = results.pop() if len(results) == 1 else results
+        self.clear()
+        return results
+
+    def value(self):
+        '''return outgoing things and clear outgoing things'''
+        results = list(self.outgoing)
+        results = results.pop() if len(results) == 1 else results
+        self.outclear()
+        return results
+
+    def first(self):
+        '''first incoming thing'''
+        with self._sync as sync:
+            sync.append(next(sync.iterable))
+        return self
+
+    def last(self):
+        '''last incoming thing'''
+        with self._sync as sync:
+            i1, _ = tee(sync.iterable)
+            sync.append(deque(i1, maxlen=1).pop())
+        return self
+
+    def peek(self):
+        '''results in read-only mode'''
+        results = list(self._util)
+        return results[0] if len(results) == 1 else results

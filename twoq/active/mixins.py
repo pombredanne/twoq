@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 '''active twoq mixins'''
 
-from threading import local
 from collections import deque
 from bisect import bisect_right
 
 from stuf.utils import iterexcept, lazy
 
-from twoq.mixins.queuing import QueueingMixin
+from twoq.mixins.queuing import QueueingMixin, ResultMixin
 
 from twoq.active.contexts import (
-    AutoContext, FourArmedContext, TwoArmedContext, ThreeArmedContext)
+    AutoContext, FourArmedContext, OneArmedContext, TwoArmedContext,
+    ThreeArmedContext)
 
 __all__ = ('AutoQMixin', 'ManQMixin')
 
@@ -32,6 +32,7 @@ class BaseQMixin(QueueingMixin):
             incoming.append(args[0])
         else:
             incoming.extend(args)
+        self._1arm = OneArmedContext
         self._2arm = TwoArmedContext
         self._3arm = ThreeArmedContext
         self._4arm = FourArmedContext
@@ -98,13 +99,6 @@ class BaseQMixin(QueueingMixin):
         incoming.rotate(position)
         return self
 
-    def clear(self):
-        '''clear every thing'''
-        self.detap()
-        self.outgoing.clear()
-        self.incoming.clear()
-        return self
-
     def inclear(self):
         '''clear incoming things'''
         self.incoming.clear()
@@ -136,8 +130,9 @@ class BaseQMixin(QueueingMixin):
 
         @param thing: some thing
         '''
-        self.incoming.append(thing)
-        return self
+        with self.ctx1()._sync as sync:
+            sync.append(thing)
+        return self.unswap()
 
     def appendleft(self, thing):
         '''
@@ -145,8 +140,9 @@ class BaseQMixin(QueueingMixin):
 
         @param thing: some thing
         '''
-        self.incoming.appendleft(thing)
-        return self
+        with self.ctx1()._sync as sync:
+            sync.appendleft(thing)
+        return self.unswap()
 
     def insert(self, index, thing):
         '''
@@ -167,8 +163,9 @@ class BaseQMixin(QueueingMixin):
 
         @param thing: some things
         '''
-        self.outgoing.extend(things)
-        return self
+        with self.ctx1('outgoing')._sync as sync:
+            sync(things)
+        return self.unswap()
 
     def extend(self, things):
         '''
@@ -176,8 +173,9 @@ class BaseQMixin(QueueingMixin):
 
         @param thing: some things
         '''
-        self.incoming.extend(things)
-        return self
+        with self.ctx1()._sync as sync:
+            sync(things)
+        return self.unswap()
 
     def extendleft(self, things):
         '''
@@ -185,8 +183,9 @@ class BaseQMixin(QueueingMixin):
 
         @param thing: some things
         '''
-        self.incoming.extendleft(things)
-        return self
+        with self.ctx1()._sync as sync:
+            sync.extendleft(things)
+        return self.unswap()
 
     ###########################################################################
     ## queue rotation #########################################################
@@ -194,9 +193,9 @@ class BaseQMixin(QueueingMixin):
 
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
-        with self._sync as sync:
-            sync.append(list(self.incoming))
-        return self
+        with self.ctx2()._sync as sync:
+            sync.append(list(sync.iterable))
+        return self.unswap()
 
     def shift(self):
         '''shift outgoing things to incoming things'''
@@ -229,43 +228,12 @@ class BaseQMixin(QueueingMixin):
         return self
 
 
-class ResultQMixin(local):
-
-    def end(self):
-        '''return outgoing things and clear everything'''
-        results = list(self.outgoing)
-        results = results.pop() if len(results) == 1 else results
-        self.clear()
-        return results
+class ResultQMixin(ResultMixin):
 
     def results(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
         for thing in iterexcept(self.outgoing.popleft, IndexError):
             yield thing
-
-    def value(self):
-        '''return outgoing things and clear outgoing things'''
-        results = list(self.outgoing)
-        results = results.pop() if len(results) == 1 else results
-        self.outclear()
-        return results
-
-    def first(self):
-        '''first incoming thing'''
-        with self._sync as sync:
-            sync.append(sync.popleft())
-        return self
-
-    def last(self):
-        '''last incoming thing'''
-        with self._sync as sync:
-            sync.append(sync.pop())
-        return self
-
-    def peek(self):
-        '''results in read-only mode'''
-        results = list(self._util)
-        return results[0] if len(results) == 1 else results
 
 
 class AutoQMixin(BaseQMixin):

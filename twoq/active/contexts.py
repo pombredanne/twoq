@@ -4,7 +4,8 @@
 from stuf.utils import breakcount, iterexcept
 
 __all__ = (
-    'AutoContext', 'FourArmedContext', 'TwoArmedContext', 'ThreeArmedContext',
+    'AutoContext', 'FourArmedContext', 'OneArmedContext', 'TwoArmedContext',
+    'ThreeArmedContext',
 )
 
 
@@ -18,8 +19,8 @@ class Context(object):
 
     @property
     def iterable(self):
-        '''iterable object'''
-        return iterexcept(self._workq.popleft, IndexError)
+        '''`iterator'''
+        return breakcount(self._workq.popleft, len(self._workq))
 
     def iter(self, args):
         '''extend work queue with `args` wrapped in iterator'''
@@ -37,10 +38,18 @@ class Context(object):
         '''left-side pop from work queue'''
         return self._workq.popleft()
 
+    def appendleft(self, thing):
+        '''left side append from work queue'''
+        self._workq.appendleft(thing)
 
-class TwoArmedContext(Context):
+    def extendleft(self, thing):
+        '''left side extend from work queue'''
+        self._workq.extendleft(thing)
 
-    '''two armed context manager'''
+
+class OneArmedContext(Context):
+
+    '''one armed context manager'''
 
     def __init__(self, queue, **kw):
         '''
@@ -48,22 +57,20 @@ class TwoArmedContext(Context):
 
         @param queue: queue collection
         '''
-        super(TwoArmedContext, self).__init__()
-        # work/utility queue attribute name (default: 'incoming')
+        super(OneArmedContext, self).__init__()
+        # work/utility queue attribute name
         self._workq = self._utilq = getattr(queue, kw.get('workq', 'incoming'))
 
     def __enter__(self):
         return self
 
-    @property
-    def iterable(self):
-        '''`iterator'''
-        return breakcount(self._workq.popleft, len(self._workq))
+    def __exit__(self, t, v, e):
+        pass
 
 
-class ThreeArmedContext(Context):
+class TwoArmedContext(OneArmedContext):
 
-    '''three armed context manager'''
+    '''two armed context manager'''
 
     def __init__(self, queue, **kw):
         '''
@@ -71,9 +78,8 @@ class ThreeArmedContext(Context):
 
         @param queue: queue collections
         '''
-        super(ThreeArmedContext, self).__init__()
-        # work/utility queue attribute name (default: '_workq')
-        self._workq = self._utilq = getattr(queue, kw.get('workq', '_work'))
+        kw['workq'] = kw.pop('workq', '_workq')
+        super(TwoArmedContext, self).__init__(queue, **kw)
         # outgoing queue attribute name (default: 'incoming')
         self._outq = getattr(queue, kw.get('outq', 'incoming'))
 
@@ -92,15 +98,10 @@ class ThreeArmedContext(Context):
         # clear work queue
         self._workq.clear()
 
-    @property
-    def iterable(self):
-        '''iterable object'''
-        return iterexcept(self._workq.popleft, IndexError)
 
+class ThreeArmedContext(TwoArmedContext):
 
-class FourArmedContext(Context):
-
-    '''four armed context manager'''
+    '''three armed context manager'''
 
     def __init__(self, queue, **kw):
         '''
@@ -108,15 +109,10 @@ class FourArmedContext(Context):
 
         @param queue: queue collections
         '''
-        super(FourArmedContext, self).__init__()
-        # outgoing queue attribute name (default: 'outgoing')
-        self._outq = getattr(queue, kw.get('outq', 'outgoing'))
+        kw['outq'] = kw.pop('outq', 'outgoing')
+        super(ThreeArmedContext, self).__init__(queue, **kw)
         # incoming queue attribute name (default: 'incoming')
         self._inq = getattr(queue, kw.get('inq', 'incoming'))
-        # work queue attribute name (default: '_workq')
-        self._workq = getattr(queue, kw.get('workq', '_work'))
-        # utility queue attribute name (default: '_utilq')
-        self._utilq = getattr(queue, kw.get('utilq', '_util'))
 
     def __enter__(self):
         # clear work queue
@@ -132,6 +128,26 @@ class FourArmedContext(Context):
         self._outq.extend(self._utilq)
         # clear utility queue
         self._utilq.clear()
+
+    @property
+    def iterable(self):
+        '''iterable object'''
+        return iterexcept(self._workq.popleft, IndexError)
+
+
+class FourArmedContext(ThreeArmedContext):
+
+    '''four armed context manager'''
+
+    def __init__(self, queue, **kw):
+        '''
+        init
+
+        @param queue: queue collections
+        '''
+        super(FourArmedContext, self).__init__(queue, **kw)
+        # utility queue attribute name (default: '_utilq')
+        self._utilq = getattr(queue, kw.get('utilq', '_util'))
 
 
 class AutoContext(FourArmedContext):

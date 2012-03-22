@@ -4,10 +4,10 @@
 from itertools import tee
 from collections import deque
 
-from twoq.mixins.queuing import QueueingMixin
+from twoq.mixins.queuing import QueueingMixin, ResultMixin
 
 from twoq.lazy.contexts import (
-    AutoContext, TwoArmedContext, FourArmedContext, ThreeArmedContext)
+    AutoContext, OneArmedContext, FourArmedContext, TwoArmedContext)
 
 __all__ = ['AutoQMixin', 'ManQMixin']
 
@@ -21,8 +21,8 @@ class BaseQMixin(QueueingMixin):
         incoming = iter([args[0]]) if len(args) == 1 else iter(args)
         self._work = None
         self._util = None
+        self._1arm = OneArmedContext
         self._2arm = TwoArmedContext
-        self._3arm = ThreeArmedContext
         self._4arm = FourArmedContext
         self._auto = AutoContext
         super(BaseQMixin, self).__init__(incoming, iter([]))
@@ -78,13 +78,6 @@ class BaseQMixin(QueueingMixin):
         self.incoming = list(self.incoming)
         self.incoming.remove(thing)
         self.incoming = iter(self.incoming)
-        return self
-
-    def clear(self):
-        '''clear every thing'''
-        self.detap()
-        self.outclear()
-        self.inclear()
         return self
 
     def inclear(self):
@@ -193,43 +186,11 @@ class BaseQMixin(QueueingMixin):
     outsync = outshift
 
 
-class ResultQMixin(BaseQMixin):
-
-    def end(self):
-        '''return outgoing things and clear out all things'''
-        results = list(self.outgoing)
-        results = results.pop() if len(results) == 1 else list(results)
-        self.clear()
-        return results
+class ResultQMixin(ResultMixin):
 
     def results(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
         return self.outgoing
-
-    def value(self):
-        '''return outgoing things and clear outgoing things'''
-        results = list(self.outgoing)
-        results = results.pop() if len(results) == 1 else list(results)
-        self.outclear()
-        return results
-
-    def first(self):
-        '''first incoming thing'''
-        with self._sync as sync:
-            sync.append(next(sync.iterable))
-        return self
-
-    def last(self):
-        '''last incoming thing'''
-        with self._sync as sync:
-            i1, _ = tee(sync.iterable)
-            sync.append(deque(i1, maxlen=1).pop())
-        return self
-
-    def peek(self):
-        '''see results of read-only mode'''
-        measure, results = tee(self._util)
-        return list(results)[0] if len(measure) == 1 else list(results)
 
 
 class AutoQMixin(BaseQMixin):

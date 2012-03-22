@@ -4,7 +4,8 @@
 from itertools import tee
 
 __all__ = (
-    'AutoContext', 'FourArmedContext', 'TwoArmedContext', 'ThreeArmedContext',
+    'AutoContext', 'FourArmedContext', 'OneArmedContext', 'TwoArmedContext',
+    'ThreeArmedContext',
 )
 
 
@@ -28,7 +29,26 @@ class Context(object):
         setattr(self._queue, self._utilq, iter([args]))
 
 
-class TwoArmedContext(Context):
+class OneArmedContext(Context):
+
+    '''one armed context manager'''
+
+    def __init__(self, queue, **kw):
+        '''
+        init
+
+        @param queue: queue
+        '''
+        super(OneArmedContext, self).__init__()
+        self._queue = queue
+        # work/utility queue attribute name
+        self._workq = self._utilq = kw.get('workq', 'incoming')
+
+    def __enter__(self):
+        return self
+
+
+class TwoArmedContext(OneArmedContext):
 
     '''two armed context manager'''
 
@@ -38,27 +58,7 @@ class TwoArmedContext(Context):
 
         @param queue: queue
         '''
-        super(TwoArmedContext, self).__init__()
-        self._queue = queue
-        # work/utility queue attribute name
-        self._workq = self._utilq = kw.get('workq', 'incoming')
-
-    def __enter__(self):
-        return self
-
-
-class ThreeArmedContext(Context):
-
-    '''three armed context manager'''
-
-    def __init__(self, queue, **kw):
-        '''
-        init
-
-        @param queue: queue
-        '''
-        super(ThreeArmedContext, self).__init__()
-        self._queue = queue
+        super(TwoArmedContext, self).__init__(queue)
         # work/utility queue attribute name
         self._workq = self._utilq = kw.get('workq', '_work')
         # outgoing queue attribute name
@@ -70,9 +70,9 @@ class ThreeArmedContext(Context):
         # clear utility queue
         setattr(self._queue, self._utilq, None)
         # extend scratch queue with incoming queue
-        workq, inq = tee(getattr(self._queue, self._inq))
+        workq, outq = tee(getattr(self._queue, self._outq))
         setattr(self._queue, self._workq, workq)
-        setattr(self._queue, self._inq, inq)
+        setattr(self._queue, self._outq, outq)
         return self
 
     def __exit__(self, t, v, e):
@@ -84,9 +84,9 @@ class ThreeArmedContext(Context):
         setattr(self._queue, self._utilq, None)
 
 
-class FourArmedContext(Context):
+class ThreeArmedContext(TwoArmedContext):
 
-    '''four armed context manager'''
+    '''three armed context manager'''
 
     def __init__(self, queue, **kw):
         '''
@@ -94,16 +94,13 @@ class FourArmedContext(Context):
 
         @param queue: queue collections
         '''
-        super(FourArmedContext, self).__init__()
-        self._queue = queue
+        super(ThreeArmedContext, self).__init__(queue)
         # incoming queue attribute name
         self._inq = kw.get('inq', 'incoming')
         # outgoing queue attribute name
         self._outq = kw.get('outq', 'outgoing')
-        # utility queue attribute name
-        self._utilq = kw.get('utilq', '_util')
-        # work queue attribute name
-        self._workq = kw.get('workq', '_work')
+        # work/utility queue attribute name
+        self._workq = self._utilq = kw.get('workq', '_work')
 
     def __enter__(self):
         # clear outgoing queue
@@ -123,6 +120,20 @@ class FourArmedContext(Context):
         setattr(self._queue, self._workq, None)
         # clear utility queue
         setattr(self._queue, self._utilq, None)
+
+
+class FourArmedContext(ThreeArmedContext):
+
+    '''four armed context manager'''
+
+    def __init__(self, queue, **kw):
+        '''
+        init
+
+        @param queue: queue collections
+        '''
+        super(FourArmedContext, self).__init__(queue, **kw)
+        self._utilq = kw.get('utilq', '_util')
 
 
 class AutoContext(FourArmedContext):
