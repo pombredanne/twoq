@@ -8,7 +8,7 @@ from itertools import islice, tee
 __all__ = ['QueueingMixin']
 
 
-class ManagementMixin(local):
+class QueueingMixin(local):
 
     '''queue management mixin'''
 
@@ -19,7 +19,7 @@ class ManagementMixin(local):
         @param incoming: incoming things
         @param outgoing: outgoing things
         '''
-        super(ManagementMixin, self).__init__()
+        super(QueueingMixin, self).__init__()
         # callable stub
         self._call = None
         # callable postitional arguments stub
@@ -164,11 +164,6 @@ class ManagementMixin(local):
             utilq=self._utilq,
         )
 
-
-class CallableMixin(local):
-
-    '''active callable management'''
-
     def args(self, *args, **kw):
         '''arguments for active callable'''
         # set positional arguments
@@ -206,11 +201,6 @@ class CallableMixin(local):
 
     # alias
     unwrap = detap
-
-
-class FingerMixin(local):
-
-    '''finger the queues'''
 
     def ahead(self, n=None):
         '''
@@ -300,11 +290,6 @@ class FingerMixin(local):
         with self.ctx1()._sync as sync:
             sync.extendleft(things)
         return self.unswap()
-
-
-class QueueingMixin(ManagementMixin, CallableMixin, FingerMixin):
-
-    '''queuing mixin'''
 
 
 class ResultMixin(local):

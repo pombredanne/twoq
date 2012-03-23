@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 '''active twoq mixins'''
 
-from threading import local
 from collections import deque
 
 from stuf.utils import lazy
@@ -15,7 +14,7 @@ from twoq.active.contexts import (
 __all__ = ('AutoQMixin', 'ManQMixin')
 
 
-class BaseQMixin(local):
+class BaseQMixin(QueueingMixin):
 
     '''base active queue'''
 
@@ -53,35 +52,25 @@ class BaseQMixin(local):
         return len_(self.outgoing) == len_(self.incoming)
 
 
-class AutoMixin(BaseQMixin):
+class AutoQMixin(BaseQMixin):
 
     '''auto-balancing queue mixin'''
 
     _default_context = AutoContext
 
 
-class ManMixin(BaseQMixin):
+class ManQMixin(BaseQMixin):
 
     '''manually balanced queue mixin'''
 
     _default_context = FourArmContext
 
 
-class AutoQMixin(AutoMixin, QueueingMixin):
-
-    '''auto-balancing queue mixin'''
-
-
-class ManQMixin(ManMixin, QueueingMixin):
-
-    '''manually balanced queue mixin'''
-
-
-class AutoResultMixin(AutoQMixin, QueueingMixin, ResultMixin):
+class AutoResultMixin(AutoQMixin, ResultMixin):
 
     '''auto-balancing manipulation queue (with results extractor) mixin'''
 
 
-class ManResultMixin(ManQMixin, QueueingMixin, ResultMixin):
+class ManResultMixin(ManQMixin, ResultMixin):
 
     '''manually balanced queue (with results extractor) mixin'''

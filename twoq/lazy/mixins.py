@@ -45,28 +45,18 @@ class BaseQMixin(QueueingMixin):
         return len_(list_(outgoing)) == len_(list_(incoming))
 
 
-class AutoMixin(BaseQMixin):
+class AutoQMixin(BaseQMixin):
 
     '''auto-balancing queue mixin'''
 
     _default_context = AutoContext
 
 
-class ManMixin(BaseQMixin):
+class ManQMixin(BaseQMixin):
 
     '''manually balanced queue mixin'''
 
     _default_context = FourArmContext
-
-
-class AutoQMixin(AutoMixin, QueueingMixin):
-
-    '''auto-balancing queue mixin'''
-
-
-class ManQMixin(ManMixin, QueueingMixin):
-
-    '''manually balanced queue mixin'''
 
 
 class AutoResultMixin(ResultMixin, AutoQMixin):
