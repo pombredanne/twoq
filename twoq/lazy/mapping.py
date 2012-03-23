@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq lazy mapping queues'''
 
-from inspect import ismodule
-
-from twoq.support import port
-from twoq.mixins.mapping import (
-    DelayMixin, CopyMixin, RepeatMixin, MappingMixin)
+from twoq.mixins.mapping import DelayMixin, RepeatMixin, MappingMixin
 
 from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
 
@@ -24,22 +20,6 @@ delayq = adelayq
 class mdelayq(ManResultMixin, DelayMixin):
 
     '''manually balanced delayed map queue'''
-
-###############################################################################
-## lazy copy queues #########################################################
-###############################################################################
-
-
-class acopyq(AutoResultMixin, CopyMixin):
-
-    '''auto-balanced copy queue'''
-
-copyq = acopyq
-
-
-class mcopyq(ManResultMixin, CopyMixin):
-
-    '''manually balanced copy queue'''
 
 ###############################################################################
 ## lazy repeat queues #######################################################
@@ -72,7 +52,3 @@ mapq = amapq
 class mmapq(ManResultMixin, MappingMixin):
 
     '''manually balanced map queue'''
-
-__all__ = sorted(name for name, obj in port.items(locals()) if not any([
-    name.startswith('_'), ismodule(obj),
-]))

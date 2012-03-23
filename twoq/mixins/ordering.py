@@ -17,11 +17,9 @@ class RandomMixin(local):
 
     def choice(self):
         '''random choice of/from incoming things'''
-        with self._sync() as sync:
+        with self._sync as sync:
             sync.append(choice(list(sync.iterable)))
         return self
-
-    _ochoice = choice
 
     def sample(self, n):
         '''
@@ -29,21 +27,17 @@ class RandomMixin(local):
 
         @param n: number of incoming things
         '''
-        with self._sync() as sync:
+        with self._sync as sync:
             sync(sample(list(sync.iterable), n))
         return self
 
-    _osample = sample
-
     def shuffle(self):
         '''randomly order incoming things'''
-        with self._sync() as sync:
+        with self._sync as sync:
             iterable = list(sync.iterable)
             shuffle(iterable)
             sync(iterable)
         return self
-
-    _oshuffle = shuffle
 
 
 class OrderMixin(local):
@@ -52,19 +46,14 @@ class OrderMixin(local):
 
     def group(self):
         '''group incoming things using call for key function'''
-        call = self._call
-        with self._sync() as sync:
-            if call is None:
-                sync(imap(
-                    lambda x: [x[0], list(x[1])], groupby(sync.iterable)
-                ))
+        call_ = self._call
+        filt_ = lambda x: [x[0], list(x[1])]
+        with self._sync as sync:
+            if call_ is None:
+                sync(imap(filt_, groupby(sync.iterable)))
             else:
-                sync(imap(
-                    lambda x: [x[0], list(x[1])], groupby(sync.iterable, call),
-                ))
+                sync(imap(filt_, groupby(sync.iterable, call_)))
         return self
-
-    _ogroup = group
 
     def grouper(self, n, fill=None):
         '''
@@ -74,31 +63,25 @@ class OrderMixin(local):
         @param n: number of things
         @param fill: fill thing (default: None)
         '''
-        with self._sync() as sync:
+        with self._sync as sync:
             sync(zip_longest(fillvalue=fill, *[iter(sync.iterable)] * n))
         return self
 
-    _ogrouper = grouper
-
     def reverse(self):
         '''reverse incoming things'''
-        with self._sync() as sync:
+        with self._sync as sync:
             sync(reversed(list(sync.iterable)))
         return self
 
-    _oreverse = reverse
-
     def sort(self):
         '''sort incoming things using call for key function'''
-        call = self._call
-        with self._sync() as sync:
-            if self._call is None:
+        call_ = self._call
+        with self._sync as sync:
+            if call_ is None:
                 sync(sorted(sync.iterable))
             else:
-                sync(sorted(sync.iterable, key=call))
+                sync(sorted(sync.iterable, key=call_))
         return self
-
-    _osort = sort
 
 
 class OrderingMixin(OrderMixin, RandomMixin):

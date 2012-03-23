@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 '''setup twoq'''
 
@@ -8,11 +9,11 @@ try:
 except ImportError:
     from distutils.core import setup
 
-install_requires = ['stuf>=0.8.8']
+install_requires = ['stuf>=0.8.9']
 
 setup(
     name='twoq',
-    version='0.2.3',
+    version='0.4.0',
     description='iterator chaining, underscored by a two-headed queue',
     long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'r').read(),
     author='L. C. Rees',

@@ -1,62 +1,188 @@
 # -*- coding: utf-8 -*-
 '''twoq lazy contexts'''
 
-from itertools import tee
+from itertools import tee, chain
 
-__all__ = ('AutoContext', 'ManContext')
+__all__ = (
+    'AutoContext', 'FourArmContext', 'OneArmContext', 'TwoArmContext',
+    'ThreeArmContext',
+)
 
 
-class ManContext(object):
+class Context(object):
 
-    '''manual sync context manager'''
+    '''base context manager'''
 
-    def __init__(self, q, inq='incoming', outq='outgoing', tmpq='_scratch'):
+    def _chain(self, thing):
+        queue_, utilq_ = self._queue, self._utilq
+        setattr(queue_, utilq_, chain(thing, getattr(queue_, utilq_)))
+
+    @property
+    def iterable(self):
+        '''iterable object'''
+        return getattr(self._queue, self._workq)
+
+    def __call__(self, args):
+        '''extend work queue with `args` wrapped in iterator'''
+        self._chain(args)
+
+    def iter(self, args):
+        '''extend work queue with `args` wrapped in iterator'''
+        self._chain(iter(args))
+
+    def append(self, args):
+        '''append `args` to work queue'''
+        self._chain(iter([args]))
+
+    def appendleft(self, thing):
+        '''
+        append `thing` to left side of incoming things
+
+        @param thing: some thing
+        '''
+        self._chain(iter([thing]))
+
+    def extendleft(self, things):
+        '''
+        extend left side of incoming things with `things`
+
+        @param thing: some things
+        '''
+        self._chain(reversed(things))
+
+    def clear(self):
+        '''clear queue'''
+        setattr(self._queue, self._utilq, iter([]))
+
+
+class OneArmContext(Context):
+
+    '''one armed context manager'''
+
+    def __init__(self, queue, **kw):
         '''
         init
 
         @param queue: queue
         '''
-        super(ManContext, self).__init__()
-        self._queue = q
-        self._inq = inq
-        self._outq = outq
-        self._iterable = tmpq
+        super(OneArmContext, self).__init__()
+        self._queue = queue
+        # work/utility queue attribute name
+        self._workq = self._utilq = kw.get('workq', 'incoming')
 
     def __enter__(self):
-        # clear outgoing queue
-        setattr(self._queue, self._outq, None)
+        return self
+
+    def __exit__(self, e, v, b):
+        self
+
+
+class TwoArmContext(OneArmContext):
+
+    '''two armed context manager'''
+
+    def __init__(self, queue, **kw):
+        '''
+        init
+
+        @param queue: queue
+        '''
+        super(TwoArmContext, self).__init__(queue)
+        # work/utility queue attribute name
+        self._workq = self._utilq = kw.get('workq', '_work')
+        # outgoing queue attribute name
+        self._outq = kw.get('outq', 'incoming')
+
+    def __enter__(self):
+        setattr_, iter_ = setattr,  iter
+        queue_, workq_, outq_ = self._queue, self._workq, self._outq
+        # clear work queue
+        setattr_(queue_, workq_, iter_([]))
+        # clear utility queue
+        setattr_(queue_, self._utilq, iter_([]))
         # extend scratch queue with incoming queue
-        tmpq, inq = tee(getattr(self._queue, self._inq))
-        setattr(self._queue, self._iterable, tmpq)
-        setattr(self._queue, self._inq, inq)
+        workq, outq = tee(getattr(queue_, outq_))
+        setattr_(queue_, workq_, workq)
+        setattr_(queue_, outq_, outq)
         return self
 
     def __exit__(self, t, v, e):
-        # clear scratch queue
-        self._queue._scratch = None
-
-    @property
-    def iterable(self):
-        return getattr(self._queue, self._iterable)
-
-    def __call__(self, args):
-        setattr(self._queue, self._outq, args)
-
-    def iter(self, args):
-        setattr(self._queue, self._outq, iter(args))
-
-    def append(self, args):
-        setattr(self._queue, self._outq, iter([args]))
+        setattr_, iter_ = setattr,  iter
+        queue_, utilq_ = self._queue, self._utilq
+        # set outgoing queue
+        setattr_(queue_, self._outq, getattr(queue_, utilq_))
+        # clear work queue
+        setattr_(queue_, self._workq, iter_([]))
+        # clear utility queue
+        setattr_(queue_, utilq_, iter_([]))
 
 
-class AutoContext(ManContext):
+class ThreeArmContext(TwoArmContext):
 
-    '''auto sync context manager'''
+    '''three armed context manager'''
+
+    def __init__(self, queue, **kw):
+        '''
+        init
+
+        @param queue: queue collections
+        '''
+        super(ThreeArmContext, self).__init__(queue)
+        # incoming queue attribute name
+        self._inq = kw.get('inq', 'incoming')
+        # outgoing queue attribute name
+        self._outq = kw.get('outq', 'outgoing')
+        # work/utility queue attribute name
+        self._workq = self._utilq = kw.get('workq', '_work')
+
+    def __enter__(self):
+        setattr_, iter_ = setattr,  iter
+        queue_, workq_, inq_ = self._queue, self._workq, self._inq
+        # clear utility queue
+        setattr_(queue_, self._utilq, iter_([]))
+        # extend work queue with incoming queue
+        tmpq, inq = tee(getattr(queue_, inq_))
+        setattr_(queue_, workq_, tmpq)
+        setattr_(queue_, inq_, inq)
+        return self
 
     def __exit__(self, t, v, e):
-        # clear scratch queue
-        setattr(self._queue, self._iterable, None)
+        setattr_, iter_ = setattr,  iter
+        queue_, utilq_, outq_ = self._queue, self._utilq, self._outq
+        # set outgoing queue
+        setattr_(queue_, outq_, getattr(queue_, utilq_))
+        # clear work queue
+        setattr_(queue_, self._workq, iter_([]))
+        # clear utility queue
+        setattr_(queue_, utilq_, iter_([]))
+
+
+class FourArmContext(ThreeArmContext):
+
+    '''four armed context manager'''
+
+    def __init__(self, queue, **kw):
+        '''
+        init
+
+        @param queue: queue collections
+        '''
+        super(FourArmContext, self).__init__(queue, **kw)
+        self._utilq = kw.get('utilq', '_util')
+
+
+class AutoContext(FourArmContext):
+
+    '''auto-synchronized context manager'''
+
+    def __exit__(self, t, v, e):
+        setattr_, iter_ = setattr,  iter
+        queue_, utilq_ = self._queue, self._utilq
         # extend incoming queue with outgoing queue
-        outq, inq = tee(getattr(self._queue, self._outq))
-        setattr(self._queue, self._outq, outq)
-        setattr(self._queue, self._inq, inq)
+        outq, inq = tee(getattr(queue_, utilq_))
+        setattr_(queue_, self._outq, outq)
+        setattr_(queue_, self._inq, inq)
+        # clear work queue
+        setattr_(queue_, self._workq, iter_([]))
+        # clear utility queue
+        setattr(queue_, utilq_, iter_([]))

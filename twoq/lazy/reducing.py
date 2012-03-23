@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 '''twoq lazy reducing queues'''
 
-from inspect import ismodule
-
-from twoq.support import port
 from twoq.mixins.reducing import MathMixin, TruthMixin, ReducingMixin
 
 from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
@@ -56,9 +53,3 @@ reduceq = areduceq
 class mreduceq(ManResultMixin, ReducingMixin):
 
     '''manually balanced reduce queue'''
-
-
-__all__ = sorted(name for name, obj in port.items(locals()) if not any([
-    name.startswith('_'), ismodule(obj),
-]))
-del ismodule

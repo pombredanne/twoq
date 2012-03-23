@@ -1,0 +1,8 @@
+argv = ['./waf', 'configure']
+environ = {'TERM_SESSION_ID': 'CCD77D50-3DF6-4DCF-A012-1F59CAE06B59', 'SSH_AUTH_SOCK': '/tmp/launch-eSIWgI/Listeners', 'TERM_PROGRAM_VERSION': '303', 'PLAN9': '/usr/local/plan9', 'TMPDIR': '/var/folders/0z/2xcnpc4x6yj641n94p07fg8r0000gp/T/', 'SHELL': '/bin/bash', 'LOGNAME': 'lrees', 'USER': 'lrees', 'HOME': '/Users/lrees', 'PATH': '/usr/local/bin:/usr/local/sbin:/usr/local/share/python:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/X11/bin:/usr/X11/bin:/usr/local/plan9/bin', 'DISPLAY': '/tmp/launch-SMBsKa/org.macosforge.xquartz:0', '_': './waf', 'TERM_PROGRAM': 'Apple_Terminal', 'LANG': 'en_US.UTF-8', 'TERM': 'xterm-256color', 'Apple_PubSub_Socket_Render': '/tmp/launch-bRUx2M/Render', 'SHLVL': '1', 'OLDPWD': '/Users/lrees/Documents/hgrepo', 'SECURITYSESSIONID': '186a4', '__CF_USER_TEXT_ENCODING': '0x1F6:0:0', 'Apple_Ubiquity_Message': '/tmp/launch-XDlI8a/Apple_Ubiquity_Message', 'PWD': '/Users/lrees/Documents/hgrepo/twoq', 'EDITOR': 'joe', 'COMMAND_MODE': 'unix2003'}
+files = ['/Users/lrees/Documents/hgrepo/twoq/wscript']
+hash = -2955996537289896806
+options = {'files': '', 'jobs': 8, 'verbose': 0, 'nocache': False, 'progress_bar': 0, 'top': '', 'destdir': '', 'keep': 0, 'zones': '', 'prefix': '/usr/local/', 'download': False, 'force': False, 'targets': '', 'out': ''}
+out_dir = '/Users/lrees/Documents/hgrepo/twoq/build'
+run_dir = '/Users/lrees/Documents/hgrepo/twoq'
+top_dir = '/Users/lrees/Documents/hgrepo/twoq'
