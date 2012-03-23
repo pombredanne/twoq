@@ -43,8 +43,7 @@ class QueueingMixin(local):
 
     def __iter__(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
-        with self._sync as sync:
-            return sync.iterable
+        return self._context.iterator(self, self._outq)
 
     @property
     def balanced(self):
@@ -330,5 +329,4 @@ class ResultMixin(local):
 
     def results(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
-        with self._sync as sync:
-            return sync.iterable
+        return self.__iter__()
