@@ -164,6 +164,71 @@ class ManagementMixin(local):
             utilq=self._utilq,
         )
 
+
+class CallableMixin(local):
+
+    '''active callable management'''
+
+    def args(self, *args, **kw):
+        '''arguments for active callable'''
+        # set positional arguments
+        self._args = args
+        # set keyword arguemnts
+        self._kw.update(kw)
+        return self
+
+    def tap(self, call):
+        '''
+        set active callable
+
+        @param call: a call
+        '''
+        self.detap()
+        # set active callable
+        self._call = call
+        return self
+
+    def detap(self):
+        '''clear active callable'''
+        # reset postitional arguments
+        self._args = ()
+        # reset keyword arguments
+        self._kw.clear()
+        # reset callable
+        self._call = None
+        return self
+
+    def wrap(self, call):
+        '''build active callable from factory'''
+        def factory(*args, **kw):
+            return call(*args, **kw)
+        return self.tap(factory)
+
+    # alias
+    unwrap = detap
+
+
+class FingerMixin(local):
+
+    '''finger the queues'''
+
+    def ahead(self, n=None):
+        '''
+        move iterator for incoming things `n`-steps ahead
+
+        If `n` is `None`, consume entirely.
+
+        @param n: number of steps to advance incoming things (default: None)
+        '''
+        # use functions that consume iterators at C speed.
+        if n is None:
+            # feed the entire iterator into a zero-length `deque`
+            self.incoming = deque(self.incoming, maxlen=0)
+        else:
+            # advance to the empty slice starting at position `n`
+            next(islice(self.incoming, n, n), None)
+        return self
+
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
         with self.ctx1()._sync as sync:
@@ -185,54 +250,6 @@ class ManagementMixin(local):
         return self.unswap()
 
     outsync = outshift
-
-
-class CallableMixin(local):
-
-    '''current callable management'''
-
-    def args(self, *args, **kw):
-        '''arguments for current callable'''
-        # set positional arguments
-        self._args = args
-        # set keyword arguemnts
-        self._kw.update(kw)
-        return self
-
-    def tap(self, call):
-        '''
-        set current callable
-
-        @param call: a call
-        '''
-        self.detap()
-        # set current callable
-        self._call = call
-        return self
-
-    def detap(self):
-        '''clear current callable'''
-        # reset postitional arguments
-        self._args = ()
-        # reset keyword arguments
-        self._kw.clear()
-        # reset callable
-        self._call = None
-        return self
-
-    def wrap(self, call):
-        '''build current callable from factory'''
-        def factory(*args, **kw):
-            return call(*args, **kw)
-        return self.tap(factory)
-
-    # alias
-    unwrap = detap
-
-
-class FingerMixin(local):
-
-    '''finger the queues'''
 
     def append(self, thing):
         '''
@@ -293,23 +310,6 @@ class QueueingMixin(ManagementMixin, CallableMixin, FingerMixin):
 class ResultMixin(local):
 
     '''result queue mixin'''
-
-    def ahead(self, n=None):
-        '''
-        move iterator for incoming things `n`-steps ahead
-
-        If `n` is `None`, consume entirely.
-
-        @param n: number of steps to advance incoming things (default: None)
-        '''
-        # use functions that consume iterators at C speed.
-        if n is None:
-            # feed the entire iterator into a zero-length `deque`
-            self.incoming = deque(self.incoming, maxlen=0)
-        else:
-            # advance to the empty slice starting at position `n`
-            next(islice(self.incoming, n, n), None)
-        return self
 
     def end(self):
         '''return outgoing things and clear everything'''
