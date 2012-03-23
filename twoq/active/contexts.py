@@ -25,14 +25,6 @@ class Context(object):
         '''append `args` to work queue'''
         self._utilq.append(args)
 
-    def pop(self):
-        '''right side `pop` from work queue'''
-        return self._workq.pop()
-
-    def popleft(self):
-        '''left-side pop from work queue'''
-        return self._workq.popleft()
-
     def appendleft(self, thing):
         '''left side append from work queue'''
         self._utilq.appendleft(thing)

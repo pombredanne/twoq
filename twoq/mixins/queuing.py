@@ -46,6 +46,11 @@ class QueueingMixin(local):
         with self._sync as sync:
             return sync.iterable
 
+    @property
+    def balanced(self):
+        '''if queues are balanced'''
+        return self.outcount() == self.__len__()
+
     ###########################################################################
     ## clear queues ###########################################################
     ###########################################################################
@@ -252,7 +257,7 @@ class QueueingMixin(local):
 
         @param thing: some thing
         '''
-        with self.ctx1()._sync as sync:
+        with self.ctx2()._sync as sync:
             sync.appendleft(thing)
         return self.unswap()
 

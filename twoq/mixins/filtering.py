@@ -121,12 +121,12 @@ class CollectMixin(local):
 class SetMixin(local):
 
     '''set and uniqueness mixin'''
-    
+
     @staticmethod
     def _unique(iterable, key=None):
         '''
         unique things in in iterable
-    
+
         @param iterable: an iterable
         @param key: determine uniqueness filter
         '''
@@ -256,12 +256,12 @@ class SliceMixin(local):
 class FilterMixin(local):
 
     '''filters mixin'''
-    
+
     @staticmethod
     def _find(call, iterable):
         '''
         find the first `True` thing in iterator
-    
+
         @param call: "Truth" filter
         @param iterable: an iterable
         '''

@@ -45,12 +45,6 @@ class BaseQMixin(QueueingMixin):
         '''count of outgoing things'''
         return len(self.outgoing)
 
-    @property
-    def balanced(self):
-        '''if queues are balanced'''
-        len_ = len
-        return len_(self.outgoing) == len_(self.incoming)
-
 
 class AutoQMixin(BaseQMixin):
 
