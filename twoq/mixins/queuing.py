@@ -41,6 +41,11 @@ class ManagementMixin(local):
         # context pointers -> default context manager
         self._context = self._default_context
 
+    def __iter__(self):
+        '''yield outgoing things, clearing outgoing things as it iterates'''
+        with self._sync as sync:
+            return sync.iterable
+
     ###########################################################################
     ## clear queues ###########################################################
     ###########################################################################
@@ -338,9 +343,7 @@ class ResultMixin(local):
         results = list(self._util)
         return results[0] if len(results) == 1 else results
 
-    def __iter__(self):
+    def results(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
         with self._sync as sync:
             return sync.iterable
-
-    results = __iter__
