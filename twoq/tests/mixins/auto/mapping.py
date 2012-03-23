@@ -6,29 +6,6 @@ from inspect import ismodule
 from twoq.support import port
 
 
-class ACopyQMixin(object):
-
-    def test_copy(self):
-        testlist = [[1, 2, 3], [4, 5, 6]]
-        newlist = self.qclass(testlist).copy().end()
-        self.assertFalse(newlist is testlist)
-        self.assertListEqual(newlist, testlist)
-        self.assertTrue(newlist[0] is testlist[0])
-        self.assertListEqual(newlist[0], testlist[0])
-        self.assertTrue(newlist[1] is testlist[1])
-        self.assertListEqual(newlist[1], testlist[1])
-
-    def test_deepcopy(self):
-        testlist = [[1, [2, 3]], [4, [5, 6]]]
-        newlist = self.qclass(testlist).deepcopy().end()
-        self.assertFalse(newlist is testlist)
-        self.assertListEqual(newlist, testlist)
-        self.assertFalse(newlist[0] is testlist[0])
-        self.assertListEqual(newlist[0], testlist[0])
-        self.assertFalse(newlist[1] is testlist[1])
-        self.assertListEqual(newlist[1], testlist[1])
-
-
 class ARepeatQMixin(object):
 
     def test_range(self):
@@ -50,6 +27,16 @@ class ARepeatQMixin(object):
             [[40, 50, 60], [40, 50, 60], [40, 50, 60]],
         )
 
+    def test_copy(self):
+        testlist = [[1, [2, 3]], [4, [5, 6]]]
+        newlist = self.qclass(testlist).copy().end()
+        self.assertFalse(newlist is testlist)
+        self.assertListEqual(newlist, testlist)
+        self.assertFalse(newlist[0] is testlist[0])
+        self.assertListEqual(newlist[0], testlist[0])
+        self.assertFalse(newlist[1] is testlist[1])
+        self.assertListEqual(newlist[1], testlist[1])
+
 
 class ADelayQMixin(object):
 
@@ -59,13 +46,13 @@ class ADelayQMixin(object):
         self.assertEqual(
             self.qclass(
                 ((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})
-            ).tap(test).delay_each(0.1).end(),
+            ).tap(test).delay_each(0.01).end(),
             [6, 10, 14],
         )
 
     def test_delay_map(self):
         self.assertEqual(
-            self.qclass(1, 2, 3).tap(lambda x: x * 3).delay_map(0.1).end(),
+            self.qclass(1, 2, 3).tap(lambda x: x * 3).delay_map(0.01).end(),
             [3, 6, 9],
         )
 
@@ -76,12 +63,12 @@ class ADelayQMixin(object):
             [1, 2],
         )
         self.assertEqual(
-            self.qclass([5, 1, 7], [3, 2, 1]).delay_invoke('sort', 0.1).end(),
+            self.qclass([5, 1, 7], [3, 2, 1]).delay_invoke('sort', 0.01).end(),
             [[1, 5, 7], [1, 2, 3]],
         )
 
 
-class AMapQMixin(ACopyQMixin, ADelayQMixin, ARepeatQMixin):
+class AMapQMixin(ADelayQMixin, ARepeatQMixin):
 
     def test_wrap(self):
         from stuf import stuf

@@ -16,6 +16,7 @@ def tox():
 
 
 def tox_recreate():
+    '''recreate twoq test env'''
     prompt(
         'Enter testenv: [py26, py27, py32]',
         'testenv',
@@ -35,9 +36,9 @@ def release():
     local('hg merge next; hg ci -m automerge')
     local('hg update pu')
     local('hg merge default; hg ci -m automerge')
-    prompt('Enter tag:', 'tag')
+    prompt('Enter tag: ', 'tag')
     with settings(warn_only=True):
         local('hg tag "%(tag)s"' % env)
         local('hg push ssh://hg@bitbucket.org/lcrees/twoq')
         local('hg push git+ssh://git@github.com:kwarterthieves/twoq.git')
-#    local('python setup.py register sdist --format=bztar,gztar,zip upload')
+    local('./setup.py register sdist --format=bztar,gztar,zip upload')
