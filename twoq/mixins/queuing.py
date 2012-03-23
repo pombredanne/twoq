@@ -76,10 +76,7 @@ class QueueingMixin(local):
 
     def clear(self):
         '''clear every thing'''
-        self.detap()
-        self.outclear()
-        self.inclear()
-        return self
+        return self.detap().outclear().inclear()
 
     ###########################################################################
     ## queue rotation #########################################################
@@ -115,24 +112,22 @@ class QueueingMixin(local):
     def ctx4(self, **kw):
         '''switch to four-armed context manager'''
         self._context = self._4arm
-        self.swap(
+        return self.swap(
             inq=kw.get('inq', 'incoming'),
             outq=kw.get('outq', 'outgoing'),
             workq=kw.get('workq', '_work'),
             utilq=kw.get('utilq', '_util'),
         )
-        return self
 
     def autoctx(self, **kw):
         '''switch to auto-synchronizing context manager'''
         self._context = self._auto
-        self.swap(
+        return self.swap(
             inq=kw.get('inq', 'incoming'),
             outq=kw.get('outq', 'outgoing'),
             workq=kw.get('workq', '_work'),
             utilq=kw.get('utilq', '_util'),
         )
-        return self
 
     def swap(self, **kw):
         '''swap queues'''
