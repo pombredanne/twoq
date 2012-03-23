@@ -18,8 +18,9 @@ class BaseQMixin(QueueingMixin):
     '''base active queue'''
 
     def __init__(self, *args):
-        incoming = deque(args[0]) if len(args) == 1 else deque(args)
-        super(BaseQMixin, self).__init__(incoming, deque())
+        deque_ = deque
+        incoming = deque_(args[0]) if len(args) == 1 else deque_(args)
+        super(BaseQMixin, self).__init__(incoming, deque_())
         self._1arm = OneArmContext
         self._2arm = TwoArmContext
         self._3arm = ThreeArmContext
@@ -46,7 +47,8 @@ class BaseQMixin(QueueingMixin):
     @property
     def balanced(self):
         '''if queues are balanced'''
-        return len(self.outgoing) == len(self.incoming)
+        len_ = len
+        return len_(self.outgoing) == len_(self.incoming)
 
 
 class AutoQMixin(BaseQMixin):

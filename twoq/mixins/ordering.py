@@ -46,16 +46,13 @@ class OrderMixin(local):
 
     def group(self):
         '''group incoming things using call for key function'''
-        call = self._call
+        call_ = self._call
+        filt_ = lambda x: [x[0], list(x[1])]
         with self._sync as sync:
-            if call is None:
-                sync(imap(
-                    lambda x: [x[0], list(x[1])], groupby(sync.iterable)
-                ))
+            if call_ is None:
+                sync(imap(filt_, groupby(sync.iterable)))
             else:
-                sync(imap(
-                    lambda x: [x[0], list(x[1])], groupby(sync.iterable, call),
-                ))
+                sync(imap(filt_, groupby(sync.iterable, call_)))
         return self
 
     def grouper(self, n, fill=None):
@@ -78,12 +75,12 @@ class OrderMixin(local):
 
     def sort(self):
         '''sort incoming things using call for key function'''
-        call = self._call
+        call_ = self._call
         with self._sync as sync:
-            if self._call is None:
+            if call_ is None:
                 sync(sorted(sync.iterable))
             else:
-                sync(sorted(sync.iterable, key=call))
+                sync(sorted(sync.iterable, key=call_))
         return self
 
 

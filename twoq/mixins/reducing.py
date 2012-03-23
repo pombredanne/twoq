@@ -33,13 +33,13 @@ class MathMixin(local):
         return self
 
     def max(self):
-        '''find maximum thing in incoming things using call as key function'''
-        call = self._call
+        '''find maximum thing in incoming things using call_ as key function'''
+        call_ = self._call
         with self._sync as sync:
-            if call is None:
+            if call_ is None:
                 sync.append(max(sync.iterable))
             else:
-                sync.append(max(sync.iterable, key=call))
+                sync.append(max(sync.iterable, key=call_))
         return self
 
     def median(self):
@@ -52,13 +52,13 @@ class MathMixin(local):
         return self
 
     def min(self):
-        '''find minimum thing in incoming things using call as key function'''
-        call = self._call
+        '''find minimum thing in incoming things using call_ as key function'''
+        call_ = self._call
         with self._sync as sync:
-            if call is None:
+            if call_ is None:
                 sync.append(min(sync.iterable))
             else:
-                sync.append(min(sync.iterable, key=call))
+                sync.append(min(sync.iterable, key=call_))
         return self
 
     def minmax(self):
@@ -110,16 +110,16 @@ class TruthMixin(local):
 
     def all(self):
         '''if `all` incoming things are `True`'''
-        call = self._call
+        call_ = self._call
         with self._sync as sync:
-            sync.append(all(imap(call, sync.iterable)))
+            sync.append(all(imap(call_, sync.iterable)))
         return self
 
     def any(self):
         '''if `any` incoming things are `True`'''
-        call = self._call
+        call_ = self._call
         with self._sync as sync:
-            sync.append(any(imap(call, sync.iterable)))
+            sync.append(any(imap(call_, sync.iterable)))
         return self
 
     def contains(self, thing):
@@ -134,9 +134,9 @@ class TruthMixin(local):
 
     def quantify(self):
         '''how many times call is `True` for incoming things'''
-        call = self._call
+        call_ = self._call
         with self._sync as sync:
-            sync.append(sum(imap(call, sync.iterable)))
+            sync.append(sum(imap(call_, sync.iterable)))
         return self
 
 
@@ -147,21 +147,21 @@ class ReduceMixin(local):
     @staticmethod
     def _roundrobin(iterable):
         '''
-        interleave things in iterable into one thing e.g.
+        interleave things in iterable into one thing
 
         @param iterable: an iterable
         '''
         pending = len(tee(iterable, 1))
-        _cycle = cycle
-        _islice = islice
-        nexts = _cycle(partial(next, iter(i)) for i in iterable)
+        cycle_ = cycle
+        islice_ = islice
+        nexts_ = cycle_(partial(next, iter(i)) for i in iterable)
         while pending:
             try:
-                for nextz in nexts:
+                for nextz in nexts_:
                     yield nextz()
             except StopIteration:
                 pending -= 1
-                nexts = _cycle(_islice(nexts, pending))
+                nexts_ = cycle_(islice_(nexts_, pending))
 
     @classmethod
     def _smash(cls, iterable):
@@ -170,12 +170,10 @@ class ReduceMixin(local):
 
         @param iterable: an iterable
         '''
-        _isstring = isstring
-        _Iterable = Iterable
-        _smash = cls._smash
+        isstring_, Iterable_, smash_ = isstring, Iterable, cls._smash
         for i in iterable:
-            if isinstance(i, _Iterable) and not _isstring(i):
-                for j in _smash(i):
+            if isinstance(i, Iterable_) and not isstring_(i):
+                for j in smash_(i):
                     yield j
             else:
                 yield i
@@ -209,12 +207,12 @@ class ReduceMixin(local):
 
         @param initial: initial thing (default: None)
         '''
-        call = self._call
+        call_ = self._call
         with self._sync as sync:
             if initial:
-                sync.append(ireduce(call, sync.iterable, initial))
+                sync.append(ireduce(call_, sync.iterable, initial))
             else:
-                sync.append(ireduce(call, sync.iterable))
+                sync.append(ireduce(call_, sync.iterable))
         return self
 
     def reduce_right(self, initial=None):
@@ -224,12 +222,13 @@ class ReduceMixin(local):
 
         @param initial: initial thing (default: None)
         '''
-        call = self._call
+        call_ = self._call
+        filt_ = lambda x, y: call_(y, x)
         with self._sync as sync:
             if initial:
-                sync(ireduce(lambda x, y: call(y, x), sync.iterable, initial))
+                sync(ireduce(filt_, sync.iterable, initial))
             else:
-                sync(ireduce(lambda x, y: call(y, x), sync.iterable))
+                sync(ireduce(filt_, sync.iterable))
         return self
 
     def roundrobin(self):

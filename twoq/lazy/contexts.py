@@ -14,11 +14,8 @@ class Context(object):
     '''base context manager'''
 
     def _chain(self, thing):
-        setattr(
-            self._queue,
-            self._utilq,
-            chain(thing, getattr(self._queue, self._utilq)),
-        )
+        queue_, utilq_ = self._queue, self._utilq
+        setattr(queue_, utilq_, chain(thing, getattr(queue_, utilq_)))
 
     @property
     def iterable(self):
@@ -97,23 +94,27 @@ class TwoArmContext(OneArmContext):
         self._outq = kw.get('outq', 'incoming')
 
     def __enter__(self):
+        setattr_, iter_ = setattr,  iter
+        queue_, workq_, outq_ = self._queue, self._workq, self._outq
         # clear work queue
-        setattr(self._queue, self._workq, iter([]))
+        setattr_(queue_, workq_, iter_([]))
         # clear utility queue
-        setattr(self._queue, self._utilq, iter([]))
+        setattr_(queue_, self._utilq, iter_([]))
         # extend scratch queue with incoming queue
-        workq, outq = tee(getattr(self._queue, self._outq))
-        setattr(self._queue, self._workq, workq)
-        setattr(self._queue, self._outq, outq)
+        workq, outq = tee(getattr(queue_, outq_))
+        setattr_(queue_, workq_, workq)
+        setattr_(queue_, outq_, outq)
         return self
 
     def __exit__(self, t, v, e):
+        setattr_, iter_ = setattr,  iter
+        queue_, utilq_ = self._queue, self._utilq
         # set outgoing queue
-        setattr(self._queue, self._outq, getattr(self._queue, self._utilq))
+        setattr_(queue_, self._outq, getattr(queue_, utilq_))
         # clear work queue
-        setattr(self._queue, self._workq, iter([]))
+        setattr_(queue_, self._workq, iter_([]))
         # clear utility queue
-        setattr(self._queue, self._utilq, iter([]))
+        setattr_(queue_, utilq_, iter_([]))
 
 
 class ThreeArmContext(TwoArmContext):
@@ -135,23 +136,25 @@ class ThreeArmContext(TwoArmContext):
         self._workq = self._utilq = kw.get('workq', '_work')
 
     def __enter__(self):
-        # clear outgoing queue
-        setattr(self._queue, self._outq, iter([]))
+        setattr_, iter_ = setattr,  iter
+        queue_, workq_, inq_ = self._queue, self._workq, self._inq
         # clear utility queue
-        setattr(self._queue, self._utilq, iter([]))
+        setattr_(queue_, self._utilq, iter_([]))
         # extend work queue with incoming queue
-        tmpq, inq = tee(getattr(self._queue, self._inq))
-        setattr(self._queue, self._workq, tmpq)
-        setattr(self._queue, self._inq, inq)
+        tmpq, inq = tee(getattr(queue_, inq_))
+        setattr_(queue_, workq_, tmpq)
+        setattr_(queue_, inq_, inq)
         return self
 
     def __exit__(self, t, v, e):
+        setattr_, iter_ = setattr,  iter
+        queue_, utilq_, outq_ = self._queue, self._utilq, self._outq
         # set outgoing queue
-        setattr(self._queue, self._outq, getattr(self._queue, self._utilq))
+        setattr_(queue_, outq_, getattr(queue_, utilq_))
         # clear work queue
-        setattr(self._queue, self._workq, iter([]))
+        setattr_(queue_, self._workq, iter_([]))
         # clear utility queue
-        setattr(self._queue, self._utilq, iter([]))
+        setattr_(queue_, utilq_, iter_([]))
 
 
 class FourArmContext(ThreeArmContext):
@@ -173,11 +176,13 @@ class AutoContext(FourArmContext):
     '''auto-synchronized context manager'''
 
     def __exit__(self, t, v, e):
+        setattr_, iter_ = setattr,  iter
+        queue_, utilq_ = self._queue, self._utilq
         # extend incoming queue with outgoing queue
-        outq, inq = tee(getattr(self._queue, self._utilq))
-        setattr(self._queue, self._outq, outq)
-        setattr(self._queue, self._inq, inq)
+        outq, inq = tee(getattr(queue_, utilq_))
+        setattr_(queue_, self._outq, outq)
+        setattr_(queue_, self._inq, inq)
         # clear work queue
-        setattr(self._queue, self._workq, iter([]))
+        setattr_(queue_, self._workq, iter_([]))
         # clear utility queue
-        setattr(self._queue, self._utilq, iter([]))
+        setattr(queue_, utilq_, iter_([]))

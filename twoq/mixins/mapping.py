@@ -93,9 +93,9 @@ class DelayMixin(local):
 
         @param wait: time in seconds
         '''
-        _call = partial(self._delay_map, wait=wait, caller=self._call)
+        call_ = partial(self._delay_map, wait=wait, caller=self._call)
         with self._sync as sync:
-            sync(imap(_call, sync.iterable))
+            sync(imap(call_, sync.iterable))
         return self
 
 
@@ -104,7 +104,7 @@ class RepeatMixin(local):
     '''repetition mixin'''
 
     def copy(self):
-        '''copy each incoming thing '''
+        '''copy each incoming thing'''
         with self._sync as sync:
             sync(imap(deepcopy, sync.iterable))
         return self
@@ -144,15 +144,14 @@ class RepeatMixin(local):
         '''
         repeat call with incoming things `n` times
 
-        @param n: number of times to repeat calls with incoming things
-            (default: None)
+        @param n: repeat call n times on incoming things (default: None)
         '''
-        call = self._call
+        call_ = self._call
         with self._sync as sync:
             if n is None:
-                sync(starmap(call, repeat(list(sync.iterable))))
+                sync(starmap(call_, repeat(list(sync.iterable))))
             else:
-                sync(starmap(call, repeat(list(sync.iterable), n)))
+                sync(starmap(call_, repeat(list(sync.iterable), n)))
         return self
 
 
@@ -174,9 +173,10 @@ class MapMixin(local):
 
     def each(self):
         '''invoke call with passed arguments, keywords in incoming things'''
-        call = self._call
+        call_ = self._call
+        filt_ = lambda x, y: call_(*x, **y)
         with self._sync as sync:
-            sync(starmap(lambda x, y: call(*x, **y), sync.iterable))
+            sync(starmap(filt_, sync.iterable))
         return self
 
     def invoke(self, name):
@@ -186,32 +186,32 @@ class MapMixin(local):
 
         @param name: name of method
         '''
-        _call = partial(
+        call_ = partial(
             self._invoke, caller=methodcaller(name, *self._args, **self._kw),
         )
         with self._sync as sync:
-            sync(imap(_call, sync.iterable))
+            sync(imap(call_, sync.iterable))
         return self
 
     def items(self):
         '''invoke call on each mapping to get key, value pairs'''
-        call = self._call
+        call_ = self._call
         with self._sync as sync:
-            sync(starmap(call, chain_iter(imap(items, sync.iterable))))
+            sync(starmap(call_, chain_iter(imap(items, sync.iterable))))
         return self
 
     def map(self):
         '''invoke call on each incoming thing'''
-        call = self._call
+        call_ = self._call
         with self._sync as sync:
-            sync(imap(call, sync.iterable))
+            sync(imap(call_, sync.iterable))
         return self
 
     def starmap(self):
         '''invoke call on each sequence of incoming things'''
-        call = self._call
+        call_ = self._call
         with self._sync as sync:
-            sync(starmap(call, sync.iterable))
+            sync(starmap(call_, sync.iterable))
         return self
 
 

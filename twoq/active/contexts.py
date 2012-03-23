@@ -84,17 +84,19 @@ class TwoArmContext(Context):
         self._workq = self._utilq = getattr(queue, kw.get('workq', '_workq'))
 
     def __enter__(self):
+        workq_ = self._workq
         # clear work queue
-        self._workq.clear()
+        workq_.clear()
         # extend work queue with outgoing queue
-        self._workq.extend(self._outq)
+        workq_.extend(self._outq)
         return self
 
     def __exit__(self, t, v, e):
+        outq_ = self._outq
         # clear outgoing queue
-        self._outq.clear()
+        outq_.clear()
         # extend outgoing queue with utility queue
-        self._outq.extend(self._utilq)
+        outq_.extend(self._utilq)
         # clear work queue
         self._workq.clear()
 
@@ -118,17 +120,19 @@ class ThreeArmContext(Context):
         self._workq = self._utilq = getattr(queue, kw.get('workq', '_workq'))
 
     def __enter__(self):
+        workq_ = self._workq
         # clear work queue
-        self._workq.clear()
+        workq_.clear()
         # extend work queue with incoming queue
-        self._workq.extend(self._inq)
+        workq_.extend(self._inq)
         return self
 
     def __exit__(self, t, v, e):
+        outq_ = self._outq
         # clear outgoing queue
-        self._outq.clear()
+        outq_.clear()
         # extend outgoing queue with utility queue
-        self._outq.extend(self._utilq)
+        outq_.extend(self._utilq)
         # clear utility queue
         self._utilq.clear()
 
@@ -158,13 +162,14 @@ class AutoContext(FourArmContext):
     '''auto-synchronizing four armed context manager'''
 
     def __exit__(self, t, v, e):
+        inq_, outq_, utilq_ = self._inq, self._outq, self._utilq
         # clear incoming queue
-        self._inq.clear()
+        inq_.clear()
         # clear outgoing queue
-        self._outq.clear()
+        outq_.clear()
         # extend outgoing queue with outgoing queue
-        self._outq.extend(self._utilq)
+        outq_.extend(utilq_)
         # extend incoming queue with outgoing queue
-        self._inq.extend(self._utilq)
+        inq_.extend(utilq_)
         # clear utility queue
-        self._utilq.clear()
+        utilq_.clear()
