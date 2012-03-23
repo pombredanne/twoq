@@ -80,6 +80,12 @@ class ManagementMixin(local):
     ## queue rotation #########################################################
     ###########################################################################
 
+    def ro(self):
+        '''switch to read-only mode'''
+        with self.ctx3(outq='_util')._sync as sync:
+            sync(sync.iterable)
+        return self.unswap().ctx1('_util')
+
     def ctx1(self, workq='incoming'):
         '''switch to ctx1-armed context manager'''
         self._workq = workq
@@ -139,6 +145,8 @@ class ManagementMixin(local):
         '''rotate queues to default'''
         self._context = self._default_context
         return self.swap()
+
+    rw = unswap
 
     @property
     def _sync(self):

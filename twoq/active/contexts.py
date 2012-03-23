@@ -136,11 +136,6 @@ class ThreeArmContext(Context):
         # clear utility queue
         self._utilq.clear()
 
-    @property
-    def iterable(self):
-        '''iterable object'''
-        return iterexcept(self._workq.popleft, IndexError)
-
 
 class FourArmContext(ThreeArmContext):
 
@@ -155,6 +150,11 @@ class FourArmContext(ThreeArmContext):
         super(FourArmContext, self).__init__(queue, **kw)
         # utility queue attribute name (default: '_utilq')
         self._utilq = getattr(queue, kw.get('utilq', '_util'))
+
+    @property
+    def iterable(self):
+        '''iterable object'''
+        return iterexcept(self._workq.popleft, IndexError)
 
 
 class AutoContext(FourArmContext):

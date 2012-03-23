@@ -9,6 +9,11 @@ class AQMixin(object):
     ## queue manipulation #####################################################
     ###########################################################################
 
+    def test_ro(self):
+        self.assertEqual(
+            self.qclass([1, 2, 3, 4, 5, 6]).ro().peek(), [1, 2, 3, 4, 5, 6],
+        )
+
     def test_extend(self):
         self.assertEqual(
             self.qclass().extend([1, 2, 3, 4, 5, 6]).outsync().end(),
