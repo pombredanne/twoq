@@ -3,7 +3,7 @@
 
 from threading import local
 from collections import deque
-from itertools import islice, tee
+from itertools import islice, tee, chain
 
 __all__ = ['QueueingMixin']
 
@@ -11,6 +11,8 @@ __all__ = ['QueueingMixin']
 class QueueingMixin(local):
 
     '''queue management mixin'''
+
+    _default_pre = '_iq2wq'
 
     def __init__(self, incoming, outgoing):
         '''
@@ -40,69 +42,68 @@ class QueueingMixin(local):
         self._utilq = '_util'
         # context pointers -> default context manager
         self._context = self._default_context
+        # clear out outgoing queue
+        self._clearout = True
 
     def __iter__(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
-        return self._context.iterator(self, self._outq)
+        return self._iterator(self, self._outq)
 
     @property
     def balanced(self):
         '''if queues are balanced'''
         return self.outcount() == self.__len__()
 
-    ###########################################################################
-    ## clear queues ###########################################################
-    ###########################################################################
+    @property
+    def _iterable(self):
+        '''iterable'''
+        return self._iterator(self._workq)
 
-    def inclear(self):
-        '''clear incoming things'''
-        with self.ctx1()._sync as sync:
-            sync.clear()
-        return self.unswap()
+    def _split(self, iterable, n=2):
+        return tee(iterable, n)
 
-    def outclear(self):
-        '''clear outgoing things'''
-        with self.ctx1('outgoing')._sync as sync:
-            sync.clear()
-        return self.unswap()
+    def _join(self, *iterables):
+        return chain(*iterables)
 
     def _wclear(self):
         '''clear work queue'''
-        with self.ctx1('_work')._sync as sync:
-            sync.clear()
-        return self.unswap()
+        return self.ctx1('_work').clear().unswap()
 
     def _uclear(self):
         '''clear utility queue'''
-        with self.ctx1('_util')._sync as sync:
-            sync.clear()
-        return self.unswap()
+        return self.ctx1('_util').clear().unswap()
 
     def clear(self):
         '''clear every thing'''
         return self.detap().outclear().inclear()
 
-    ###########################################################################
-    ## queue rotation #########################################################
-    ###########################################################################
+    def inclear(self):
+        '''clear incoming things'''
+        return self.ctx1()._clear().unswap()
+
+    def outclear(self):
+        '''clear outgoing things'''
+        return self.ctx1('outgoing').clear().unswap()
 
     def ro(self):
         '''switch to read-only mode'''
-        with self.ctx3(outq='_util')._sync as sync:
-            sync(sync.iterable)
-        return self.unswap().ctx1('_util')
+        return self.ctx3(outq='_util')._extend(
+            self._iterable
+        ).unswap().ctx1('_util')
 
     def ctx1(self, workq='incoming'):
         '''switch to ctx1-armed context manager'''
         self._workq = workq
-        self._context = self._1arm
+        self._pre = lambda: self
+        self._post = lambda: self
         return self
 
     def ctx2(self, workq='_work', outq='incoming'):
         '''switch to two-armed context manager'''
         self._workq = workq
         self._outq = outq
-        self._context = self._2arm
+        self._pre = self._oq2wq
+        self._post = self._uq2oq
         return self
 
     def ctx3(self, workq='_work', outq='outgoing', inq='incoming'):
@@ -110,28 +111,21 @@ class QueueingMixin(local):
         self._workq = workq
         self._outq = outq
         self._inq = inq
-        self._context = self._3arm
+        self._pre = self._iq2wq
+        self._post = self._uq2oq
         return self
 
     def ctx4(self, **kw):
         '''switch to four-armed context manager'''
-        self._context = self._4arm
-        return self.swap(
-            inq=kw.get('inq', 'incoming'),
-            outq=kw.get('outq', 'outgoing'),
-            workq=kw.get('workq', '_work'),
-            utilq=kw.get('utilq', '_util'),
-        )
+        self._pre = self._iq2wq
+        self._post = self._uq2oq
+        return self.swap(**kw)
 
     def autoctx(self, **kw):
         '''switch to auto-synchronizing context manager'''
-        self._context = self._auto
-        return self.swap(
-            inq=kw.get('inq', 'incoming'),
-            outq=kw.get('outq', 'outgoing'),
-            workq=kw.get('workq', '_work'),
-            utilq=kw.get('utilq', '_util'),
-        )
+        self._pre = self._iq2wq
+        self._post = self._uq2iqoq
+        return self.swap(**kw)
 
     def swap(self, **kw):
         '''swap queues'''
@@ -147,7 +141,8 @@ class QueueingMixin(local):
 
     def unswap(self):
         '''rotate queues to default'''
-        self._context = self._default_context
+        self._pre = getattr(self, '_default_pre')
+        self._post = getattr(self, '_default_post')
         return self.swap()
 
     rw = unswap
@@ -220,23 +215,20 @@ class QueueingMixin(local):
 
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
-        with self.ctx1()._sync as sync:
-            sync.append(list(sync.iterable))
+        self.ctx1()._append(list(self._iterable))
         return self.unswap()
 
     def shift(self):
         '''shift outgoing things to incoming things'''
-        with self.autoctx(inq='outgoing', outq='incoming')._sync as sync:
-            sync(sync.iterable)
-        return self.unswap()
+        return self.autoctx(inq='outgoing', outq='incoming')._extend(
+            self._iterable
+        ).unswap()
 
     sync = shift
 
     def outshift(self):
         '''shift incoming things to outgoing things'''
-        with self.autoctx()._sync as sync:
-            sync(sync.iterable)
-        return self.unswap()
+        return self.autoctx()._extend(self._iterable).unswap()
 
     outsync = outshift
 
@@ -246,9 +238,7 @@ class QueueingMixin(local):
 
         @param thing: some thing
         '''
-        with self.ctx1()._sync as sync:
-            sync.append(thing)
-        return self.unswap()
+        return self.ctx1()._append(thing).self.unswap()
 
     def appendleft(self, thing):
         '''
@@ -256,9 +246,7 @@ class QueueingMixin(local):
 
         @param thing: some thing
         '''
-        with self.ctx2()._sync as sync:
-            sync.appendleft(thing)
-        return self.unswap()
+        return self.ctx2()._appendleft(thing).unswap()
 
     def outextend(self, things):
         '''
@@ -266,9 +254,7 @@ class QueueingMixin(local):
 
         @param thing: some things
         '''
-        with self.ctx1('outgoing')._sync as sync:
-            sync(things)
-        return self.unswap()
+        return self.ctx1('outgoing')._extend(things).unswap()
 
     def extend(self, things):
         '''
@@ -276,9 +262,7 @@ class QueueingMixin(local):
 
         @param thing: some things
         '''
-        with self.ctx1()._sync as sync:
-            sync(things)
-        return self.unswap()
+        return self.ctx1()._extend(things).unswap()
 
     def extendleft(self, things):
         '''
@@ -286,9 +270,7 @@ class QueueingMixin(local):
 
         @param thing: some things
         '''
-        with self.ctx1()._sync as sync:
-            sync.extendleft(things)
-        return self.unswap()
+        return self.ctx1()._extendleft(things).unswap()
 
 
 class ResultMixin(local):
@@ -297,29 +279,26 @@ class ResultMixin(local):
 
     def end(self):
         '''return outgoing things and clear everything'''
-        results, measure = tee(self.outgoing)
+        results, measure = self._split(self.outgoing)
         results = next(results) if len(list(measure)) == 1 else list(results)
         self.clear()
         return results
 
     def value(self):
         '''return outgoing things and clear outgoing things'''
-        results, measure = tee(self.outgoing)
+        results, measure = self._split(self.outgoing)
         results = next(results) if len(list(measure)) == 1 else list(results)
         self.outclear()
         return results
 
     def first(self):
         '''first incoming thing'''
-        with self._sync as sync:
-            sync.append(next(sync.iterable))
-        return self
+        return self._append(next(self._iterable))
 
     def last(self):
         '''last incoming thing'''
-        with self._sync as sync:
-            i1, _ = tee(sync.iterable)
-            sync.append(deque(i1, maxlen=1).pop())
+        i1, _ = self._split(self._iterable)
+        self._append(deque(i1, maxlen=1).pop())
         return self
 
     def peek(self):
