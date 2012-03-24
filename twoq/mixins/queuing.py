@@ -3,9 +3,8 @@
 
 from threading import local
 from collections import deque
-from itertools import islice, chain, tee, starmap
-
-from stuf.utils import imap
+from functools import reduce as ireduce
+from itertools import islice, chain, tee
 
 __all__ = ['QueueingMixin']
 
@@ -34,30 +33,43 @@ class QueueingMixin(local):
         return self._iterator(self._outq)
 
     def _split(self, iterable, n=2):
+        '''
+        split iterable `n` ways
+
+        @param iterable: an iterable
+        @param n: numpber of splits (default: 2)
+        '''
         return tee(iterable, n)
 
     def _join(self, *iterables):
+        '''
+        join `iterables` together
+
+        @param *iterables: a group of iterables
+        '''
         return chain(*iterables)
 
-    def _xmap(self, call, iterable=False):
+    def _areduce(self, filt, initial=None):
         '''
-        invoke call on each incoming thing
+        reduce iterable and append results to outgoing things
 
-        @param call: a callable
-        @param iterable: an iterable
+        @param filt: filter callable
+        @param initial: initializer (default: None)
         '''
-        iterable = self._iterable if not iterable else iterable
-        return self._pre()._extend(imap(call, self._iterable))
+        if initial is None:
+            return self._pre()._append(ireduce(filt, self._iterable))
+        return self._pre()._append(ireduce(filt, self._iterable, initial))
 
-    def _xstarmap(self, call, iterable=False):
+    def _xreduce(self, filt, initial=None):
         '''
-        invoke 'call' on each sequence of incoming things
+        reduce iterable and extend outgoing things with results
 
-        @param call: a callable
-        @param iterable: an iterable
+        @param filt: filter callable
+        @param initial: initializer (default: None)
         '''
-        iterable = self._iterable if not iterable else iterable
-        return self._pre()._extend(starmap(call, self._iterable))
+        if initial is None:
+            return self._pre()._extend(ireduce(filt, self._iterable))
+        return self._pre()._extend(ireduce(filt, self._iterable, initial))
 
     @property
     def balanced(self):

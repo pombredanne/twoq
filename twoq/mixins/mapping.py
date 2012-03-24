@@ -64,9 +64,9 @@ class DelayMixin(local):
 
         @param wait: time in seconds
         '''
-        return self._xstarmap(partial(
+        return self._pre()._extend(starmap(partial(
             self._delay_each, wait=wait, caller=self._call
-        ))
+        ), self._iterable))
 
     def delay_invoke(self, name, wait):
         '''
@@ -77,11 +77,11 @@ class DelayMixin(local):
         @param name: name of method
         @param wait: time in seconds
         '''
-        return self._xmap(partial(
+        return self._pre()._extend(imap(partial(
             self._delay_invoke,
             wait=wait,
             caller=methodcaller(name, *self._args, **self._kw),
-        ))
+        ), self._iterable))
 
     def delay_map(self, wait):
         '''
@@ -89,9 +89,9 @@ class DelayMixin(local):
 
         @param wait: time in seconds
         '''
-        return self._xmap(partial(
+        return self._pre()._extend(imap(partial(
             self._delay_map, wait=wait, caller=self._call
-        ))
+        ), self._iterable))
 
 
 class RepeatMixin(local):
@@ -100,7 +100,7 @@ class RepeatMixin(local):
 
     def copy(self):
         '''copy each incoming thing'''
-        return self._xmap(deepcopy)
+        return self._pre()._extend(imap(deepcopy, self._iterable))
 
     def padnone(self):
         '''incoming things and then `None` indefinitely'''
@@ -134,11 +134,11 @@ class RepeatMixin(local):
         '''
         if n is None:
             return self._pre()._extend(starmap(
-                self._call, repeat(list(self._iterable))
+                self._call, repeat(list(self._iterable)),
             ))
-        return self._pre()._extend(
-            starmap(self._call, repeat(list(self._iterable), n))
-        )
+        return self._pre()._extend(starmap(
+            self._call, repeat(list(self._iterable), n),
+        ))
 
 
 class MapMixin(local):
@@ -159,7 +159,9 @@ class MapMixin(local):
 
     def each(self):
         '''invoke call with passed arguments, keywords in incoming things'''
-        return self._xstarmap(lambda x, y: self._call(*x, **y))
+        return self._pre()._extend(starmap(
+            lambda x, y: self._call(*x, **y), self._iterable,
+        ))
 
     def invoke(self, name):
         '''
@@ -168,24 +170,23 @@ class MapMixin(local):
 
         @param name: name of method
         '''
-        call_ = partial(
+        return self._pre()._extend(imap(partial(
             self._invoke, caller=methodcaller(name, *self._args, **self._kw),
-        )
-        return self._xmap(call_)
+        ), self._iterable))
 
     def items(self):
         '''invoke call on each mapping to get key, value pairs'''
         return self._pre()._extend(starmap(
-            self._call, ichain(imap(items, self._iterable))
+            self._call, ichain(imap(items, self._iterable)),
         ))
 
     def map(self):
         '''invoke call on each incoming thing'''
-        return self._xmap(self._call)
+        return self._pre()._extend(imap(self._call, self._iterable))
 
     def starmap(self):
         '''invoke call on each sequence of incoming things'''
-        return self._xstarmap(self._call)
+        return self._pre()._extend(starmap(self._call, self._iterable))
 
 
 class MappingMixin(DelayMixin, RepeatMixin, MapMixin):

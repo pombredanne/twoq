@@ -4,7 +4,7 @@
 from inspect import getmro
 from threading import local
 from itertools import islice
-from functools import partial, reduce as ireduce
+from functools import partial
 from operator import attrgetter, itemgetter, truth
 
 from stuf.six import PY3
@@ -95,8 +95,9 @@ class CollectMixin(local):
 
     def members(self):
         '''collect object members from incoming things'''
-        mz_ = partial(self._mfilter, self._call)
-        return self._pre()._extend(ichain(imap(mz_, self._iterable)))
+        return self._pre()._extend(ichain(imap(
+            partial(self._mfilter, self._call), self._iterable,
+        )))
 
     def pick(self, *names):
         '''collect object attributes from incoming things by their `*names`'''
@@ -134,38 +135,31 @@ class SetMixin(local):
 
     def difference(self):
         '''difference between incoming things'''
-        filt_ = lambda x, y: set(x).difference(y)
-        return self._pre()._extend(ireduce(filt_, self._iterable))
+        return self._xreduce(lambda x, y: set(x).difference(y))
 
     def symmetric_difference(self):
         '''symmetric difference between incoming things'''
-        filt_ = lambda x, y: set(x).symmetric_difference(y)
-        return self._pre()._extend(ireduce(filt_, self._iterable))
+        return self._xreduce(lambda x, y: set(x).symmetric_difference(y))
 
     def disjointed(self):
         '''disjoint between incoming things'''
-        filt_ = lambda x, y: set(x).isdisjoint(y)
-        return self._pre()._append(ireduce(filt_, self._iterable))
+        return self._areduce(lambda x, y: set(x).isdisjoint(y))
 
     def intersection(self):
         '''intersection between incoming things'''
-        filt_ = lambda x, y: set(x).intersection(y)
-        return self._pre()._extend(ireduce(filt_, self._iterable))
+        return self._xreduce(lambda x, y: set(x).intersection(y))
 
     def subset(self):
-        '''incoming things are subsets of incoming things'''
-        filt_ = lambda x, y: set(x).issubset(y)
-        return self._pre()._append(ireduce(filt_, self._iterable))
+        '''incoming things that are subsets of incoming things'''
+        return self._areduce(lambda x, y: set(x).issubset(y))
 
     def superset(self):
-        '''incoming things are supersets of incoming things'''
-        filt_ = lambda x, y: set(x).issubset(y)
-        return self._pre()._append(ireduce(filt_, self._iterable))
+        '''incoming things that are supersets of incoming things'''
+        return self._areduce(lambda x, y: set(x).issubset(y))
 
     def union(self):
         '''union between incoming things'''
-        filt_ = lambda x, y: set(x).union(y)
-        return self._pre()._extend(ireduce(filt_, self._iterable))
+        return self._xreduce(lambda x, y: set(x).union(y))
 
     def unique(self):
         '''

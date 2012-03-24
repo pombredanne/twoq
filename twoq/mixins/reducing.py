@@ -4,10 +4,10 @@
 from math import fsum
 from heapq import merge
 from threading import local
+from functools import partial
 from collections import Iterable
 from operator import truediv, contains
 from itertools import cycle, tee, islice
-from functools import partial, reduce as ireduce
 
 from stuf.utils import imap
 from twoq.support import Counter, isstring, zip
@@ -96,8 +96,7 @@ class TruthMixin(local):
 
     def all(self):
         '''if `all` incoming things are `True`'''
-        self._pre()._append(all(imap(self._call, self._iterable)))
-        return self
+        return self._pre()._append(all(imap(self._call, self._iterable)))
 
     def any(self):
         '''if `any` incoming things are `True`'''
@@ -178,11 +177,7 @@ class ReduceMixin(local):
 
         @param initial: initial thing (default: None)
         '''
-        if initial is None:
-            return self._pre()._append(ireduce(self._call, self._iterable))
-        return self._pre()._append(
-            ireduce(self._call, self._iterable, initial)
-        )
+        return self._areduce(self._call, initial)
 
     def reduce_right(self, initial=None):
         '''
@@ -191,10 +186,8 @@ class ReduceMixin(local):
 
         @param initial: initial thing (default: None)
         '''
-        call_, filt_ = self._call, lambda x, y: call_(y, x)
-        if initial:
-            return self._pre()._extend(ireduce(filt_, self._iterable, initial))
-        return self._pre()._extend(ireduce(filt_, self._iterable))
+        call_ = self._call
+        return self._areduce(lambda x, y: call_(y, x), initial)
 
     def roundrobin(self):
         '''interleave incoming things into one thing'''
