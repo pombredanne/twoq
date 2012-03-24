@@ -55,8 +55,9 @@ class MathMixin(local):
 
     def minmax(self):
         '''minimum and maximum things among all incoming things'''
+        self._pre()
         iterable1, iterable2 = self._split(self._iterable)
-        return self._pre()._extend(iter([min(iterable1), max(iterable2)]))
+        return self._extend(iter([min(iterable1), max(iterable2)]))
 
     def mode(self):
         '''mode of all incoming things'''

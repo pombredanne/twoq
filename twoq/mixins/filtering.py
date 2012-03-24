@@ -192,8 +192,9 @@ class SliceMixin(local):
 
     def initial(self):
         '''all incoming things except the last thing'''
+        self._pre()
         iterable1, iterable2 = self._split(self._iterable)
-        return self._pre()._extend(islice(iterable1, len(list(iterable2)) - 1))
+        return self._extend(islice(iterable1, len(list(iterable2)) - 1))
 
     def rest(self):
         '''all incoming things except the first thing'''
@@ -205,8 +206,9 @@ class SliceMixin(local):
 
         @param n: number of things
         '''
+        self._pre()
         iterable1, iterable2 = self._split(self._iterable)
-        return self._pre()._extend(
+        return self._extend(
             islice(iterable1, len(list(iterable2)) - n, None)
         )
 
@@ -252,10 +254,11 @@ class FilterMixin(local):
         split incoming things into `True` and `False` things based on results
         of call
         '''
-        call_, list_ = self._call, list
+        self._pre()
         falsy, truey = self._split(self._iterable)
-        return self._pre()._extend(iter([
-            list_(filterfalse(call_, falsy)), list_(ifilter(call_, truey)),
+        return self._extend(iter([
+            list(filterfalse(self._call, falsy)),
+            list(ifilter(self._call, truey)),
         ]))
 
     def reject(self):

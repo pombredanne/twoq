@@ -3,7 +3,9 @@
 
 from threading import local
 from collections import deque
-from itertools import islice, chain, tee
+from itertools import islice, chain, tee, starmap
+
+from stuf.utils import imap
 
 __all__ = ['QueueingMixin']
 
@@ -31,11 +33,31 @@ class QueueingMixin(local):
         '''yield outgoing things, clearing outgoing things as it iterates'''
         return self._iterator(self._outq)
 
-    def _split(self, iterable):
-        return tee(iterable)
+    def _split(self, iterable, n=2):
+        return tee(iterable, n)
 
     def _join(self, *iterables):
         return chain(*iterables)
+
+    def _xmap(self, call, iterable=False):
+        '''
+        invoke call on each incoming thing
+
+        @param call: a callable
+        @param iterable: an iterable
+        '''
+        iterable = self._iterable if not iterable else iterable
+        return self._pre()._extend(imap(call, self._iterable))
+
+    def _xstarmap(self, call, iterable=False):
+        '''
+        invoke 'call' on each sequence of incoming things
+
+        @param call: a callable
+        @param iterable: an iterable
+        '''
+        iterable = self._iterable if not iterable else iterable
+        return self._pre()._extend(starmap(call, self._iterable))
 
     @property
     def balanced(self):
@@ -134,7 +156,7 @@ class QueueingMixin(local):
         return self.swap()
 
     rw = unswap
-    
+
     ###########################################################################
     ## current callable management ############################################
     ###########################################################################
@@ -176,7 +198,7 @@ class QueueingMixin(local):
 
     # alias
     unwrap = detap
-    
+
     ###########################################################################
     ## queue rotation #########################################################
     ###########################################################################
@@ -215,7 +237,7 @@ class QueueingMixin(local):
         return self.autoctx()._pre()._extend(self._iterable).unswap()
 
     outsync = outshift
-    
+
     ###########################################################################
     ## queue appending ########################################################
     ###########################################################################
@@ -235,7 +257,7 @@ class QueueingMixin(local):
         @param thing: some thing
         '''
         return self.ctx2()._pre()._appendleft(thing).unswap()
-    
+
     ###########################################################################
     ## queue extension ########################################################
     ###########################################################################
@@ -289,8 +311,9 @@ class ResultMixin(local):
 
     def last(self):
         '''last incoming thing'''
+        self._pre()
         i1, _ = self._split(self._iterable)
-        self._pre()._append(deque(i1, maxlen=1).pop())
+        self._append(deque(i1, maxlen=1).pop())
         return self
 
     def peek(self):
