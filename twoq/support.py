@@ -11,7 +11,7 @@ from stuf.six.moves import (
 
 __all__ = ['port']
 items = six.items
-chain_iter = chain.from_iterable
+ichain = chain.from_iterable
 range = xrange
 
 

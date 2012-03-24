@@ -98,13 +98,23 @@ class BaseQMixin(QueueingMixin):
         '''extend work queue with outgoing queue'''
         self._clearwork()
         sd_ = self.__dict__
-        sd_[self._workq], sd_[self._outq] = self._split(sd_[self.outq_])
+        sd_[self._workq], sd_[self._outq] = self._split(sd_[self._outq])
         return self
 
     def outcount(self):
         '''count of outgoing things'''
         self.outgoing, outgoing = self._split(self.outgoing)
         return len(list(outgoing))
+
+    def ctx3(self, **kw):
+        '''switch to three-armed context manager'''
+        self._clearout = kw.pop('clearout', True)
+        self._workq = self._utilq = kw.pop('workq', '_work')
+        self._outq = kw.pop('outq', 'outgoing')
+        self._inq = kw.pop('inq', 'incoming')
+        self._pre = self._iq2wq
+        self._post = self._uq2oq
+        return self
 
 
 class AutoQMixin(BaseQMixin):

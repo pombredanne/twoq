@@ -21,23 +21,24 @@ class MathMixin(local):
 
     def average(self):
         '''average of all incoming things'''
-        iterable1, iterable2 = tee(self._iterable)
-        return self._append(truediv(sum(iterable1, 0.0), len(list(iterable2))))
+        self._pre()
+        i1, i2 = self._split(self._iterable)
+        return self._append(truediv(sum(i1, 0.0), len(list(i2))))
 
     def fsum(self):
         '''add incoming things together'''
-        self._append(fsum(self._iterable))
-        return self
+        return self._pre()._append(fsum(self._iterable))
 
     def max(self):
         '''find maximum thing in incoming things using call_ as key function'''
         call_ = self._call
         if call_ is None:
-            return self._append(max(self._iterable))
-        return self._append(max(self._iterable, key=call_))
+            return self._pre()._append(max(self._iterable))
+        return self._pre()._append(max(self._iterable, key=call_))
 
     def median(self):
         '''mean of all incoming things'''
+        self._pre()
         i = list(sorted(self._iterable))
         e = truediv(len(i) - 1, 2)
         p = int(e)
@@ -49,30 +50,33 @@ class MathMixin(local):
         '''find minimum thing in incoming things using call_ as key function'''
         call_ = self._call
         if call_ is None:
-            return self._append(min(self._iterable))
-        return self._append(min(self._iterable, key=call_))
+            return self._pre()._append(min(self._iterable))
+        return self._pre()._append(min(self._iterable, key=call_))
 
     def minmax(self):
         '''minimum and maximum things among all incoming things'''
-        iterable1, iterable2 = tee(self._iterable)
-        return self._extend(iter([min(iterable1), max(iterable2)]))
+        iterable1, iterable2 = self._split(self._iterable)
+        return self._pre()._extend(iter([min(iterable1), max(iterable2)]))
 
     def mode(self):
         '''mode of all incoming things'''
-        return self._append(Counter(self._iterable).most_common(1)[0][0])
+        return self._pre()._append(Counter(
+            self._iterable
+        ).most_common(1)[0][0])
 
     def uncommon(self):
         '''least common incoming thing'''
-        return self._append(
+        return self._pre()._append(
             Counter(self._iterable).most_common()[:-2:-1][0][0]
         )
 
     def frequency(self):
         '''frequency of each incoming thing'''
-        return self._append(Counter(self._iterable).most_common())
+        return self._pre()._append(Counter(self._iterable).most_common())
 
     def statrange(self):
         '''statistical range of all incoming things'''
+        self._pre()
         iterz = list(sorted(self._iterable))
         return self._append(iterz[-1] - iterz[0])
 
@@ -82,7 +86,7 @@ class MathMixin(local):
 
         @param start: starting number (default: 0)
         '''
-        return self._append(sum(self._iterable, start))
+        return self._pre()._append(sum(self._iterable, start))
 
 
 class TruthMixin(local):
@@ -91,13 +95,12 @@ class TruthMixin(local):
 
     def all(self):
         '''if `all` incoming things are `True`'''
-        self._append(all(imap(self._call, self._iterable)))
+        self._pre()._append(all(imap(self._call, self._iterable)))
         return self
 
     def any(self):
         '''if `any` incoming things are `True`'''
-        self._append(any(imap(self._call, self._iterable)))
-        return self
+        return self._pre()._append(any(imap(self._call, self._iterable)))
 
     def contains(self, thing):
         '''
@@ -105,12 +108,11 @@ class TruthMixin(local):
 
         @param thing: some thing
         '''
-        self._append(contains(self._iterable, thing))
-        return self
+        return self._pre()._append(contains(self._iterable, thing))
 
     def quantify(self):
         '''how many times call is `True` for incoming things'''
-        return self._append(sum(imap(self._call, self._iterable)))
+        return self._pre()._append(sum(imap(self._call, self._iterable)))
 
 
 class ReduceMixin(local):
@@ -153,17 +155,18 @@ class ReduceMixin(local):
 
     def merge(self):
         '''flatten nested but ordered incoming things'''
-        return self._extend(merge(*self._iterable))
+        return self._pre()._extend(merge(*self._iterable))
 
     def smash(self):
         '''flatten deeply nested incoming things'''
-        return self._extend(self._smash(self._iterable))
+        return self._pre()._extend(self._smash(self._iterable))
 
     flatten = smash
 
     def pairwise(self):
         '''every two incoming things as a tuple'''
-        a, b = tee(self._iterable)
+        self._pre()
+        a, b = self._split(self._iterable)
         next(b, None)
         return self._extend(zip(a, b))
 
@@ -174,9 +177,11 @@ class ReduceMixin(local):
 
         @param initial: initial thing (default: None)
         '''
-        if initial:
-            return self._append(ireduce(self._call, self._iterable, initial))
-        return self._append(ireduce(self._call, self._iterable))
+        if initial is None:
+            return self._pre()._append(ireduce(self._call, self._iterable))
+        return self._pre()._append(
+            ireduce(self._call, self._iterable, initial)
+        )
 
     def reduce_right(self, initial=None):
         '''
@@ -187,19 +192,19 @@ class ReduceMixin(local):
         '''
         call_, filt_ = self._call, lambda x, y: call_(y, x)
         if initial:
-            return self._extend(ireduce(filt_, self._iterable, initial))
-        return self._extend(ireduce(filt_, self._iterable))
+            return self._pre()._extend(ireduce(filt_, self._iterable, initial))
+        return self._pre()._extend(ireduce(filt_, self._iterable))
 
     def roundrobin(self):
         '''interleave incoming things into one thing'''
-        return self._extend(self._roundrobin(self._iterable))
+        return self._pre()._extend(self._roundrobin(self._iterable))
 
     def zip(self):
         '''
         smash incoming things into one single thing, pairing things by iterable
         position
         '''
-        return self._extend(zip(*self._iterable))
+        return self._pre()._extend(zip(*self._iterable))
 
 
 class ReducingMixin(MathMixin, TruthMixin, ReduceMixin):
