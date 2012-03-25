@@ -48,7 +48,7 @@ class MRepeatQMixin(object):
         self.assertListEqual(newlist[0], testlist[0])
         self.assertFalse(newlist[1] is testlist[1])
         self.assertListEqual(newlist[1], testlist[1])
-#        self.assertFalse(manq.balanced)
+        self.assertTrue(manq.balanced)
 
 
 class MDelayQMixin(object):
@@ -59,14 +59,14 @@ class MDelayQMixin(object):
         self._true_true_false(
             self.qclass(
                 ((1, 2), {'a': 2}), ((2, 3), {'a': 2}), ((3, 4), {'a': 2})
-            ).tap(test).delay_each(0.01),
+            ).tap(test).delay_each(0.0001),
             self.assertEqual,
             [6, 10, 14],
         )
 
     def test_delay_map(self):
         self._true_true_false(
-            self.qclass(1, 2, 3).tap(lambda x: x * 3).delay_map(0.01),
+            self.qclass(1, 2, 3).tap(lambda x: x * 3).delay_map(0.0001),
             self.assertEqual,
             [3, 6, 9],
         )
@@ -75,12 +75,12 @@ class MDelayQMixin(object):
         self._true_true_false(
             self.qclass(
                 [5, 1, 7], [3, 2, 1]
-            ).args(1).delay_invoke('index', 0.01),
+            ).args(1).delay_invoke('index', 0.0001),
             self.assertEqual,
             [1, 2],
         )
         self._true_true_false(
-            self.qclass([5, 1, 7], [3, 2, 1]).delay_invoke('sort', 0.01),
+            self.qclass([5, 1, 7], [3, 2, 1]).delay_invoke('sort', 0.0001),
             self.assertEqual,
             [[1, 5, 7], [1, 2, 3]],
         )

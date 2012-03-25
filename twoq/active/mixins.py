@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
 '''active twoq mixins'''
 
-from collections import deque
-
-from stuf.utils import lazy
-
 from twoq.mixins.queuing import QueueingMixin, ResultMixin
 
-from twoq.active.contexts import (
-    AutoContext, OneArmContext, FourArmContext, TwoArmContext, ThreeArmContext)
 
 __all__ = ('AutoQMixin', 'ManQMixin')
 
@@ -18,51 +12,146 @@ class BaseQMixin(QueueingMixin):
     '''base active queue'''
 
     def __init__(self, *args):
-        deque_ = deque
+        deque_ = self._deek
         incoming = deque_(args[0]) if len(args) == 1 else deque_(args)
+        self._iterator = self._iter1
+        # work queue
+        self._work = deque_()
+        # utility queue
+        self._util = deque_()
         super(BaseQMixin, self).__init__(incoming, deque_())
-        self._1arm = OneArmContext
-        self._2arm = TwoArmContext
-        self._3arm = ThreeArmContext
-        self._4arm = FourArmContext
-        self._auto = AutoContext
 
-    @lazy
-    def _util(self):
-        '''utility queue'''
-        return deque()
+    def _iter1(self, attr='_utilq'):
+        return self.iterexcept(self.__dict__[attr].popleft, IndexError)
 
-    @lazy
-    def _work(self):
-        ''''work queue'''
-        return deque()
+    def _iter2(self, attr='_utilq'):
+        return self.breakcount(self.__dict__[attr].popleft, self.__len__())
 
     def __len__(self):
-        return len(self.incoming)
+        return self._len(self.incoming)
+
+    def _extend(self, args):
+        '''extend work queue with `args` wrapped in iterator'''
+        self.__dict__[self._utilq].extend(args)
+        return self._post()
+
+    def _append(self, args):
+        '''append `args` to work queue'''
+        self.__dict__[self._utilq].append(args)
+        return self._post()
+
+    def _appendleft(self, args):
+        '''append `args` to left side of work queue'''
+        self.__dict__[self._utilq].appendleft(args)
+        return self._post()
+
+    def _iter(self, args):
+        '''extend work queue with `args` wrapped in iterator'''
+        self.__dict__[self._utilq].extend(iter(args))
+        return self._post()
+
+    def _clear(self):
+        '''clear queue'''
+        self.__dict__[self._workq].clear()
+        return self._post()
+
+    def _extendleft(self, args):
+        '''extend left side of work queue with `args`'''
+        self.__dict__[self._utilq].extendleft(args)
+        return self._post()
+
+    def _iq2wq(self):
+        '''extend work queue with incoming queue'''
+        self._iterator = self._iter1
+        sdict_ = self.__dict__
+        workq_ = sdict_[self._workq]
+        # clear work queue
+        workq_.clear()
+        workq_.extend(sdict_[self._inq])
+        return self
+
+    def _iq2wq2(self):
+        '''extend work queue with incoming queue'''
+        self._iterator = self._iter2
+        sdict_ = self.__dict__
+        workq_ = sdict_[self._workq]
+        # clear work queue
+        workq_.clear()
+        workq_.extend(sdict_[self._inq])
+        return self
+
+    def _uq2oq(self):
+        '''extend outgoing queue with utility queue'''
+        sdict_ = self.__dict__
+        outq_, utilq_ = sdict_[self._outq], sdict_[self._utilq]
+        # clear outgoing queue if set that way
+        if self._clearout:
+            outq_.clear()
+        outq_.extend(utilq_)
+        # clear utility queue
+        utilq_.clear()
+        return self
+
+    def _uq2iqoq(self):
+        '''extend outgoing queue and incoming queue with utility queue'''
+        sdict_ = self.__dict__
+        inq_ = sdict_[self._inq]
+        outq_ = sdict_[self._outq]
+        utilq_ = sdict_[self._utilq]
+        # clear outgoing queue
+        if self._clearout:
+            outq_.clear()
+        outq_.extend(utilq_)
+        # clear incoming queue
+        inq_.clear()
+        inq_.extend(utilq_)
+        # clear utility queue
+        utilq_.clear()
+        return self
+
+    def _oq2wq(self):
+        '''extend work queue with outgoing queue'''
+        self._iterator = self._iter2
+        sdict_ = self.__dict__
+        workq_ = sdict_[self._workq]
+        # clear work queue
+        workq_.clear()
+        workq_.extend(sdict_[self._outq])
+        return self
 
     def outcount(self):
         '''count of outgoing things'''
-        return len(self.outgoing)
+        return self._len(self.outgoing)
 
-    @property
-    def balanced(self):
-        '''if queues are balanced'''
-        len_ = len
-        return len_(self.outgoing) == len_(self.incoming)
+    def ro(self):
+        '''switch to read-only mode'''
+        return self.ctx3(outq='_util')._pre()._extend(
+            self._iterable
+        ).ctx1(workq='_util')
+
+    def ctx3(self, **kw):
+        '''switch to three-armed context manager'''
+        self._clearout = kw.pop('clearout', True)
+        self._workq = self._utilq = kw.pop('workq', '_work')
+        self._outq = kw.pop('outq', 'outgoing')
+        self._inq = kw.pop('inq', 'incoming')
+        self._pre = self._iq2wq2
+        self._post = self._uq2oq
+        return self
 
 
 class AutoQMixin(BaseQMixin):
 
     '''auto-balancing queue mixin'''
 
-    _default_context = AutoContext
+    _default_post = '_uq2iqoq'
 
 
 class ManQMixin(BaseQMixin):
 
     '''manually balanced queue mixin'''
 
-    _default_context = FourArmContext
+    _default_post = '_uq2oq'
 
 
 class AutoResultMixin(AutoQMixin, ResultMixin):
