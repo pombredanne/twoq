@@ -4,13 +4,12 @@
 from math import fsum
 from heapq import merge
 from threading import local
-from functools import partial
+from itertools import cycle
 from collections import Iterable
 from operator import truediv, contains
-from itertools import cycle, tee, islice
 
-from stuf.utils import imap
-from twoq.support import Counter, isstring, zip
+from twoq.support import Counter, isstring, zip, lazier
+
 
 __all__ = ('MathMixin', 'TruthMixin', 'ReduceMixin', 'ReducingMixin')
 
@@ -19,11 +18,16 @@ class MathMixin(local):
 
     '''math mixin'''
 
+    _truediv = lazier(truediv)
+    _counter = lazier(Counter)
+
     def average(self):
         '''average of all incoming things'''
         self._pre()
         i1, i2 = self._split(self._iterable)
-        return self._append(truediv(sum(i1, 0.0), len(list(i2))))
+        return self._append(self._truediv(
+            self._sum(i1, 0.0), self._len(self._list(i2)),
+        ))
 
     def fsum(self):
         '''add incoming things together'''
@@ -39,11 +43,11 @@ class MathMixin(local):
     def median(self):
         '''mean of all incoming things'''
         self._pre()
-        i = list(sorted(self._iterable))
-        e = truediv(len(i) - 1, 2)
+        i = self._list(self._sorted(self._iterable))
+        e = self._truediv(self._len(i) - 1, 2)
         p = int(e)
         return self._append(
-            i[p] if e % 2 == 0 else truediv(i[p] + i[p + 1], 2)
+            i[p] if e % 2 == 0 else self._truediv(i[p] + i[p + 1], 2)
         )
 
     def min(self):
@@ -61,24 +65,24 @@ class MathMixin(local):
 
     def mode(self):
         '''mode of all incoming things'''
-        return self._pre()._append(Counter(
+        return self._pre()._append(self._counter(
             self._iterable
         ).most_common(1)[0][0])
 
     def uncommon(self):
         '''least common incoming thing'''
         return self._pre()._append(
-            Counter(self._iterable).most_common()[:-2:-1][0][0]
+            self._counter(self._iterable).most_common()[:-2:-1][0][0]
         )
 
     def frequency(self):
         '''frequency of each incoming thing'''
-        return self._pre()._append(Counter(self._iterable).most_common())
+        return self._pre()._append(self._counter(self._iterable).most_common())
 
     def statrange(self):
         '''statistical range of all incoming things'''
         self._pre()
-        iterz = list(sorted(self._iterable))
+        iterz = self._list(self._sorted(self._iterable))
         return self._append(iterz[-1] - iterz[0])
 
     def sum(self, start=0):
@@ -87,7 +91,7 @@ class MathMixin(local):
 
         @param start: starting number (default: 0)
         '''
-        return self._pre()._append(sum(self._iterable, start))
+        return self._pre()._append(self._sum(self._iterable, start))
 
 
 class TruthMixin(local):
@@ -96,11 +100,11 @@ class TruthMixin(local):
 
     def all(self):
         '''if `all` incoming things are `True`'''
-        return self._pre()._append(all(imap(self._call, self._iterable)))
+        return self._pre()._append(all(self._imap(self._call, self._iterable)))
 
     def any(self):
         '''if `any` incoming things are `True`'''
-        return self._pre()._append(any(imap(self._call, self._iterable)))
+        return self._pre()._append(any(self._imap(self._call, self._iterable)))
 
     def contains(self, thing):
         '''
@@ -112,24 +116,28 @@ class TruthMixin(local):
 
     def quantify(self):
         '''how many times call is `True` for incoming things'''
-        return self._pre()._append(sum(imap(self._call, self._iterable)))
+        return self._pre()._append(
+            self._sum(self._imap(self._call, self._iterable)
+        ))
 
 
 class ReduceMixin(local):
 
     '''reduce mixin'''
 
-    @staticmethod
-    def _roundrobin(iterable):
+    _zip = lazier(zip)
+
+    @classmethod
+    def _roundrobin(cls, iterable):
         '''
         interleave things in iterable into one thing
 
         @param iterable: an iterable
         '''
-        pending = len(tee(iterable, 1))
+        pending = len(cls._split(iterable, 1))
         cycle_ = cycle
-        islice_ = islice
-        nexts_ = cycle_(partial(next, iter(i)) for i in iterable)
+        islice_ = cls._islice
+        nexts_ = cycle_(cls._partial(next, iter(i)) for i in iterable)
         while pending:
             try:
                 for nextz in nexts_:
@@ -168,7 +176,7 @@ class ReduceMixin(local):
         self._pre()
         a, b = self._split(self._iterable)
         next(b, None)
-        return self._extend(zip(a, b))
+        return self._extend(self._zip(a, b))
 
     def reduce(self, initial=None):
         '''
@@ -198,7 +206,7 @@ class ReduceMixin(local):
         smash incoming things into one single thing, pairing things by iterable
         position
         '''
-        return self._pre()._extend(zip(*self._iterable))
+        return self._pre()._extend(self._zip(*self._iterable))
 
 
 class ReducingMixin(MathMixin, TruthMixin, ReduceMixin):

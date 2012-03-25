@@ -4,6 +4,7 @@
 from itertools import chain
 
 from stuf import six
+from stuf.utils import lazy_class
 # pylint: disable-msg=f0401,w0611
 from stuf.six.moves import (
     map, filterfalse, filter, zip, zip_longest, xrange)  # @UnresolvedImport @UnusedImport @IgnorePep8
@@ -13,6 +14,14 @@ __all__ = ['port']
 items = six.items
 ichain = chain.from_iterable
 range = xrange
+imap = map
+ifilter = filter
+
+
+class lazier(lazy_class):
+
+    def __init__(self, method):
+        super(lazier, self).__init__(lambda x: method)
 
 
 class port(object):

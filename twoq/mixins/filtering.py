@@ -3,14 +3,10 @@
 
 from inspect import getmro
 from threading import local
-from itertools import islice
-from functools import partial
 from operator import attrgetter, itemgetter, truth
 
 from stuf.six import PY3
-from stuf.utils import getcls, ifilter, imap
-
-from twoq.support import ichain, filterfalse
+from stuf.utils import getcls
 
 __all__ = (
     'FilterMixin', 'CollectMixin', 'SetMixin', 'SliceMixin', 'FilteringMixin',
@@ -53,25 +49,25 @@ class CollectMixin(local):
                 yield key, thing
 
     @classmethod
-    def _mfilter(cls, call_, iterable):
+    def _mfilter(cls, call, iterable):
         '''
         filter members of things
 
         @param call: "Truth" filter
         @param iterable: an iterable
         '''
-        for i in ifilter(call_, cls._members(iterable)):
+        for i in cls._ifilter(call, cls._members(iterable)):
             yield i
 
     @staticmethod
-    def _pluck(keys, iterable):
+    def _pluck(keys, iterable, _itemgetter=itemgetter):
         '''
         collect values of things in iterable
 
         @param keys: sequence of keys
         @param iterable: an iterable
         '''
-        itemfind = itemgetter(*keys)
+        itemfind = _itemgetter(*keys)
         IndexError_, KeyError_, TypeError_ = IndexError, KeyError, TypeError
         for thing in iterable:
             try:
@@ -81,22 +77,24 @@ class CollectMixin(local):
 
     def deepmembers(self):
         '''collect object members from incoming things and their bases'''
-        _mz = partial(self._mfilter, self._call)
+        _mz = self._partial(self._mfilter, self._call)
         if PY3:
-            def _memfilters(thing, mz=_mz, gc=getcls, ci=ichain):
+            def _memfilters(thing, mz=_mz, gc=getcls, ci=self._ichain):
                 t = lambda x: not x[0].startswith('mro')
-                return ifilter(
-                    t, ci(imap(mz, ci([getmro((gc(thing))), [thing]])))
+                return self._ifilter(
+                    t, ci(self._imap(mz, ci([getmro((gc(thing))), [thing]])))
                 )
         else:
-            def _memfilters(thing, mz=_mz, gc=getcls, ci=ichain):
-                return ci(imap(mz, ci([getmro((gc(thing))), [thing]])))
-        return self._pre()._extend(ichain(imap(_memfilters, self._iterable)))
+            def _memfilters(thing, mz=_mz, gc=getcls, ci=self._ichain):
+                return ci(self._imap(mz, ci([getmro((gc(thing))), [thing]])))
+        return self._pre()._extend(self._ichain(
+            self._imap(_memfilters, self._iterable)
+        ))
 
     def members(self):
         '''collect object members from incoming things'''
-        return self._pre()._extend(ichain(imap(
-            partial(self._mfilter, self._call), self._iterable,
+        return self._pre()._extend(self._ichain(self._imap(
+            self._partial(self._mfilter, self._call), self._iterable,
         )))
 
     def pick(self, *names):
@@ -112,8 +110,8 @@ class SetMixin(local):
 
     '''set and uniqueness mixin'''
 
-    @staticmethod
-    def _unique(iterable, key=None):
+    @classmethod
+    def _unique(cls, iterable, key=None):
         '''
         unique things in in iterable
 
@@ -123,7 +121,7 @@ class SetMixin(local):
         seen = set()
         seen_add_, seen_contains_ = seen.add, seen.__contains__
         if key is None:
-            for element in filterfalse(seen_contains_, iterable):
+            for element in cls._filterfalse(seen_contains_, iterable):
                 seen_add_(element)
                 yield element
         else:
@@ -181,18 +179,18 @@ class SliceMixin(local):
         @param default: default thing (default: None)
         '''
         return self._pre()._append(
-            next(islice(self._iterable, n, None), default)
+            self._next(self._islice(self._iterable, n, None), default)
         )
 
     def initial(self):
         '''all incoming things except the last thing'''
         self._pre()
         iterable1, iterable2 = self._split(self._iterable)
-        return self._extend(islice(iterable1, len(list(iterable2)) - 1))
+        return self._extend(self._islice(iterable1, len(list(iterable2)) - 1))
 
     def rest(self):
         '''all incoming things except the first thing'''
-        return self._pre()._extend(islice(self._iterable, 1, None))
+        return self._pre()._extend(self._islice(self._iterable, 1, None))
 
     def snatch(self, n):
         '''
@@ -203,7 +201,7 @@ class SliceMixin(local):
         self._pre()
         iterable1, iterable2 = self._split(self._iterable)
         return self._extend(
-            islice(iterable1, len(list(iterable2)) - n, None)
+            self._islice(iterable1, len(list(iterable2)) - n, None)
         )
 
     def take(self, n):
@@ -212,32 +210,32 @@ class SliceMixin(local):
 
         @param n: number of things
         '''
-        return self._pre()._extend(islice(self._iterable, n))
+        return self._pre()._extend(self._islice(self._iterable, n))
 
 
 class FilterMixin(local):
 
     '''filters mixin'''
 
-    @staticmethod
-    def _find(call, iterable):
+    @classmethod
+    def _find(cls, call, iterable):
         '''
         find the first `True` thing in iterator
 
         @param call: "Truth" filter
         @param iterable: an iterable
         '''
-        for thing in ifilter(call, iterable):
+        for thing in cls._ifilter(call, iterable):
             yield thing
             break
 
     def compact(self):
         '''strip "untrue" things from incoming things'''
-        return self._pre()._iter(ifilter(truth, self._iterable))
+        return self._pre()._iter(self._ifilter(truth, self._iterable))
 
     def filter(self):
         '''incoming things for which call is `True`'''
-        return self._pre()._extend(ifilter(self._call, self._iterable))
+        return self._pre()._extend(self._ifilter(self._call, self._iterable))
 
     def find(self):
         '''first incoming thing for which call is `True`'''
@@ -251,18 +249,20 @@ class FilterMixin(local):
         self._pre()
         falsy, truey = self._split(self._iterable)
         return self._extend(iter([
-            list(filterfalse(self._call, falsy)),
-            list(ifilter(self._call, truey)),
+            list(self._filterfalse(self._call, falsy)),
+            list(self._ifilter(self._call, truey)),
         ]))
 
     def reject(self):
         '''incoming things for which call is `False`'''
-        return self._pre()._extend(filterfalse(self._call, self._iterable))
+        return self._pre()._extend(
+            self._filterfalse(self._call, self._iterable)
+        )
 
     def without(self, *things):
         '''strip things from incoming things'''
         return self._pre()._extend(
-            filterfalse(lambda x: x in things, self._iterable)
+            self._filterfalse(lambda x: x in things, self._iterable)
         )
 
 

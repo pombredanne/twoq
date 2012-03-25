@@ -3,8 +3,12 @@
 
 from threading import local
 from collections import deque
-from functools import reduce as ireduce
-from itertools import islice, chain, tee
+from operator import methodcaller
+from functools import reduce as ireduce, partial
+from itertools import islice, tee, starmap, repeat
+
+from twoq.support import (
+    lazier, ichain, filterfalse, imap, ifilter, chain, items, range)
 
 __all__ = ['QueueingMixin']
 
@@ -12,6 +16,28 @@ __all__ = ['QueueingMixin']
 class QueueingMixin(local):
 
     '''queue management mixin'''
+
+    _deek = lazier(deque)
+    _filterfalse = lazier(filterfalse)
+    _ichain = lazier(ichain)
+    _ifilter = lazier(ifilter)
+    _imap = lazier(imap)
+    _ireduce = lazier(ireduce)
+    _islice = lazier(islice)
+    _join = lazier(chain)
+    _len = lazier(len)
+    _list = lazier(list)
+    _methodcaller = lazier(methodcaller)
+    _next = lazier(next)
+    _partial = lazier(partial)
+    _reversed = lazier(reversed)
+    _sorted = lazier(sorted)
+    _split = lazier(tee)
+    _starmap = lazier(starmap)
+    _sum = lazier(sum)
+    _items = lazier(items)
+    _repeat = lazier(repeat)
+    _range = lazier(range)
 
     def __init__(self, incoming, outgoing):
         '''
@@ -32,23 +58,6 @@ class QueueingMixin(local):
         '''yield outgoing things, clearing outgoing things as it iterates'''
         return self._iterator(self._outq)
 
-    def _split(self, iterable, n=2):
-        '''
-        split iterable `n` ways
-
-        @param iterable: an iterable
-        @param n: numpber of splits (default: 2)
-        '''
-        return tee(iterable, n)
-
-    def _join(self, *iterables):
-        '''
-        join `iterables` together
-
-        @param *iterables: a group of iterables
-        '''
-        return chain(*iterables)
-
     def _areduce(self, filt, initial=None):
         '''
         reduce iterable and append results to outgoing things
@@ -57,8 +66,10 @@ class QueueingMixin(local):
         @param initial: initializer (default: None)
         '''
         if initial is None:
-            return self._pre()._append(ireduce(filt, self._iterable))
-        return self._pre()._append(ireduce(filt, self._iterable, initial))
+            return self._pre()._append(self._ireduce(filt, self._iterable))
+        return self._pre()._append(
+            self._ireduce(filt, self._iterable, initial)
+        )
 
     def _xreduce(self, filt, initial=None):
         '''
@@ -68,8 +79,10 @@ class QueueingMixin(local):
         @param initial: initializer (default: None)
         '''
         if initial is None:
-            return self._pre()._extend(ireduce(filt, self._iterable))
-        return self._pre()._extend(ireduce(filt, self._iterable, initial))
+            return self._pre()._extend(self._ireduce(filt, self._iterable))
+        return self._pre()._extend(
+            self._ireduce(filt, self._iterable, initial)
+        )
 
     @property
     def balanced(self):
@@ -108,12 +121,6 @@ class QueueingMixin(local):
     ###########################################################################
     ## context management #####################################################
     ###########################################################################
-
-    def ro(self):
-        '''switch to read-only mode'''
-        return self.ctx3(outq='_util')._pre()._extend(
-            self._iterable
-        ).ctx1(workq='_util')
 
     def ctx1(self, **kw):
         '''switch to ctx1-armed context manager'''
@@ -226,10 +233,10 @@ class QueueingMixin(local):
         # use functions that consume iterators at C speed.
         if n is None:
             # feed the entire iterator into a zero-length `deque`
-            self.incoming = deque(self.incoming, maxlen=0)
+            self.incoming = self._deek(self.incoming, maxlen=0)
         else:
             # advance to the empty slice starting at position `n`
-            next(islice(self.incoming, n, n), None)
+            self._next(self._islice(self.incoming, n, n), None)
         return self
 
     def reup(self):
@@ -298,6 +305,74 @@ class QueueingMixin(local):
         '''
         return self.ctx1()._pre()._extendleft(things).unswap()
 
+    ###########################################################################
+    ## iteration utils ########################################################
+    ###########################################################################
+
+    @staticmethod
+    def iterexcept(call, exception, start=None):
+        '''
+        call a function repeatedly until an exception is raised
+
+        Converts a call-until-exception interface to an iterator interface.
+        Like `__builtin__.iter(call, sentinel)` but uses an exception instead
+        of a sentinel to end the loop.
+
+        Raymond Hettinger Python Cookbook recipe # 577155
+        '''
+        try:
+            if start is not None:
+                yield start()
+            while 1:
+                yield call()
+        except exception:
+            pass
+
+    @classmethod
+    def exhaust(cls, iterable, exception=StopIteration):
+        '''
+        call next on an iterator until it's exhausted
+
+        @param iterable: an iterable to exhaust
+        @param exception: exception that marks end of iteration
+        '''
+        next_ = cls._next
+        try:
+            while 1:
+                next_(iterable)
+        except exception:
+            pass
+
+    @classmethod
+    def breakcount(cls, call, length):
+        '''
+        rotate through iterator until it reaches its original length
+
+        @param iterable: an iterable to exhaust
+        '''
+        for i in cls._range(0, length):  # @UnusedVariable
+            yield call()
+
+    @classmethod
+    def exhaustmap(cls, mapr, call, filter=False, exception=StopIteration):
+        '''
+        call `next` on an iterator until it's exhausted
+
+        @param mapping: a mapping to exhaust
+        @param call: call to handle what survives the filter
+        @param filter: a filter to apply to mapping (default: `None`)
+        @param exception: exception sentinel (default: `StopIteration`)
+        '''
+        next_, starmap_ = cls._next, cls._starmap
+        subiter = cls._ifilter(
+            filter, cls._items(mapr)
+        ) if filter else cls._items(mapr)
+        try:
+            while 1:
+                next_(starmap_(call, subiter))
+        except exception:
+            pass
+
 
 class ResultMixin(local):
 
@@ -305,33 +380,38 @@ class ResultMixin(local):
 
     def end(self):
         '''return outgoing things and clear everything'''
+        list_ = self._list
         results, measure = self._split(self.outgoing)
-        results = next(results) if len(list(measure)) == 1 else list(results)
+        results = self._next(results) if self._len(
+            list_(measure)
+        ) == 1 else list_(results)
         self.clear()
         return results
 
     def value(self):
         '''return outgoing things and clear outgoing things'''
+        list_ = self._list
         results, measure = self._split(self.outgoing)
-        results = next(results) if len(list(measure)) == 1 else list(results)
+        results = self._next(results) if self._len(
+            list_(measure)
+        ) == 1 else list_(results)
         self.outclear()
         return results
 
     def first(self):
         '''first incoming thing'''
-        return self._pre()._append(next(self._iterable))
+        return self._pre()._append(self._next(self._iterable))
 
     def last(self):
         '''last incoming thing'''
         self._pre()
         i1, _ = self._split(self._iterable)
-        self._append(deque(i1, maxlen=1).pop())
-        return self
+        return self._append(self._deek(i1, maxlen=1).pop())
 
     def peek(self):
         '''results in read-only mode'''
-        results = list(self._util)
-        return results[0] if len(results) == 1 else results
+        results = self._list(self._util)
+        return results[0] if self._len(results) == 1 else results
 
     def results(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''

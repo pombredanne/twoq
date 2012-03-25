@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 '''active twoq mixins'''
 
-from collections import deque
-
-from stuf.utils import breakcount, iterexcept
-
 from twoq.mixins.queuing import QueueingMixin, ResultMixin
 
 
@@ -16,23 +12,23 @@ class BaseQMixin(QueueingMixin):
     '''base active queue'''
 
     def __init__(self, *args):
-        deque_ = deque
+        deque_ = self._deek
         incoming = deque_(args[0]) if len(args) == 1 else deque_(args)
         self._iterator = self._iter1
         # work queue
-        self._work = deque()
+        self._work = deque_()
         # utility queue
-        self._util = deque()
+        self._util = deque_()
         super(BaseQMixin, self).__init__(incoming, deque_())
 
     def _iter1(self, attr='_utilq'):
-        return iterexcept(self.__dict__[attr].popleft, IndexError)
+        return self.iterexcept(self.__dict__[attr].popleft, IndexError)
 
     def _iter2(self, attr='_utilq'):
-        return breakcount(self.__dict__[attr].popleft, len(self))
+        return self.breakcount(self.__dict__[attr].popleft, self.__len__())
 
     def __len__(self):
-        return len(self.incoming)
+        return self._len(self.incoming)
 
     def _extend(self, args):
         '''extend work queue with `args` wrapped in iterator'''
@@ -67,6 +63,16 @@ class BaseQMixin(QueueingMixin):
     def _iq2wq(self):
         '''extend work queue with incoming queue'''
         self._iterator = self._iter1
+        sdict_ = self.__dict__
+        workq_ = sdict_[self._workq]
+        # clear work queue
+        workq_.clear()
+        workq_.extend(sdict_[self._inq])
+        return self
+
+    def _iq2wq2(self):
+        '''extend work queue with incoming queue'''
+        self._iterator = self._iter2
         sdict_ = self.__dict__
         workq_ = sdict_[self._workq]
         # clear work queue
@@ -115,7 +121,13 @@ class BaseQMixin(QueueingMixin):
 
     def outcount(self):
         '''count of outgoing things'''
-        return len(self.outgoing)
+        return self._len(self.outgoing)
+
+    def ro(self):
+        '''switch to read-only mode'''
+        return self.ctx3(outq='_util')._pre()._extend(
+            self._iterable
+        ).ctx1(workq='_util')
 
     def ctx3(self, **kw):
         '''switch to three-armed context manager'''
@@ -123,7 +135,7 @@ class BaseQMixin(QueueingMixin):
         self._workq = self._utilq = kw.pop('workq', '_work')
         self._outq = kw.pop('outq', 'outgoing')
         self._inq = kw.pop('inq', 'incoming')
-        self._pre = self._oq2wq
+        self._pre = self._iq2wq2
         self._post = self._uq2oq
         return self
 

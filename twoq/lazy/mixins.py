@@ -19,15 +19,23 @@ class BaseQMixin(QueueingMixin):
 
     def __len__(self):
         self.incoming, incoming = self._split(self.incoming)
-        return len(list(incoming))
+        return len(self._list(incoming))
 
-    def __buildchain(self, thing):
+    def _extend(self, thing):
         '''build chain'''
         self._pre()
-        utilq_ = self._utilq
-        setattr(self, utilq_, self._join(thing, getattr(self, utilq_)))
+        utilq_, sdict_ = self._utilq, self.__dict__
+        sdict_[utilq_] = self._join(thing, sdict_[utilq_])
         self._post()
         return self
+
+    def _exreplace(self, thing):
+        '''build chain'''
+        self._pre().__dict__[self._utilq] = thing
+        self._post()
+        return self
+
+    __buildchain = _extend
 
     def _append(self, args):
         '''append `args` to work queue'''
@@ -40,19 +48,15 @@ class BaseQMixin(QueueingMixin):
     def _clear(self):
         '''clear queue'''
         self._pre()
-        utilq_ = self._utilq
-        delattr(self, utilq_)
-        setattr(self, utilq_, iter([]))
+        utilq_, sdict_ = self._utilq, self.__dict__
+        del sdict_[utilq_]
+        sdict_[utilq_] = iter([])
         self._post()
         return self
 
-    def _extend(self, args):
-        '''extend work queue with `args` wrapped in iterator'''
-        return self.__buildchain(args)
-
     def _extendleft(self, args):
         '''extend left side of work queue with `args`'''
-        return self.__buildchain(reversed(args))
+        return self.__buildchain(self._reversed(args))
 
     def _iter(self, args):
         '''extend work queue with `args` wrapped in iterator'''
@@ -60,7 +64,7 @@ class BaseQMixin(QueueingMixin):
 
     def _iterator(self, attr='_workq'):
         '''iterator'''
-        return getattr(self, attr)
+        return self.__dict__[attr]
 
     def _clearwork(self):
         '''clear work queue and utility queue'''
@@ -105,6 +109,12 @@ class BaseQMixin(QueueingMixin):
         '''count of outgoing things'''
         self.outgoing, outgoing = self._split(self.outgoing)
         return len(list(outgoing))
+
+    def ro(self):
+        '''switch to read-only mode'''
+        return self.ctx3(outq='_util')._pre()._exreplace(
+            self._iterable
+        ).ctx1(workq='_util')
 
     def ctx3(self, **kw):
         '''switch to three-armed context manager'''
