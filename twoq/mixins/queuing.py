@@ -17,6 +17,25 @@ class QueueingMixin(local):
 
     '''queue management mixin'''
 
+    def __init__(self, incoming, outgoing):
+        '''
+        init
+
+        @param incoming: incoming things
+        @param outgoing: outgoing things
+        '''
+        super(QueueingMixin, self).__init__()
+        # incoming queue
+        self.incoming = incoming
+        # outgoing queue
+        self.outgoing = outgoing
+        # set defaults
+        self.detap().unswap()
+
+    ###########################################################################
+    ## lookup optimizations ###################################################
+    ###########################################################################
+
     _deek = lazier(deque)
     _filterfalse = lazier(filterfalse)
     _ichain = lazier(ichain)
@@ -39,60 +58,40 @@ class QueueingMixin(local):
     _repeat = lazier(repeat)
     _range = lazier(range)
 
-    def __init__(self, incoming, outgoing):
-        '''
-        init
-
-        @param incoming: incoming things
-        @param outgoing: outgoing things
-        '''
-        super(QueueingMixin, self).__init__()
-        # incoming queue
-        self.incoming = incoming
-        # outgoing queue
-        self.outgoing = outgoing
-        # set defaults
-        self.detap().unswap()
+    ###########################################################################
+    ## iteration ##############################################################
+    ###########################################################################
 
     def __iter__(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
         return self._iterator(self._outq)
 
-    def _areduce(self, filt, initial=None):
-        '''
-        reduce iterable and append results to outgoing things
-
-        @param filt: filter callable
-        @param initial: initializer (default: None)
-        '''
-        if initial is None:
-            return self._pre()._append(self._ireduce(filt, self._iterable))
-        return self._pre()._append(
-            self._ireduce(filt, self._iterable, initial)
-        )
-
-    def _xreduce(self, filt, initial=None):
-        '''
-        reduce iterable and extend outgoing things with results
-
-        @param filt: filter callable
-        @param initial: initializer (default: None)
-        '''
-        if initial is None:
-            return self._pre()._extend(self._ireduce(filt, self._iterable))
-        return self._pre()._extend(
-            self._ireduce(filt, self._iterable, initial)
-        )
+    @property
+    def _iterable(self):
+        '''iterable'''
+        return self._iterator(self._workq)
 
     @property
     def balanced(self):
         '''if queues are balanced'''
         return self.outcount() == self.__len__()
 
-    @property
-    def _iterable(self):
-        '''iterable'''
-        return self._iterator(self._workq)
+    def ahead(self, n=None):
+        '''
+        move iterator for incoming things `n`-steps ahead
+
+        If `n` is `None`, consume entirely.
+
+        @param n: number of steps to advance incoming things (default: None)
+        '''
+        # use functions that consume iterators at C speed.
+        if n is None:
+            # feed the entire iterator into a zero-length `deque`
+            self.incoming = self._deek(self.incoming, maxlen=0)
+        else:
+            # advance to the empty slice starting at position `n`
+            self._next(self._islice(self.incoming, n, n), None)
+        return self
 
     ###########################################################################
     ## queue clearance ########################################################
@@ -222,23 +221,6 @@ class QueueingMixin(local):
     ## queue rotation #########################################################
     ###########################################################################
 
-    def ahead(self, n=None):
-        '''
-        move iterator for incoming things `n`-steps ahead
-
-        If `n` is `None`, consume entirely.
-
-        @param n: number of steps to advance incoming things (default: None)
-        '''
-        # use functions that consume iterators at C speed.
-        if n is None:
-            # feed the entire iterator into a zero-length `deque`
-            self.incoming = self._deek(self.incoming, maxlen=0)
-        else:
-            # advance to the empty slice starting at position `n`
-            self._next(self._islice(self.incoming, n, n), None)
-        return self
-
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
         return self.ctx1()._pre()._append(list(self._iterable)).unswap()
@@ -261,6 +243,28 @@ class QueueingMixin(local):
     ## queue appending ########################################################
     ###########################################################################
 
+    def _inappend(self, call):
+        return self._pre()._append(call(self._iterable))
+
+    def _pappend(self, iterable):
+        return self._pre()._append(iterable)
+
+    def _amap(self, call, iterable):
+        return self._pre()._append(self._imap(call, iterable))
+
+    def _astarmap(self, call, iterable):
+        return self._pre()._append(self._starmap(call, iterable))
+
+    def _ainmap(self, call):
+        return self._pre()._append(self._imap(call, self._iterable))
+
+    def _a2map(self, call1, call2):
+        imap_ = self._imap
+        return self._pre()._append(imap_(call1, imap_(call2, self._iterable)))
+
+    def _ainstarmap(self, call):
+        return self._pre()._append(self._starmap(call, self._iterable))
+
     def append(self, thing):
         '''
         append thing to right side of incoming things
@@ -277,17 +281,62 @@ class QueueingMixin(local):
         '''
         return self.ctx2()._pre()._appendleft(thing).unswap()
 
+    def _areduce(self, call, initial=None):
+        '''
+        reduce iterable and append results to outgoing things
+
+        @param call: filter callable
+        @param initial: initializer (default: None)
+        '''
+        if initial is None:
+            return self._pre()._append(self._ireduce(call, self._iterable))
+        return self._pre()._append(
+            self._ireduce(call, self._iterable, initial)
+        )
+
     ###########################################################################
     ## queue extension ########################################################
     ###########################################################################
 
-    def outextend(self, things):
-        '''
-        extend right side of outgoing things with `things`
+    def _x2map(self, call1, call2):
+        imap_ = self._imap
+        return self._pre()._extend(imap_(call1, imap_(call2, self._iterable)))
 
-        @param thing: some things
+    def _xreduce(self, call, initial=None):
         '''
-        return self.ctx1(workq='outgoing')._pre()._extend(things).unswap()
+        reduce iterable and extend outgoing things with results
+
+        @param call: filter callable
+        @param initial: initializer (default: None)
+        '''
+        if initial is None:
+            return self._pre()._extend(self._ireduce(call, self._iterable))
+        return self._pre()._extend(
+            self._ireduce(call, self._iterable, initial)
+        )
+
+    def _pextend(self, iterable):
+        return self._pre()._extend(iterable)
+
+    def _inextend(self, call):
+        return self._pre()._extend(call(self._iterable))
+
+    def _xmap(self, call, iterable):
+        return self._pre()._extend(self._imap(call, iterable))
+
+    def _xstarmap(self, call, iterable):
+        return self._pre()._extend(self._starmap(call, iterable))
+
+    def _x2starmap(self, call, iterable):
+        return self._pre()._extend(
+            self._starmap(call, iterable(self._iterable))
+        )
+
+    def _xinmap(self, call):
+        return self._pre()._extend(self._imap(call, self._iterable))
+
+    def _xinstarmap(self, call):
+        return self._pre()._extend(self._starmap(call, self._iterable))
 
     def extend(self, things):
         '''
@@ -305,28 +354,33 @@ class QueueingMixin(local):
         '''
         return self.ctx1()._pre()._extendleft(things).unswap()
 
-    ###########################################################################
-    ## iteration utils ########################################################
-    ###########################################################################
-
-    @staticmethod
-    def iterexcept(call, exception, start=None):
+    def outextend(self, things):
         '''
-        call a function repeatedly until an exception is raised
+        extend right side of outgoing things with `things`
 
-        Converts a call-until-exception interface to an iterator interface.
-        Like `__builtin__.iter(call, sentinel)` but uses an exception instead
-        of a sentinel to end the loop.
-
-        Raymond Hettinger Python Cookbook recipe # 577155
+        @param thing: some things
         '''
-        try:
-            if start is not None:
-                yield start()
-            while 1:
-                yield call()
-        except exception:
-            pass
+        return self.ctx1(workq='outgoing')._pre()._extend(things).unswap()
+
+    ###########################################################################
+    ## iteration runners ######################################################
+    ###########################################################################
+
+    def _inmap(self, call):
+        return self._imap(call, self._iterable)
+
+    def _instarmap(self, call):
+        return self._starmap(call, self._iterable)
+
+    @classmethod
+    def breakcount(cls, call, length):
+        '''
+        rotate through iterator until it reaches its original length
+
+        @param iterable: an iterable to exhaust
+        '''
+        for i in cls._range(0, length):  # @UnusedVariable
+            yield call()
 
     @classmethod
     def exhaust(cls, iterable, exception=StopIteration):
@@ -342,16 +396,6 @@ class QueueingMixin(local):
                 next_(iterable)
         except exception:
             pass
-
-    @classmethod
-    def breakcount(cls, call, length):
-        '''
-        rotate through iterator until it reaches its original length
-
-        @param iterable: an iterable to exhaust
-        '''
-        for i in cls._range(0, length):  # @UnusedVariable
-            yield call()
 
     @classmethod
     def exhaustmap(cls, mapr, call, filter=False, exception=StopIteration):
@@ -373,6 +417,25 @@ class QueueingMixin(local):
         except exception:
             pass
 
+    @staticmethod
+    def iterexcept(call, exception, start=None):
+        '''
+        call a function repeatedly until an exception is raised
+
+        Converts a call-until-exception interface to an iterator interface.
+        Like `__builtin__.iter(call, sentinel)` but uses an exception instead
+        of a sentinel to end the loop.
+
+        Raymond Hettinger Python Cookbook recipe # 577155
+        '''
+        try:
+            if start is not None:
+                yield start()
+            while 1:
+                yield call()
+        except exception:
+            pass
+
 
 class ResultMixin(local):
 
@@ -386,16 +449,6 @@ class ResultMixin(local):
             list_(measure)
         ) == 1 else list_(results)
         self.clear()
-        return results
-
-    def value(self):
-        '''return outgoing things and clear outgoing things'''
-        list_ = self._list
-        results, measure = self._split(self.outgoing)
-        results = self._next(results) if self._len(
-            list_(measure)
-        ) == 1 else list_(results)
-        self.outclear()
         return results
 
     def first(self):
@@ -416,3 +469,13 @@ class ResultMixin(local):
     def results(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
         return self.__iter__()
+
+    def value(self):
+        '''return outgoing things and clear outgoing things'''
+        list_ = self._list
+        results, measure = self._split(self.outgoing)
+        results = self._next(results) if self._len(
+            list_(measure)
+        ) == 1 else list_(results)
+        self.outclear()
+        return results

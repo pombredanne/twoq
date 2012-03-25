@@ -87,23 +87,23 @@ class CollectMixin(local):
         else:
             def _memfilters(thing, mz=_mz, gc=getcls, ci=self._ichain):
                 return ci(self._imap(mz, ci([getmro((gc(thing))), [thing]])))
-        return self._pre()._extend(self._ichain(
-            self._imap(_memfilters, self._iterable)
-        ))
+        return self._pre()._extend(self._ichain(self._inmap(_memfilters)))
 
     def members(self):
         '''collect object members from incoming things'''
-        return self._pre()._extend(self._ichain(self._imap(
-            self._partial(self._mfilter, self._call), self._iterable,
+        return self._pre()._extend(self._ichain(self._inmap(
+            self._partial(self._mfilter, self._call),
         )))
 
     def pick(self, *names):
         '''collect object attributes from incoming things by their `*names`'''
-        return self._pre()._extend(self._pick(names, self._iterable))
+        pick_ = self._pick
+        return self._inextend(lambda x: pick_(names, x))
 
     def pluck(self, *keys):
         '''collect object items from incoming things by item `*keys`'''
-        return self._pre()._extend(self._pluck(keys, self._iterable))
+        pluck_ = self._pluck
+        return self._inextend(lambda x: pluck_(keys, x))
 
 
 class SetMixin(local):
@@ -178,8 +178,8 @@ class SliceMixin(local):
         @param n: number of things
         @param default: default thing (default: None)
         '''
-        return self._pre()._append(
-            self._next(self._islice(self._iterable, n, None), default)
+        return self._inappend(
+            lambda x: self._next(self._islice(x, n, None), default)
         )
 
     def initial(self):
@@ -190,7 +190,7 @@ class SliceMixin(local):
 
     def rest(self):
         '''all incoming things except the first thing'''
-        return self._pre()._extend(self._islice(self._iterable, 1, None))
+        return self._inextend(lambda x: self._islice(x, 1, None))
 
     def snatch(self, n):
         '''
@@ -201,7 +201,7 @@ class SliceMixin(local):
         self._pre()
         iterable1, iterable2 = self._split(self._iterable)
         return self._extend(
-            self._islice(iterable1, len(list(iterable2)) - n, None)
+            self._islice(iterable1, self._len(self._list(iterable2)) - n, None)
         )
 
     def take(self, n):
@@ -210,7 +210,7 @@ class SliceMixin(local):
 
         @param n: number of things
         '''
-        return self._pre()._extend(self._islice(self._iterable, n))
+        return self._inextend(lambda x: self._islice(x, n))
 
 
 class FilterMixin(local):
@@ -235,11 +235,11 @@ class FilterMixin(local):
 
     def filter(self):
         '''incoming things for which call is `True`'''
-        return self._pre()._extend(self._ifilter(self._call, self._iterable))
+        return self._inextend(lambda x: self._ifilter(self._call, x))
 
     def find(self):
         '''first incoming thing for which call is `True`'''
-        return self._pre()._extend(self._find(self._call, self._iterable))
+        return self._inextend(lambda x: self._find(self._call, x))
 
     def partition(self):
         '''
@@ -255,15 +255,13 @@ class FilterMixin(local):
 
     def reject(self):
         '''incoming things for which call is `False`'''
-        return self._pre()._extend(
-            self._filterfalse(self._call, self._iterable)
-        )
+        ff_, call_ = self._filterfalse, self._call
+        return self._inextend(lambda x: ff_(call_, x))
 
     def without(self, *things):
         '''strip things from incoming things'''
-        return self._pre()._extend(
-            self._filterfalse(lambda x: x in things, self._iterable)
-        )
+        ff_ = self._filterfalse
+        return self._inextend(lambda x: ff_(lambda y: y in things, x))
 
 
 class FilteringMixin(CollectMixin, SetMixin, SliceMixin, FilterMixin):

@@ -5,7 +5,7 @@ from threading import local
 from itertools import groupby
 from random import choice, shuffle, sample
 
-from twoq.support import zip_longest
+from twoq.support import zip_longest, lazier
 
 __all__ = ('OrderMixin', 'RandomMixin', 'OrderingMixin')
 
@@ -14,9 +14,24 @@ class RandomMixin(local):
 
     '''random mixin'''
 
+    _choice = lazier(choice)
+    _sample = lazier(sample)
+    _shuffle = lazier(shuffle)
+
+    @classmethod
+    def _shuffleit(cls, iterable):
+        '''
+        shuffle iterable
+
+        @param iterable: an iterable
+        '''
+        iterable = cls._list(iterable)
+        cls._shuffle(iterable)
+        return iterable
+
     def choice(self):
         '''random choice of/from incoming things'''
-        return self._pre()._append(choice(self._list(self._iterable)))
+        return self._inappend(lambda x: self._choice(self._list(x)))
 
     def sample(self, n):
         '''
@@ -24,29 +39,31 @@ class RandomMixin(local):
 
         @param n: number of incoming things
         '''
-        return self._pre()._extend(sample(self._list(self._iterable), n))
+        sample_, list_ = self._sample, self._list
+        return self._inextend(lambda x: sample_(list_(x), n))
 
     def shuffle(self):
         '''randomly order incoming things'''
-        self._pre()
-        iterable = self._list(self._iterable)
-        shuffle(iterable)
-        return self._extend(iterable)
+        return self._inextend(self._shuffleit)
 
 
 class OrderMixin(local):
 
     '''order mixin'''
 
+    _groupby = lazier(groupby)
+
     def group(self):
-        '''group incoming things using call for key function'''
-        call_ = self._call
+        '''
+        group incoming things, optionally using current call for key function
+        '''
+        call_, list_ = self._call, self._list
         if call_ is None:
             return self._pre()._extend(self._imap(
-                lambda x: [x[0], self._list(x[1])], groupby(self._iterable),
+                lambda x: [x[0], list_(x[1])], self._groupby(self._iterable),
             ))
         return self._pre()._extend(self._imap(
-            lambda x: [x[0], self._list(x[1])], groupby(self._iterable, call_)
+            lambda x: [x[0], list_(x[1])], self._groupby(self._iterable, call_)
         ))
 
     def grouper(self, n, fill=None):
@@ -57,22 +74,24 @@ class OrderMixin(local):
         @param n: number of things
         @param fill: fill thing (default: None)
         '''
-        return self._pre()._extend(
-            zip_longest(fillvalue=fill, *[self._iter(self._iterable)] * n)
+        iter_ = self._iter
+        return self._inextend(
+            lambda x: zip_longest(fillvalue=fill, *[iter_(x)] * n)
         )
 
     def reverse(self):
         '''reverse incoming things'''
-        return self._pre()._extend(self._reversed(self._list(self._iterable)))
+        list_, reversed_ = self._list, self._reversed
+        return self._inextend(lambda x: reversed_(list_(x)))
 
     def sort(self):
-        '''sort incoming things using call for key function'''
-        call_ = self._call
+        '''
+        sort incoming things, optionally using current call as key function
+        '''
+        call_, sorted_ = self._call, self._sorted
         if call_ is None:
-            self._pre()._extend(self._sorted(self._iterable))
-        else:
-            self._pre()._extend(self._sorted(self._iterable, key=call_))
-        return self
+            return self._inextend(sorted_)
+        return self._inextend(lambda x: sorted_(x, key=call_))
 
 
 class OrderingMixin(OrderMixin, RandomMixin):
