@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 '''lazy twoq mixins'''
 
+from contextlib import contextmanager
+
 from twoq.mixins.queuing import QueueingMixin, ResultMixin
 
 __all__ = ['AutoQMixin', 'ManQMixin']
@@ -96,7 +98,7 @@ class BaseQMixin(QueueingMixin):
         '''build chain'''
         UTILQ, sdict = self._UTILQ, self.__dict__
         sdict[UTILQ] = self._join(thing, sdict[UTILQ])
-        return self._post()
+        return self
 
     __buildchain = _xtend
 
@@ -107,7 +109,7 @@ class BaseQMixin(QueueingMixin):
     def _xreplace(self, thing):
         '''build chain'''
         self.__dict__[self._UTILQ] = thing
-        return self._post()
+        return self
 
     def _iter(self, things):
         '''extend work queue with `things` wrapped in iterator'''
@@ -129,33 +131,40 @@ class BaseQMixin(QueueingMixin):
     ## enter context ##########################################################
     ###########################################################################
 
-    def _iq2wq(self):
-        '''extend work queue with incoming queue'''
-        sdict = self._clearwork().__dict__
-        sdict[self._WORKQ], sdict[self._INQ] = self._split(sdict[self._INQ])
-        return self
-
-    def _oq2wq(self):
-        '''extend work queue with outgoing queue'''
+    @contextmanager
+    def _ctx1(self):
         sd = self._clearwork().__dict__
-        sd[self._WORKQ], sd[self._OUTQ] = self._split(sd[self._OUTQ])
-        return self
+        OUTQ = self._OUTQ
+        # extend work queue with outgoing queue
+        sd[self._WORKQ], sd[OUTQ] = self._split(sd[OUTQ])
+        yield
+        # extend outgoing queue with utility queue
+        sd[OUTQ] = sd[self._UTILQ]
+        self._clearwork()
 
-    ###########################################################################
-    ## exit context ###########################################################
-    ###########################################################################
+    _ctx2 = _ctx1
 
-    def _uq2oq(self):
-        '''extend outgoing queue with utility queue'''
-        sdict = self.__dict__
-        sdict[self._OUTQ] = sdict[self._UTILQ]
-        return self._clearwork()
+    @contextmanager
+    def _ctx3(self, **kw):
+        sd = self._clearwork().__dict__
+        # extend work queue with incoming queue
+        sd[self._WORKQ], sd[self._INQ] = self._split(sd[self._INQ])
+        yield
+        # extend outgoing queue with utility queue
+        sd[self._OUTQ] = sd[self._UTILQ]
+        self._clearwork()
 
-    def _uq2iqoq(self):
-        '''extend incoming queue and outgoing queue with utility queue'''
-        sd = self.__dict__
+    _ctx4 = _ctx3
+
+    @contextmanager
+    def _autoctx(self):
+        sd = self._clearwork().__dict__
+        # extend work queue with incoming queue
+        sd[self._WORKQ], sd[self._INQ] = self._split(sd[self._INQ])
+        yield
+        # extend incoming queue and outgoing queue with utility queue
         sd[self._INQ], sd[self._OUTQ] = self._split(sd[self._UTILQ])
-        return self._clearwork()
+        self._clearwork()
 
     ###########################################################################
     ## switch context #########################################################
@@ -163,32 +172,25 @@ class BaseQMixin(QueueingMixin):
 
     def ro(self):
         '''switch to read-only cotext'''
-        return self.ctx3(outq=self._UTILVAR)._pre()._xreplace(
-            self._iterable
-        ).ctx1(workq=self._UTILVAR)
-
-    def ctx3(self, **kw):
-        '''switch to three-armed context'''
-        return self.swap(
-            utilq=kw.get(self._WORKCFG, self._WORKVAR),
-            pre=self._iq2wq,
-            post=self._uq2oq,
-            **kw
-        )
+        self.ctx3(outq=self._UTILVAR)
+        with self._context():
+            self._xreplace(self._iterable)
+        self.ctx1(workq=self._UTILVAR)
+        return self
 
 
 class AutoQMixin(BaseQMixin):
 
     '''auto-balancing queue mixin'''
 
-    _default_post = '_uq2iqoq'
+    _default_context = '_autoctx'
 
 
 class ManQMixin(BaseQMixin):
 
     '''manually balanced queue mixin'''
 
-    _default_post = '_uq2oq'
+    _default_context = '_ctx4'
 
 
 class AutoResultMixin(ResultMixin, AutoQMixin):

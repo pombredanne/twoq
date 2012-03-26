@@ -25,13 +25,13 @@ class RandomMixin(local):
 
         @param iterable: an iterable
         '''
-        iterable = cls._list(iterable)
-        cls._shuffle(iterable)
+
         return iterable
 
     def choice(self):
         '''random choice of/from incoming things'''
-        return self._inappend(lambda x: self._choice(self._list(x)))
+        with self._context():
+            return self._append(self._choice(self._list(self._iterable)))
 
     def sample(self, n):
         '''
@@ -39,12 +39,15 @@ class RandomMixin(local):
 
         @param n: number of incoming things
         '''
-        sample_, list_ = self._sample, self._list
-        return self._inxtend(lambda x: sample_(list_(x), n))
+        with self._context():
+            return self._xtend(self._sample(self._list(self._iterable), n))
 
     def shuffle(self):
         '''randomly order incoming things'''
-        return self._inxtend(self._shuffleit)
+        with self._context():
+            iterable = self._list(self._iterable)
+            self._shuffle(iterable)
+            return self._xtend(iterable)
 
 
 class OrderMixin(local):
@@ -58,13 +61,16 @@ class OrderMixin(local):
         group incoming things, optionally using current call for key function
         '''
         call_, list_ = self._call, self._list
-        if call_ is None:
-            return self._x2map(
-                lambda x: [x[0], list_(x[1])], self._groupby,
-            )
-        return self._x2map(
-            lambda x: [x[0], list_(x[1])], lambda x: self._groupby(x, call_)
-        )
+        with self._context():
+            if call_ is None:
+                return self._xtend(self._imap(
+                    lambda x: [x[0], list_(x[1])],
+                    self._groupby(self._iterable),
+                ))
+            return self._xtend(self._imap(
+                lambda x: [x[0], list_(x[1])],
+                self._groupby(self._iterable, call_)
+            ))
 
     def grouper(self, n, fill=None):
         '''
@@ -74,24 +80,25 @@ class OrderMixin(local):
         @param n: number of things
         @param fill: fill thing (default: None)
         '''
-        iter_ = self._iter
-        return self._inxtend(
-            lambda x: zip_longest(fillvalue=fill, *[iter_(x)] * n)
-        )
+        with self._context():
+            return self._xtend(
+                zip_longest(fillvalue=fill, *[self._iter(self._iterable)] * n)
+            )
 
     def reverse(self):
         '''reverse incoming things'''
-        list_, reversed_ = self._list, self._reversed
-        return self._inxtend(lambda x: reversed_(list_(x)))
+        with self._context():
+            return self._xtend(self._reversed(self._list(self._iterable)))
 
     def sort(self):
         '''
         sort incoming things, optionally using current call as key function
         '''
-        call_, sorted_ = self._call, self._sorted
-        if call_ is None:
-            return self._inxtend(sorted_)
-        return self._inxtend(lambda x: sorted_(x, key=call_))
+        call_ = self._call
+        with self._context():
+            if call_ is None:
+                return self._xtend(self._sorted(self._iterable))
+            return self._xtend(self._sorted(self._iterable, key=call_))
 
 
 class OrderingMixin(OrderMixin, RandomMixin):

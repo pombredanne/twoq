@@ -61,9 +61,10 @@ class DelayMixin(local):
 
         @param wait: time in seconds
         '''
-        return self._xinstarmap(self._partial(
-            self._delay_each, wait=wait, caller=self._call
-        ))
+        with self._context():
+            return self._xtend(self._starmap(self._partial(
+                self._delay_each, wait=wait, caller=self._call
+            ), self._iterable))
 
     def delay_invoke(self, name, wait):
         '''
@@ -74,11 +75,12 @@ class DelayMixin(local):
         @param name: name of method
         @param wait: time in seconds
         '''
-        return self._xinmap(self._partial(
-            self._delay_invoke,
-            wait=wait,
-            caller=self._methodcaller(name, *self._args, **self._kw),
-        ))
+        with self._context():
+            return self._xtend(self._imap(self._partial(
+                self._delay_invoke,
+                wait=wait,
+                caller=self._methodcaller(name, *self._args, **self._kw),
+            ), self._iterable))
 
     def delay_map(self, wait):
         '''
@@ -86,9 +88,10 @@ class DelayMixin(local):
 
         @param wait: time in seconds
         '''
-        return self._xinmap(self._partial(
-            self._delay_map, wait=wait, caller=self._call
-        ))
+        with self._context():
+            return self._xtend(self._imap(self._partial(
+                self._delay_map, wait=wait, caller=self._call
+            ), self._iterable))
 
 
 class RepeatMixin(local):
@@ -97,13 +100,15 @@ class RepeatMixin(local):
 
     def copy(self):
         '''copy each incoming thing'''
-        return self._xinmap(deepcopy)
+        with self._context():
+            return self._xtend(self._imap(deepcopy, self._iterable))
 
     def padnone(self):
         '''repeat incoming things and then `None` indefinitely'''
-        return self._pre()._iter(
-            self._join(self._iterable, self._repeat(None),
-        ))
+        with self._context():
+            return self._iter(
+                self._join(self._iterable, self._repeat(None),
+            ))
 
     def range(self, start, stop=0, step=1):
         '''
@@ -113,9 +118,10 @@ class RepeatMixin(local):
         @param stop: number to stop with (default: 0)
         @param step: number of steps to advance per iteration (default: 1)
         '''
-        return self._pxtend(
-            self._range(start, stop, step) if stop else self._range(start)
-        )
+        with self._context():
+            return self._xtend(
+                self._range(start, stop, step) if stop else self._range(start)
+            )
 
     def repeat(self, n):
         '''
@@ -123,7 +129,8 @@ class RepeatMixin(local):
 
         @param n: number of times to repeat
         '''
-        return self._inxtend(lambda x: self._repeat(tuple(x), n))
+        with self._context():
+            return self._xtend(self._repeat(tuple(self._iterable), n))
 
     def times(self, n=None):
         '''
@@ -131,13 +138,14 @@ class RepeatMixin(local):
 
         @param n: repeat call n times on incoming things (default: None)
         '''
-        if n is None:
-            return self._x2starmap(
-                self._call, lambda x: self._repeat(self._list(x)),
-            )
-        return self._x2starmap(
-            self._call, lambda x: self._repeat(self._list(x), n),
-        )
+        with self._context():
+            if n is None:
+                return self._xtend(self._starmap(
+                    self._call, self._repeat(self._list(self._iterable)),
+                ))
+            return self._xtend(self._starmap(
+                self._call, self._repeat(self._list(self._iterable), n),
+            ))
 
 
 class MapMixin(local):
@@ -158,7 +166,8 @@ class MapMixin(local):
 
     def map(self):
         '''invoke call on each incoming thing'''
-        return self._xinmap(self._call)
+        with self._context():
+            return self._xtend(self._imap(self._call, self._iterable))
 
     def invoke(self, name):
         '''
@@ -167,24 +176,31 @@ class MapMixin(local):
 
         @param name: name of method
         '''
-        return self._xinmap(self._partial(
-            self._invoke,
-            caller=self._methodcaller(name, *self._args, **self._kw),
-        ))
+        with self._context():
+            return self._xtend(self._imap(self._partial(
+                self._invoke,
+                caller=self._methodcaller(name, *self._args, **self._kw),
+            ), self._iterable))
 
     def each(self):
         '''invoke call with passed arguments, keywords in incoming things'''
-        return self._xinstarmap(lambda x, y: self._call(*x, **y))
+        with self._context():
+            return self._xtend(self._starmap(
+                lambda x, y: self._call(*x, **y), self._iterable,
+            ))
 
     def starmap(self):
         '''invoke call on each sequence of incoming things'''
-        return self._xinstarmap(self._call)
+        with self._context():
+            return self._xtend(self._starmap(self._call, self._iterable))
 
     def items(self):
         '''invoke call on each mapping to get key, value pairs'''
-        return self._pre()._xstarmap(
-            self._call, self._ichain(self._inmap(self._items)),
-        )
+        with self._context():
+            return self._xtend(self._starmap(
+                self._call,
+                self._ichain(self._imap(self._items, self._iterable))
+            ))
 
 
 class MappingMixin(DelayMixin, RepeatMixin, MapMixin):
