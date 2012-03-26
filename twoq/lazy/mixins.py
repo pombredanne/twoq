@@ -130,12 +130,15 @@ class BaseQMixin(QueueingMixin):
         return self.__buildchain(self._iterz([things]))
 
     ###########################################################################
-    ## enter context ##########################################################
+    ## context rotation #######################################################
     ###########################################################################
 
     @contextmanager
-    def _ctx2(self):
-        sd = self._clearwork().__dict__
+    def ctx2(self, **kw):
+        '''swap context to two-armed context'''
+        sd = self.swap(
+            context=self.ctx2, outq=kw.get(self._OUTCFG, self._INVAR), **kw
+        )._clearwork().__dict__
         OUTQ = self._OUTQ
         # extend work queue with outgoing queue
         sd[self._WORKQ], sd[OUTQ] = self._split(sd[OUTQ])
@@ -143,60 +146,71 @@ class BaseQMixin(QueueingMixin):
         # extend outgoing queue with utility queue
         sd[OUTQ] = sd[self._UTILQ]
         self._clearwork()
-        # return to previous context
+        # return to global context
         self.reswap()
 
     @contextmanager
-    def _ctx3(self, **kw):
-        sd = self._clearwork().__dict__
+    def ctx3(self, **kw):
+        '''swap context to three-armed context'''
+        sd = self.swap(
+            utilq=kw.get(self._WORKCFG, self._WORKVAR), context=self.ctx3, **kw
+        )._clearwork().__dict__
         # extend work queue with incoming queue
         sd[self._WORKQ], sd[self._INQ] = self._split(sd[self._INQ])
         yield
         # extend outgoing queue with utility queue
         sd[self._OUTQ] = sd[self._UTILQ]
         self._clearwork()
-        # return to previous context
+        # return to global context
         self.reswap()
 
-    _ctx4 = _ctx3
-
     @contextmanager
-    def _autoctx(self):
-        sd = self._clearwork().__dict__
+    def ctx4(self, **kw):
+        '''swap context to three-armed context'''
+        sd = self.swap(context=self.ctx4, **kw)._clearwork().__dict__
         # extend work queue with incoming queue
         sd[self._WORKQ], sd[self._INQ] = self._split(sd[self._INQ])
         yield
-        # extend incoming queue and outgoing queue with utility queue
-        sd[self._INQ], sd[self._OUTQ] = self._split(sd[self._UTILQ])
+        # extend outgoing queue with utility queue
+        sd[self._OUTQ] = sd[self._UTILQ]
         self._clearwork()
-        # return to previous context
+        # return to global context
         self.reswap()
 
-    ###########################################################################
-    ## switch context #########################################################
-    ###########################################################################
+    @contextmanager
+    def autoctx(self, **kw):
+        '''swap context to four-armed context'''
+        sd = self.swap(context=self.autoctx, **kw)._clearwork().__dict__
+        INQ, split_ = self._INQ, self._split
+        # extend work queue with incoming queue
+        sd[self._WORKQ], sd[INQ] = split_(sd[INQ])
+        yield
+        # extend incoming queue and outgoing queue with utility queue
+        sd[INQ], sd[self._OUTQ] = split_(sd[self._UTILQ])
+        self._clearwork()
+        # return to global context
+        self.reswap()
 
     def ro(self):
-        '''switch to read-only cotext'''
-        self.ctx3(outq=self._UTILVAR)
-        with self._context():
+        '''swap context to read-only context'''
+        with self.ctx3(outq=self._UTILVAR):
             self._xreplace(self._iterable)
-        self.ctx1(workq=self._UTILVAR)
-        return self
+        with self.ctx1(hard=True, workq=self._UTILVAR):
+            return self
 
 
 class AutoQMixin(BaseQMixin):
 
     '''auto-balancing queue mixin'''
 
-    _default_context = '_autoctx'
+    _default_context = 'autoctx'
 
 
 class ManQMixin(BaseQMixin):
 
     '''manually balanced queue mixin'''
 
-    _default_context = '_ctx4'
+    _default_context = 'ctx4'
 
 
 class AutoResultMixin(ResultMixin, AutoQMixin):

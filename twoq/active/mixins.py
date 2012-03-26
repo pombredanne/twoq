@@ -122,24 +122,21 @@ class BaseQMixin(QueueingMixin):
         return self
 
     ###########################################################################
-    ## enter context ##########################################################
+    ## context rotation #######################################################
     ###########################################################################
 
     @contextmanager
-    def _ctx1(self):
-        yield
-        # return to previous context
-        self.reswap()
-
-    @contextmanager
-    def _ctx2(self):
-        sd = self.__dict__
+    def ctx2(self, **kw):
+        '''swap context to two-armed context manager'''
+        sd = self.swap(
+            outq=kw.get(self._OUTCFG, self._INVAR), context=self.ctx2(),
+        **kw).__dict__
         outq, utilq, workq = sd[self._OUTQ], sd[self._UTILQ], sd[self._WORKQ]
         # clear all work things
         workq.clear()
         # extend work things with outgoing things
         workq.extend(outq)
-        # switch iterator
+        # swap iterator
         self._iterator = self._breakcount
         yield
         # clear outgoing things if so configured
@@ -149,18 +146,23 @@ class BaseQMixin(QueueingMixin):
         outq.extend(utilq)
         # clear utility things
         utilq.clear()
-        # return to previous context
+        # return to global context
         self.reswap()
 
     @contextmanager
-    def _ctx3(self, **kw):
-        sd = self.__dict__
+    def ctx3(self, **kw):
+        '''swap context to three-armed context'''
+        sd = self.swap(
+            utilq=kw.get(self._WORKCFG, self._WORKVAR),
+            context=self.ctx3,
+            **kw
+        ).__dict__
         outq, utilq, workq = sd[self._OUTQ], sd[self._UTILQ], sd[self._WORKQ]
         # clear work things
         workq.clear()
         # extend work things with incoming things
         workq.extend(sd[self._INQ])
-        # switch iterator
+        # swap iterators
         self._iterator = self._breakcount
         yield
         # clear outgoing things if so configured
@@ -170,18 +172,19 @@ class BaseQMixin(QueueingMixin):
         outq.extend(utilq)
         # clear utility things
         utilq.clear()
-        # return to previous context
+        # return to global context
         self.reswap()
 
     @contextmanager
-    def _ctx4(self):
-        sd = self.__dict__
+    def ctx4(self, **kw):
+        '''swap context to four-armed context manager'''
+        sd = self.swap(context=self.ctx4, **kw).__dict__
         outq, utilq, workq = sd[self._OUTQ], sd[self._UTILQ], sd[self._WORKQ]
         # clear work things
         workq.clear()
         # extend work things with incoming things
         workq.extend(sd[self._INQ])
-        # switch iterator
+        # swap iterators
         self._iterator = self._iterexcept
         yield
         # clear outgoing things if so configured
@@ -191,19 +194,20 @@ class BaseQMixin(QueueingMixin):
         outq.extend(utilq)
         # clear utility things
         utilq.clear()
-        # return to previous context
+        # return to global context
         self.reswap()
 
     @contextmanager
-    def _autoctx(self):
-        sd = self.__dict__
+    def autoctx(self, **kw):
+        '''swap context to auto-synchronizing context manager'''
+        sd = self.swap(context=self.autoctx, **kw).__dict__
         outq, utilq, workq = sd[self._OUTQ], sd[self._UTILQ], sd[self._WORKQ]
         inq = sd[self._INQ]
         # clear work things
         workq.clear()
         # extend work things with incoming things
         workq.extend(inq)
-        # switch iterator
+        # swap iterators
         self._iterator = self._iterexcept
         yield
         # clear outgoing things if so configured
@@ -215,34 +219,29 @@ class BaseQMixin(QueueingMixin):
         inq.extend(utilq)
         # clear utility things
         utilq.clear()
-        # return to previous context
+        # return to global context
         self.reswap()
 
-    ###########################################################################
-    ## rotate context #########################################################
-    ###########################################################################
-
     def ro(self):
-        '''switch to read-only cotext'''
-        self.ctx3(outq=self._UTILVAR)
-        with self._context():
+        '''swap context to read-only context'''
+        with self.ctx3(outq=self._UTILVAR):
             self._xtend(self._iterable)
-        self.ctx1(hard=True, workq=self._UTILVAR)
-        return self
+        with self.ctx1(hard=True, workq=self._UTILVAR):
+            return self
 
 
 class AutoQMixin(BaseQMixin):
 
     '''auto-balancing queue mixin'''
 
-    _default_context = '_autoctx'
+    _default_context = 'autoctx'
 
 
 class ManQMixin(BaseQMixin):
 
     '''manually balanced queue mixin'''
 
-    _default_context = '_ctx4'
+    _default_context = 'ctx4'
 
 
 class AutoResultMixin(AutoQMixin, ResultMixin):
