@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 '''twoq queuing mixins'''
 
+import itertools
+import functools
 from threading import local
 from collections import deque
 from operator import methodcaller
-from functools import reduce as ireduce, partial
-from itertools import islice, tee, starmap, repeat
 
-from twoq.support import (
-    lazier, ichain, filterfalse, imap, ifilter, chain, items, range)
+from twoq.support import lazier, filterfalse, imap, ifilter, items, range
 
 __all__ = ['QueueingMixin']
 
@@ -21,10 +20,10 @@ class QueueingMixin(local):
     _INVAR = 'incoming'
     _OUTCFG = 'outq'
     _OUTVAR = 'outgoing'
-    _WORKCFG = 'workq'
-    _WORKVAR = '_work'
     _UTILCFG = 'utilq'
     _UTILVAR = '_util'
+    _WORKCFG = 'workq'
+    _WORKVAR = '_work'
 
     def __init__(self, incoming, outgoing):
         '''
@@ -42,44 +41,35 @@ class QueueingMixin(local):
         self.detap().unswap()
 
     ###########################################################################
-    ## lookup optimizations ###################################################
+    ## optimize lookups #######################################################
     ###########################################################################
 
-    _iterz = lazier(iter)
     _deek = lazier(deque)
     _filterfalse = lazier(filterfalse)
-    _ichain = lazier(ichain)
+    _ichain = lazier(itertools.chain.from_iterable)
     _ifilter = lazier(ifilter)
     _imap = lazier(imap)
-    _ireduce = lazier(ireduce)
-    _islice = lazier(islice)
-    _join = lazier(chain)
+    _ireduce = lazier(functools.reduce)
+    _islice = lazier(itertools.islice)
+    _items = lazier(items)
+    _iterz = lazier(iter)
+    _join = lazier(itertools.chain)
     _len = lazier(len)
     _list = lazier(list)
     _methodcaller = lazier(methodcaller)
     _next = lazier(next)
-    _partial = lazier(partial)
+    _partial = lazier(functools.partial)
+    _range = lazier(range)
+    _repeat = lazier(itertools.repeat)
     _reversed = lazier(reversed)
     _sorted = lazier(sorted)
-    _split = lazier(tee)
-    _starmap = lazier(starmap)
+    _split = lazier(itertools.tee)
+    _starmap = lazier(itertools.starmap)
     _sum = lazier(sum)
-    _items = lazier(items)
-    _repeat = lazier(repeat)
-    _range = lazier(range)
 
     ###########################################################################
     ## iteration ##############################################################
     ###########################################################################
-
-    def __iter__(self):
-        '''yield outgoing things, clearing outgoing things as it iterates'''
-        return self._iterator(self._OUTQ)
-
-    @property
-    def _iterable(self):
-        '''iterable'''
-        return self._iterator(self._WORKQ)
 
     @property
     def balanced(self):
@@ -107,69 +97,36 @@ class QueueingMixin(local):
     ## queue clearance ########################################################
     ###########################################################################
 
-    def _wclear(self):
-        '''clear work queue'''
-        return self.ctx1(workq=self._WORKVAR)._pre()._clear().reswap()
-
-    def _uclear(self):
-        '''clear utility queue'''
-        return self.ctx1(workq=self._UTILVAR)._pre()._clear().reswap()
-
     def clear(self):
         '''clear every thing'''
         return self.detap().outclear().inclear()._wclear()._uclear()
 
-    def inclear(self):
-        '''clear incoming things'''
-        return self.ctx1()._pre()._clear().reswap()
-
-    def outclear(self):
-        '''clear outgoing things'''
-        return self.ctx1(workq=self._OUTVAR)._pre()._clear().reswap()
-
     ###########################################################################
-    ## context management #####################################################
+    ## context rotation #######################################################
     ###########################################################################
 
-    def ctx1(self, hard=False, **kw):
-        '''
-        switch to one-armed context manager
-
-        @param hard: keep context-specific settings between context switches
-        '''
+    def ctx1(self, **kw):
+        '''switch to one-armed context manager'''
         q = kw.pop(self._WORKCFG, self._INVAR)
         ctx = lambda: self
-        return self.swap(hard=hard, workq=q, utilq=q, pre=ctx, post=ctx, **kw)
+        return self.swap(workq=q, utilq=q, pre=ctx, post=ctx, **kw)
 
-    def ctx2(self, hard=False, **kw):
-        '''
-        switch to two-armed context manager
-
-        @param hard: keep context-specific settings between context switches
-        '''
+    def ctx2(self, **kw):
+        '''switch to two-armed context manager'''
         return self.swap(
-            hard=hard,
             outq=kw.get(self._OUTCFG, self._INVAR),
             pre=self._oq2wq,
             post=self._uq2oq,
             **kw
         )
 
-    def ctx4(self, hard=False, **kw):
-        '''
-        switch to four-armed context manager
+    def ctx4(self, **kw):
+        '''switch to four-armed context manager'''
+        return self.swap(post=self._uq2oq, **kw)
 
-        @param hard: keep context-specific settings between context switches
-        '''
-        return self.swap(hard=hard, post=self._uq2oq, **kw)
-
-    def autoctx(self, hard=False, **kw):
-        '''
-        switch to auto-synchronizing context manager
-
-        @param hard: keep context-specific settings between context switches
-        '''
-        return self.swap(hard=hard, post=self._uq2iqoq, **kw)
+    def autoctx(self, **kw):
+        '''switch to auto-synchronizing context manager'''
+        return self.swap(post=self._uq2iqoq, **kw)
 
     def swap(self, hard=False, **kw):
         '''
@@ -190,25 +147,25 @@ class QueueingMixin(local):
         # utility queue
         self._UTILQ = kw.get(self._UTILCFG, self._UTILVAR)
         # preserve configuration or return to defaults
-        self._CONFIG = kw if hard else {}
+        self._CONFIG = kw if kw.get('hard', False) else {}
         return self
 
     def unswap(self):
         '''rotate queues to default'''
         return self.swap()
 
+    rw = unswap
+
     def reswap(self):
         '''rotate queues to current configuration'''
         return self.swap(**self._CONFIG)
-
-    rw = unswap
 
     ###########################################################################
     ## current callable management ############################################
     ###########################################################################
 
     def args(self, *args, **kw):
-        '''arguments for active callable'''
+        '''arguments for current callable'''
         # set positional arguments
         self._args = args
         # set keyword arguemnts
@@ -217,27 +174,30 @@ class QueueingMixin(local):
 
     def tap(self, call):
         '''
-        set active callable
+        set current callable
 
-        @param call: a call
+        @param call: a callabler
         '''
         self.detap()
-        # set active callable
         self._call = call
         return self
 
     def detap(self):
-        '''clear active callable'''
+        '''clear current callable'''
         # reset postitional arguments
         self._args = ()
         # reset keyword arguments
         self._kw = {}
-        # reset callable
+        # reset current callable
         self._call = None
         return self
 
     def wrap(self, call):
-        '''build active callable from factory'''
+        '''
+        build current callable from factory
+
+        @param call: a callable
+        '''
         def factory(*args, **kw):
             return call(*args, **kw)
         return self.tap(factory)
@@ -248,6 +208,12 @@ class QueueingMixin(local):
     ###########################################################################
     ## queue rotation #########################################################
     ###########################################################################
+
+    def outshift(self):
+        '''shift incoming things to outgoing things'''
+        return self.autoctx()._pre()._xtend(self._iterable).reswap()
+
+    outsync = outshift
 
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
@@ -261,15 +227,22 @@ class QueueingMixin(local):
 
     sync = shift
 
-    def outshift(self):
-        '''shift incoming things to outgoing things'''
-        return self.autoctx()._pre()._xtend(self._iterable).reswap()
-
-    outsync = outshift
-
     ###########################################################################
     ## queue appending ########################################################
     ###########################################################################
+
+    def _areduce(self, call, initial=None):
+        '''
+        reduce iterable and append results to outgoing things
+
+        @param call: filter callable
+        @param initial: initializer (default: None)
+        '''
+        if initial is None:
+            return self._pre()._append(self._ireduce(call, self._iterable))
+        return self._pre()._append(
+            self._ireduce(call, self._iterable, initial)
+        )
 
     def _inappend(self, call):
         return self._pre()._append(call(self._iterable))
@@ -293,26 +266,9 @@ class QueueingMixin(local):
         '''
         return self.ctx2()._pre()._appendleft(thing).reswap()
 
-    def _areduce(self, call, initial=None):
-        '''
-        reduce iterable and append results to outgoing things
-
-        @param call: filter callable
-        @param initial: initializer (default: None)
-        '''
-        if initial is None:
-            return self._pre()._append(self._ireduce(call, self._iterable))
-        return self._pre()._append(
-            self._ireduce(call, self._iterable, initial)
-        )
-
     ###########################################################################
     ## queue extension ########################################################
     ###########################################################################
-
-    def _x2map(self, call1, iterator):
-        imap_ = self._imap
-        return self._pre()._xtend(imap_(call1, iterator(self._iterable)))
 
     def _xreduce(self, call, initial=None):
         '''
@@ -327,25 +283,29 @@ class QueueingMixin(local):
             self._ireduce(call, self._iterable, initial)
         )
 
-    def _pextend(self, iterable):
+    def _pxtend(self, iterable):
         return self._pre()._xtend(iterable)
 
-    def _inextend(self, call):
+    def _inxtend(self, call):
         return self._pre()._xtend(call(self._iterable))
 
-    def _xstarmap(self, call, iterable):
-        return self._pre()._xtend(self._starmap(call, iterable))
-
-    def _x2starmap(self, call, iterator):
-        return self._pre()._xtend(
-            self._starmap(call, iterator(self._iterable))
-        )
+    def _inmap(self, call):
+        return self._imap(call, self._iterable)
 
     def _xinmap(self, call):
         return self._pre()._xtend(self._imap(call, self._iterable))
 
+    def _x2map(self, call, iter):
+        return self._pre()._xtend(self._imap(call, iter(self._iterable)))
+
+    def _xstarmap(self, call, iterable):
+        return self._pre()._xtend(self._starmap(call, iterable))
+
     def _xinstarmap(self, call):
         return self._pre()._xtend(self._starmap(call, self._iterable))
+
+    def _x2starmap(self, call, iter):
+        return self._pre()._xtend(self._starmap(call, iter(self._iterable)))
 
     def extend(self, things):
         '''
@@ -375,9 +335,6 @@ class QueueingMixin(local):
     ## iteration runners ######################################################
     ###########################################################################
 
-    def _inmap(self, call):
-        return self._imap(call, self._iterable)
-
     @classmethod
     def breakcount(cls, call, length):
         '''
@@ -404,7 +361,7 @@ class QueueingMixin(local):
             pass
 
     @classmethod
-    def exhaustmap(cls, mapr, call, filter=False, exception=StopIteration):
+    def exhaustmap(cls, map, call, filter=False, exception=StopIteration):
         '''
         call `next` on an iterator until it's exhausted
 
@@ -413,10 +370,8 @@ class QueueingMixin(local):
         @param filter: a filter to apply to mapping (default: `None`)
         @param exception: exception sentinel (default: `StopIteration`)
         '''
-        next_, starmap_ = cls._next, cls._starmap
-        subiter = cls._ifilter(
-            filter, cls._items(mapr)
-        ) if filter else cls._items(mapr)
+        next_, starmap_, items_ = cls._next, cls._starmap, cls._items
+        subiter = cls._ifilter(filter, items_(map)) if filter else items_(map)
         try:
             while 1:
                 next_(starmap_(call, subiter))
@@ -429,10 +384,10 @@ class QueueingMixin(local):
         call a function repeatedly until an exception is raised
 
         Converts a call-until-exception interface to an iterator interface.
-        Like `__builtin__.iter(call, sentinel)` but uses an exception instead
-        of a sentinel to end the loop.
+        Like `iter(call, sentinel)` but uses an exception instead of a sentinel
+        to end the loop.
 
-        Raymond Hettinger Python Cookbook recipe # 577155
+        Raymond Hettinger, Python Cookbook recipe # 577155
         '''
         try:
             if start is not None:
@@ -447,21 +402,18 @@ class ResultMixin(local):
 
     '''result queue mixin'''
 
-    def __results(self, iterable):
-        list_ = self._list
-        self.unswap()
-        out, tell = self._split(iterable)
-        return self._next(out) if self._len(list_(tell)) == 1 else list_(out)
-
     def end(self):
         '''return outgoing things then clear out everything'''
-        out = self.__results(self.outgoing)
+        self.unswap()
+        out, tell = self._split(self.outgoing)
+        list_ = self._list
+        out = self._next(out) if self._len(list_(tell)) == 1 else list_(out)
         self.clear()
         return out
 
     def first(self):
         '''first incoming thing'''
-        return self._inappend(self._next)
+        return self._pre()._append(self._next(self._iterable))
 
     def last(self):
         '''last incoming thing'''
@@ -480,6 +432,9 @@ class ResultMixin(local):
 
     def value(self):
         '''return outgoing things and clear outgoing things'''
-        out = self.__results(self.outgoing)
+        self.unswap()
+        out, tell = self._split(self.outgoing)
+        list_ = self._list
+        out = self._next(out) if self._len(list_(tell)) == 1 else list_(out)
         self.outclear()
         return out

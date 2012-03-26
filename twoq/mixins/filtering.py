@@ -98,12 +98,12 @@ class CollectMixin(local):
     def pick(self, *names):
         '''collect object attributes from incoming things by their `*names`'''
         pick_ = self._pick
-        return self._inextend(lambda x: pick_(names, x))
+        return self._inxtend(lambda x: pick_(names, x))
 
     def pluck(self, *keys):
         '''collect object items from incoming things by item `*keys`'''
         pluck_ = self._pluck
-        return self._inextend(lambda x: pluck_(keys, x))
+        return self._inxtend(lambda x: pluck_(keys, x))
 
 
 class SetMixin(local):
@@ -190,7 +190,7 @@ class SliceMixin(local):
 
     def rest(self):
         '''all incoming things except the first thing'''
-        return self._inextend(lambda x: self._islice(x, 1, None))
+        return self._inxtend(lambda x: self._islice(x, 1, None))
 
     def snatch(self, n):
         '''
@@ -210,7 +210,7 @@ class SliceMixin(local):
 
         @param n: number of things
         '''
-        return self._inextend(lambda x: self._islice(x, n))
+        return self._inxtend(lambda x: self._islice(x, n))
 
 
 class FilterMixin(local):
@@ -223,7 +223,7 @@ class FilterMixin(local):
 
     def filter(self):
         '''incoming things for which call is `True`'''
-        return self._inextend(lambda x: self._ifilter(self._call, x))
+        return self._inxtend(lambda x: self._ifilter(self._call, x))
 
     def find(self):
         '''first incoming thing for which call is `True`'''
@@ -246,12 +246,12 @@ class FilterMixin(local):
     def reject(self):
         '''incoming things for which call is `False`'''
         ff_, call_ = self._filterfalse, self._call
-        return self._inextend(lambda x: ff_(call_, x))
+        return self._inxtend(lambda x: ff_(call_, x))
 
     def without(self, *things):
         '''strip things from incoming things'''
         ff_ = self._filterfalse
-        return self._inextend(lambda x: ff_(lambda y: y in things, x))
+        return self._inxtend(lambda x: ff_(lambda y: y in things, x))
 
 
 class FilteringMixin(CollectMixin, SetMixin, SliceMixin, FilterMixin):

@@ -10,7 +10,6 @@ from operator import truediv, contains
 
 from twoq.support import Counter, isstring, zip, lazier
 
-
 __all__ = ('MathMixin', 'TruthMixin', 'ReduceMixin', 'ReducingMixin')
 
 
@@ -18,11 +17,11 @@ class MathMixin(local):
 
     '''math mixin'''
 
-    _truediv = lazier(truediv)
     _counter = lazier(Counter)
     _fsum = lazier(fsum)
     _max = lazier(max)
     _min = lazier(min)
+    _truediv = lazier(truediv)
 
     @classmethod
     def _average(cls, iterable):
@@ -175,11 +174,11 @@ class ReduceMixin(local):
     def merge(self):
         '''flatten nested but ordered incoming things'''
         merge_ = merge
-        return self._inextend(lambda x: merge_(*x))
+        return self._inxtend(lambda x: merge_(*x))
 
     def smash(self):
         '''flatten deeply nested incoming things'''
-        return self._inextend(self._smash)
+        return self._inxtend(self._smash)
 
     flatten = smash
 
@@ -211,7 +210,7 @@ class ReduceMixin(local):
 
     def roundrobin(self):
         '''interleave incoming things into one thing'''
-        return self._inextend(self._roundrobin)
+        return self._inxtend(self._roundrobin)
 
     def zip(self):
         '''
@@ -219,7 +218,7 @@ class ReduceMixin(local):
         position
         '''
         zip_ = self._zip
-        return self._inextend(lambda x: zip_(*x))
+        return self._inxtend(lambda x: zip_(*x))
 
 
 class ReducingMixin(MathMixin, TruthMixin, ReduceMixin):

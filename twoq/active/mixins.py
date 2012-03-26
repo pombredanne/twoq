@@ -9,130 +9,203 @@ __all__ = ('AutoQMixin', 'ManQMixin')
 
 class BaseQMixin(QueueingMixin):
 
-    '''base active queue'''
+    '''base active things'''
 
-    def __init__(self, *args):
+    def __init__(self, *things):
         deque_ = self._deek
-        incoming = deque_(args[0]) if len(args) == 1 else deque_(args)
-        self._iterator = self._iter1
-        # work queue
+        incoming = deque_(things[0]) if len(things) == 1 else deque_(things)
+        self._iterator = self._iterexcept
+        # work things
         self._work = deque_()
-        # utility queue
+        # utility things
         self._util = deque_()
         super(BaseQMixin, self).__init__(incoming, deque_())
 
-    def _iter1(self, attr='_UTILQ'):
-        return self.iterexcept(self.__dict__[attr].popleft, IndexError)
-
-    def _iter2(self, attr='_UTILQ'):
-        return self.breakcount(self.__dict__[attr].popleft, self.__len__())
+    ###########################################################################
+    ## thing length ###########################################################
+    ###########################################################################
 
     def __len__(self):
+        '''number of incoming things'''
         return self._len(self.incoming)
 
-    def _xtend(self, args):
-        '''extend work queue with `args` wrapped in iterator'''
-        self.__dict__[self._UTILQ].extend(args)
+    def outcount(self):
+        '''number of outgoing things'''
+        return self._len(self.outgoing)
+
+    ###########################################################################
+    ## iterators ##############################################################
+    ###########################################################################
+
+    def __iter__(self):
+        '''yield outgoing things, clearing outgoing things as it iterates'''
+        return self._iterator(self._OUTQ)
+
+    @property
+    def _iterable(self):
+        '''iterable'''
+        return self._iterator(self._WORKQ)
+
+    def _iterexcept(self, attr='_UTILQ'):
+        '''
+        iterator broken on exception
+
+        @param attr: things to iterate over
+        '''
+        return self.iterexcept(self.__dict__[attr].popleft, IndexError)
+
+    def _breakcount(self, attr='_UTILQ'):
+        '''
+        breakcount iterator
+
+        @param attr: things to iterate over
+        '''
+        return self.breakcount(self.__dict__[attr].popleft, self.__len__())
+
+    ###########################################################################
+    ## clear things ###########################################################
+    ###########################################################################
+
+    def _uclear(self):
+        '''clear utility things'''
+        self._util.clear()
+        return self
+
+    def _wclear(self):
+        '''clear work things'''
+        self._work.clear()
+        return self
+
+    def inclear(self):
+        '''clear incoming things'''
+        self.incoming.clear()
+        return self
+
+    def outclear(self):
+        '''clear outgoing things'''
+        self.outgoing.clear()
+        return self
+
+    ###########################################################################
+    ## extend #################################################################
+    ###########################################################################
+
+    def _xtend(self, things):
+        '''extend utility things with `things` wrapped'''
+        self.__dict__[self._UTILQ].extend(things)
         return self._post()
 
-    def _append(self, args):
-        '''append `args` to work queue'''
-        self.__dict__[self._UTILQ].append(args)
+    def _xtendleft(self, things):
+        '''extend left side of utility things with `things`'''
+        self.__dict__[self._UTILQ].extendleft(things)
         return self._post()
 
-    def _appendleft(self, args):
-        '''append `args` to left side of work queue'''
-        self.__dict__[self._UTILQ].appendleft(args)
+    def _iter(self, things):
+        '''extend work things with `things` wrapped in iterator'''
+        self.__dict__[self._UTILQ].extend(iter(things))
         return self._post()
 
-    def _iter(self, args):
-        '''extend work queue with `args` wrapped in iterator'''
-        self.__dict__[self._UTILQ].extend(iter(args))
+    ###########################################################################
+    ## append #################################################################
+    ###########################################################################
+
+    def _append(self, things):
+        '''append `things` to utility things'''
+        self.__dict__[self._UTILQ].append(things)
         return self._post()
 
-    def _clear(self):
-        '''clear queue'''
-        self.__dict__[self._WORKQ].clear()
+    def _appendleft(self, things):
+        '''append `things` to left side of utility things'''
+        self.__dict__[self._UTILQ].appendleft(things)
         return self._post()
 
-    def _xtendleft(self, args):
-        '''extend left side of work queue with `args`'''
-        self.__dict__[self._UTILQ].extendleft(args)
-        return self._post()
+    ###########################################################################
+    ## enter context ##########################################################
+    ###########################################################################
 
     def _iq2wq(self):
-        '''extend work queue with incoming queue'''
-        self._iterator = self._iter1
-        sdict_ = self.__dict__
-        workq_ = sdict_[self._WORKQ]
-        # clear work queue
-        workq_.clear()
-        workq_.extend(sdict_[self._INQ])
+        '''extend work things with incoming things'''
+        sdict = self.__dict__
+        workq = sdict[self._WORKQ]
+        # clear work things
+        workq.clear()
+        # extend work things with incoming things
+        workq.extend(sdict[self._INQ])
+        # switch iterator
+        self._iterator = self._iterexcept
         return self
 
     def _iq2wq2(self):
-        '''extend work queue with incoming queue'''
-        self._iterator = self._iter2
-        sdict_ = self.__dict__
-        workq_ = sdict_[self._WORKQ]
-        # clear work queue
-        workq_.clear()
-        workq_.extend(sdict_[self._INQ])
-        return self
-
-    def _uq2oq(self):
-        '''extend outgoing queue with utility queue'''
-        sdict_ = self.__dict__
-        outq_, UTILQ_ = sdict_[self._OUTQ], sdict_[self._UTILQ]
-        # clear outgoing queue if set that way
-        if self._clearout:
-            outq_.clear()
-        outq_.extend(UTILQ_)
-        # clear utility queue
-        UTILQ_.clear()
-        return self
-
-    def _uq2iqoq(self):
-        '''extend outgoing queue and incoming queue with utility queue'''
-        sdict_ = self.__dict__
-        inq_ = sdict_[self._INQ]
-        outq_ = sdict_[self._OUTQ]
-        UTILQ_ = sdict_[self._UTILQ]
-        # clear outgoing queue
-        if self._clearout:
-            outq_.clear()
-        outq_.extend(UTILQ_)
-        # clear incoming queue
-        inq_.clear()
-        inq_.extend(UTILQ_)
-        # clear utility queue
-        UTILQ_.clear()
+        '''extend work things with incoming things'''
+        sdict = self.__dict__
+        workq = sdict[self._WORKQ]
+        # clear work things
+        workq.clear()
+        # extend work things with incoming things
+        workq.extend(sdict[self._INQ])
+        # switch iterator
+        self._iterator = self._breakcount
         return self
 
     def _oq2wq(self):
-        '''extend work queue with outgoing queue'''
-        self._iterator = self._iter2
-        sdict_ = self.__dict__
-        workq_ = sdict_[self._WORKQ]
-        # clear work queue
-        workq_.clear()
-        workq_.extend(sdict_[self._OUTQ])
+        '''extend work things with outgoing things'''
+        sdict = self.__dict__
+        workq = sdict[self._WORKQ]
+        # clear all work things
+        workq.clear()
+        # extend work things with outgoing things
+        workq.extend(sdict[self._OUTQ])
+        # switch iterator
+        self._iterator = self._breakcount
         return self
 
-    def outcount(self):
-        '''count of outgoing things'''
-        return self._len(self.outgoing)
+    ###########################################################################
+    ## exit context ###########################################################
+    ###########################################################################
+
+    def _uq2oq(self):
+        '''extend outgoing things with utility things'''
+        sdict = self.__dict__
+        outq, utilq = sdict[self._OUTQ], sdict[self._UTILQ]
+        # clear outgoing things if so configured
+        if self._clearout:
+            outq.clear()
+        # extend outgoing things with utility things
+        outq.extend(utilq)
+        # clear utility things
+        utilq.clear()
+        return self
+
+    def _uq2iqoq(self):
+        '''extend outgoing things, incoming things with utility things'''
+        sdict = self.__dict__
+        inq = sdict[self._INQ]
+        outq = sdict[self._OUTQ]
+        utilq = sdict[self._UTILQ]
+        # clear outgoing things if so configured
+        if self._clearout:
+            outq.clear()
+        outq.extend(utilq)
+        # clear incoming things
+        inq.clear()
+        inq.extend(utilq)
+        # clear utility things
+        utilq.clear()
+        return self
+
+    ###########################################################################
+    ## rotate context #########################################################
+    ###########################################################################
 
     def ro(self):
-        '''switch to read-only mode'''
+        '''switch to read-only context'''
         return self.ctx3(outq=self._UTILVAR)._pre()._xtend(
             self._iterable
         ).ctx1(workq=self._UTILVAR)
 
-    def ctx3(self, hard=False, **kw):
-        '''switch to three-armed context manager'''
+    def ctx3(self, **kw):
+        '''switch to three-armed context'''
         return self.swap(
-            hard=hard,
             utilq=kw.get(self._WORKCFG, self._WORKVAR),
             pre=self._iq2wq2,
             post=self._uq2oq,
@@ -142,23 +215,23 @@ class BaseQMixin(QueueingMixin):
 
 class AutoQMixin(BaseQMixin):
 
-    '''auto-balancing queue mixin'''
+    '''auto-balancing things mixin'''
 
     _default_post = '_uq2iqoq'
 
 
 class ManQMixin(BaseQMixin):
 
-    '''manually balanced queue mixin'''
+    '''manually balanced things mixin'''
 
     _default_post = '_uq2oq'
 
 
 class AutoResultMixin(AutoQMixin, ResultMixin):
 
-    '''auto-balancing manipulation queue (with results extractor) mixin'''
+    '''auto-balancing manipulation things (with results extractor) mixin'''
 
 
 class ManResultMixin(ManQMixin, ResultMixin):
 
-    '''manually balanced queue (with results extractor) mixin'''
+    '''manually balanced things (with results extractor) mixin'''

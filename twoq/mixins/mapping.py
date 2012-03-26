@@ -113,7 +113,7 @@ class RepeatMixin(local):
         @param stop: number to stop with (default: 0)
         @param step: number of steps to advance per iteration (default: 1)
         '''
-        return self._pextend(
+        return self._pxtend(
             self._range(start, stop, step) if stop else self._range(start)
         )
 
@@ -123,7 +123,7 @@ class RepeatMixin(local):
 
         @param n: number of times to repeat
         '''
-        return self._inextend(lambda x: self._repeat(tuple(x), n))
+        return self._inxtend(lambda x: self._repeat(tuple(x), n))
 
     def times(self, n=None):
         '''

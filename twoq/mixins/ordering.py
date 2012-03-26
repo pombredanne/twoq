@@ -40,11 +40,11 @@ class RandomMixin(local):
         @param n: number of incoming things
         '''
         sample_, list_ = self._sample, self._list
-        return self._inextend(lambda x: sample_(list_(x), n))
+        return self._inxtend(lambda x: sample_(list_(x), n))
 
     def shuffle(self):
         '''randomly order incoming things'''
-        return self._inextend(self._shuffleit)
+        return self._inxtend(self._shuffleit)
 
 
 class OrderMixin(local):
@@ -75,14 +75,14 @@ class OrderMixin(local):
         @param fill: fill thing (default: None)
         '''
         iter_ = self._iter
-        return self._inextend(
+        return self._inxtend(
             lambda x: zip_longest(fillvalue=fill, *[iter_(x)] * n)
         )
 
     def reverse(self):
         '''reverse incoming things'''
         list_, reversed_ = self._list, self._reversed
-        return self._inextend(lambda x: reversed_(list_(x)))
+        return self._inxtend(lambda x: reversed_(list_(x)))
 
     def sort(self):
         '''
@@ -90,8 +90,8 @@ class OrderMixin(local):
         '''
         call_, sorted_ = self._call, self._sorted
         if call_ is None:
-            return self._inextend(sorted_)
-        return self._inextend(lambda x: sorted_(x, key=call_))
+            return self._inxtend(sorted_)
+        return self._inxtend(lambda x: sorted_(x, key=call_))
 
 
 class OrderingMixin(OrderMixin, RandomMixin):
