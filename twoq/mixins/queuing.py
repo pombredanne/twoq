@@ -6,6 +6,7 @@ import functools
 from threading import local
 from collections import deque
 from operator import methodcaller
+from contextlib import contextmanager
 
 from twoq.support import lazier, filterfalse, imap, ifilter, items, range
 
@@ -82,23 +83,6 @@ class QueueingMixin(local):
         '''if queues are balanced'''
         return self.outcount() == self.__len__()
 
-    def ahead(self, n=None):
-        '''
-        move iterator for incoming things `n`-steps ahead
-
-        If `n` is `None`, consume entirely.
-
-        @param n: number of steps to advance incoming things (default: None)
-        '''
-        # use functions that consume iterators at C speed
-        if n is None:
-            # feed the entire iterator into a zero-length `deque`
-            self.incoming = self._deek(self.incoming, maxlen=0)
-        else:
-            # advance to the empty slice starting at position `n`
-            self._next(self._islice(self.incoming, n, n), None)
-        return self
-
     ###########################################################################
     ## queue clearance ########################################################
     ###########################################################################
@@ -110,6 +94,12 @@ class QueueingMixin(local):
     ###########################################################################
     ## context rotation #######################################################
     ###########################################################################
+
+    @contextmanager
+    def _ctx1(self):
+        yield
+        # return to previous context
+        self.reswap()
 
     def ctx1(self, **kw):
         '''switch to one-armed context manager'''
@@ -227,7 +217,7 @@ class QueueingMixin(local):
         '''shift incoming things to outgoing things'''
         self.autoctx()
         with self._context():
-            return self._xtend(self._iterable).reswap()
+            return self._xtend(self._iterable)
 
     outsync = outshift
 
@@ -235,13 +225,13 @@ class QueueingMixin(local):
         '''put incoming things in incoming things as one incoming thing'''
         self.ctx2()
         with self._context():
-            return self._append(self._list(self._iterable)).reswap()
+            return self._append(self._list(self._iterable))
 
     def shift(self):
         '''shift outgoing things to incoming things'''
         self.autoctx(inq=self._OUTVAR, outq=self._INVAR)
         with self._context():
-            return self._xtend(self._iterable).reswap()
+            return self._xtend(self._iterable)
 
     sync = shift
 
@@ -257,7 +247,7 @@ class QueueingMixin(local):
         '''
         self.ctx1()
         with self._context():
-            return self._append(thing).reswap()
+            return self._append(thing)
 
     def appendleft(self, thing):
         '''
@@ -267,7 +257,7 @@ class QueueingMixin(local):
         '''
         self.ctx2()
         with self._context():
-            return self._appendleft(thing).reswap()
+            return self._appendleft(thing)
 
     ###########################################################################
     ## queue extension ########################################################
@@ -281,7 +271,7 @@ class QueueingMixin(local):
         '''
         self.ctx1()
         with self._context():
-            return self._xtend(things).reswap()
+            return self._xtend(things)
 
     def extendleft(self, things):
         '''
@@ -291,7 +281,7 @@ class QueueingMixin(local):
         '''
         self.ctx1()
         with self._context():
-            return self._xtendleft(things).reswap()
+            return self._xtendleft(things)
 
     def outextend(self, things):
         '''
@@ -301,7 +291,7 @@ class QueueingMixin(local):
         '''
         self.ctx1(workq=self._OUTVAR)
         with self._context():
-            return self._xtend(things).reswap()
+            return self._xtend(things)
 
     ###########################################################################
     ## iteration runners ######################################################

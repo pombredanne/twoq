@@ -3,7 +3,6 @@
 
 
 class AQMixin(object):
-    ''
 
     ###########################################################################
     ## queue manipulation #####################################################
@@ -17,6 +16,12 @@ class AQMixin(object):
     def test_extend(self):
         self.assertEqual(
             self.qclass().extend([1, 2, 3, 4, 5, 6]).outsync().end(),
+            [1, 2, 3, 4, 5, 6],
+        )
+
+    def test_outextend(self):
+        self.assertEqual(
+            self.qclass().outextend([1, 2, 3, 4, 5, 6]).end(),
             [1, 2, 3, 4, 5, 6],
         )
 

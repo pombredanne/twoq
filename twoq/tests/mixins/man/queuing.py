@@ -19,6 +19,12 @@ class MQMixin(object):
             [1, 2, 3, 4, 5, 6],
         )
 
+    def test_outextend(self):
+        self.assertEqual(
+            self.qclass().outextend([1, 2, 3, 4, 5, 6]).end(),
+            [1, 2, 3, 4, 5, 6],
+        )
+
     def test_extendleft(self):
         self.assertEqual(
             self.qclass().extendleft([1, 2, 3, 4, 5, 6]).outsync().end(),
