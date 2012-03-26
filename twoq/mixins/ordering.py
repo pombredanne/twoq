@@ -18,16 +18,6 @@ class RandomMixin(local):
     _sample = lazier(sample)
     _shuffle = lazier(shuffle)
 
-    @classmethod
-    def _shuffleit(cls, iterable):
-        '''
-        shuffle iterable
-
-        @param iterable: an iterable
-        '''
-
-        return iterable
-
     def choice(self):
         '''random choice of/from incoming things'''
         with self._context():
@@ -82,7 +72,7 @@ class OrderMixin(local):
         '''
         with self._context():
             return self._xtend(
-                zip_longest(fillvalue=fill, *[self._iter(self._iterable)] * n)
+                zip_longest(fillvalue=fill, *[self._iterz(self._iterable)] * n)
             )
 
     def reverse(self):

@@ -37,8 +37,14 @@ class QueueingMixin(local):
         self.incoming = incoming
         # outgoing queue
         self.outgoing = outgoing
+        # current callable
+        self._call = None
+        # reset postitional arguments
+        self._args = ()
+        # reset keyword arguments
+        self._kw = {}
         # set defaults
-        self.detap().unswap()
+        self.unswap()
 
     ###########################################################################
     ## optimize lookups #######################################################
@@ -183,7 +189,11 @@ class QueueingMixin(local):
 
         @param call: a callabler
         '''
-        self.detap()
+        # reset postitional arguments
+        self._args = ()
+        # reset keyword arguments
+        self._kw = {}
+        # set current callable
         self._call = call
         return self
 
@@ -197,6 +207,8 @@ class QueueingMixin(local):
         self._call = None
         return self
 
+    unwrap = detap
+
     def wrap(self, call):
         '''
         build current callable from factory
@@ -206,9 +218,6 @@ class QueueingMixin(local):
         def factory(*args, **kw):
             return call(*args, **kw)
         return self.tap(factory)
-
-    # alias
-    unwrap = detap
 
     ###########################################################################
     ## queue rotation #########################################################
@@ -224,7 +233,7 @@ class QueueingMixin(local):
 
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
-        self.ctx1()
+        self.ctx2()
         with self._context():
             return self._append(self._list(self._iterable)).reswap()
 
@@ -239,22 +248,6 @@ class QueueingMixin(local):
     ###########################################################################
     ## queue appending ########################################################
     ###########################################################################
-
-    def _areduce(self, call, initial=None):
-        '''
-        reduce iterable and append results to outgoing things
-
-        @param call: filter callable
-        @param initial: initializer (default: None)
-        '''
-        if initial is None:
-            return self._append(self._ireduce(call, self._iterable))
-        return self._append(
-            self._ireduce(call, self._iterable, initial)
-        )
-
-    def _inappend(self, call):
-        return self._append(call(self._iterable))
 
     def append(self, thing):
         '''
@@ -279,43 +272,6 @@ class QueueingMixin(local):
     ###########################################################################
     ## queue extension ########################################################
     ###########################################################################
-
-    def _xreduce(self, call, initial=None):
-        '''
-        reduce iterable and extend outgoing things with results
-
-        @param call: filter callable
-        @param initial: initializer (default: None)
-        '''
-        if initial is None:
-            return self._xtend(self._ireduce(call, self._iterable))
-        return self._xtend(
-            self._ireduce(call, self._iterable, initial)
-        )
-
-    def _pxtend(self, iterable):
-        return self._xtend(iterable)
-
-    def _inxtend(self, call):
-        return self._xtend(call(self._iterable))
-
-    def _inmap(self, call):
-        return self._imap(call, self._iterable)
-
-    def _xinmap(self, call):
-        return self._xtend(self._imap(call, self._iterable))
-
-    def _x2map(self, call, iter):
-        return self._xtend(self._imap(call, iter(self._iterable)))
-
-    def _xstarmap(self, call, iterable):
-        return self._xtend(self._starmap(call, iterable))
-
-    def _xinstarmap(self, call):
-        return self._xtend(self._starmap(call, self._iterable))
-
-    def _x2starmap(self, call, iter):
-        return self._xtend(self._starmap(call, iter(self._iterable)))
 
     def extend(self, things):
         '''
@@ -343,8 +299,9 @@ class QueueingMixin(local):
 
         @param thing: some things
         '''
+        self.ctx1(workq=self._OUTVAR)
         with self._context():
-            return self.ctx1(workq=self._OUTVAR)._xtend(things).reswap()
+            return self._xtend(things).reswap()
 
     ###########################################################################
     ## iteration runners ######################################################

@@ -213,7 +213,11 @@ class ReduceMixin(local):
         @param initial: initial thing (default: None)
         '''
         with self._context():
-            return self._areduce(self._call, initial)
+            if initial is None:
+                return self._append(self._ireduce(self._call, self._iterable))
+            return self._append(self._ireduce(
+                 self._call, self._iterable, initial,
+            ))
 
     def reduce_right(self, initial=None):
         '''
@@ -224,7 +228,13 @@ class ReduceMixin(local):
         '''
         call_ = self._call
         with self._context():
-            return self._areduce(lambda x, y: call_(y, x), initial)
+            if initial is None:
+                return self._append(self._ireduce(
+                    lambda x, y: call_(y, x), self._iterable,
+                ))
+            return self._append(self._ireduce(
+                 lambda x, y: call_(y, x), self._iterable, initial,
+            ))
 
     def roundrobin(self):
         '''interleave incoming things into one thing'''

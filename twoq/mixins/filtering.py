@@ -138,37 +138,51 @@ class SetMixin(local):
     def difference(self):
         '''difference between incoming things'''
         with self._context():
-            return self._xreduce(lambda x, y: set(x).difference(y))
+            return self._xtend(self._ireduce(
+                lambda x, y: set(x).difference(y), self._iterable,
+            ))
 
     def symmetric_difference(self):
         '''symmetric difference between incoming things'''
         with self._context():
-            return self._xreduce(lambda x, y: set(x).symmetric_difference(y))
+            return self._xtend(self._ireduce(
+                lambda x, y: set(x).symmetric_difference(y), self._iterable,
+            ))
 
     def disjointed(self):
         '''disjoint between incoming things'''
         with self._context():
-            return self._areduce(lambda x, y: set(x).isdisjoint(y))
+            return self._append(self._ireduce(
+                lambda x, y: set(x).isdisjoint(y), self._iterable,
+            ))
 
     def intersection(self):
         '''intersection between incoming things'''
         with self._context():
-            return self._xreduce(lambda x, y: set(x).intersection(y))
+            return self._xtend(self._ireduce(
+                lambda x, y: set(x).intersection(y), self._iterable,
+            ))
 
     def subset(self):
         '''incoming things that are subsets of incoming things'''
         with self._context():
-            return self._areduce(lambda x, y: set(x).issubset(y))
+            return self._append(self._ireduce(
+                lambda x, y: set(x).issubset(y), self._iterable,
+            ))
 
     def superset(self):
         '''incoming things that are supersets of incoming things'''
         with self._context():
-            return self._areduce(lambda x, y: set(x).issubset(y))
+            return self._append(self._ireduce(
+                lambda x, y: set(x).issubset(y), self._iterable
+            ))
 
     def union(self):
         '''union between incoming things'''
         with self._context():
-            return self._xreduce(lambda x, y: set(x).union(y))
+            return self._xtend(
+                self._ireduce(lambda x, y: set(x).union(y), self._iterable)
+            )
 
     def unique(self):
         '''
@@ -246,7 +260,7 @@ class FilterMixin(local):
         '''first incoming thing for which call is `True`'''
         with self._context():
             return self._append(
-                self._next(self._ifilter(self._call, self._iterable)),
+                self._next(self._ifilter(self._call, self._iterable))
             )
 
     def partition(self):
@@ -254,10 +268,10 @@ class FilterMixin(local):
         split incoming things into `True` and `False` things based on results
         of call
         '''
+        list_, call_ = self._list, self._call
         with self._context():
-            list_, call_ = self._list, self._call
             falsy, truey = self._split(self._iterable)
-            return self._xtend(self._iter([
+            return self._xtend(self._iterz([
                 list_(self._filterfalse(call_, falsy)),
                 list_(self._ifilter(call_, truey)),
             ]))
