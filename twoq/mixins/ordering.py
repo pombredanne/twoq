@@ -59,12 +59,12 @@ class OrderMixin(local):
         '''
         call_, list_ = self._call, self._list
         if call_ is None:
-            return self._pre()._extend(self._imap(
-                lambda x: [x[0], list_(x[1])], self._groupby(self._iterable),
-            ))
-        return self._pre()._extend(self._imap(
-            lambda x: [x[0], list_(x[1])], self._groupby(self._iterable, call_)
-        ))
+            return self._x2map(
+                lambda x: [x[0], list_(x[1])], self._groupby,
+            )
+        return self._x2map(
+            lambda x: [x[0], list_(x[1])], lambda x: self._groupby(x, call_)
+        )
 
     def grouper(self, n, fill=None):
         '''

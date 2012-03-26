@@ -87,11 +87,11 @@ class CollectMixin(local):
         else:
             def _memfilters(thing, mz=_mz, gc=getcls, ci=self._ichain):
                 return ci(self._imap(mz, ci([getmro((gc(thing))), [thing]])))
-        return self._pre()._extend(self._ichain(self._inmap(_memfilters)))
+        return self._pre()._xtend(self._ichain(self._inmap(_memfilters)))
 
     def members(self):
         '''collect object members from incoming things'''
-        return self._pre()._extend(self._ichain(self._inmap(
+        return self._pre()._xtend(self._ichain(self._inmap(
             self._partial(self._mfilter, self._call),
         )))
 
@@ -186,7 +186,7 @@ class SliceMixin(local):
         '''all incoming things except the last thing'''
         self._pre()
         iterable1, iterable2 = self._split(self._iterable)
-        return self._extend(self._islice(iterable1, len(list(iterable2)) - 1))
+        return self._xtend(self._islice(iterable1, len(list(iterable2)) - 1))
 
     def rest(self):
         '''all incoming things except the first thing'''
@@ -200,7 +200,7 @@ class SliceMixin(local):
         '''
         self._pre()
         iterable1, iterable2 = self._split(self._iterable)
-        return self._extend(
+        return self._xtend(
             self._islice(iterable1, self._len(self._list(iterable2)) - n, None)
         )
 
@@ -217,18 +217,6 @@ class FilterMixin(local):
 
     '''filters mixin'''
 
-    @classmethod
-    def _find(cls, call, iterable):
-        '''
-        find the first `True` thing in iterator
-
-        @param call: "Truth" filter
-        @param iterable: an iterable
-        '''
-        for thing in cls._ifilter(call, iterable):
-            yield thing
-            break
-
     def compact(self):
         '''strip "untrue" things from incoming things'''
         return self._pre()._iter(self._ifilter(truth, self._iterable))
@@ -239,7 +227,9 @@ class FilterMixin(local):
 
     def find(self):
         '''first incoming thing for which call is `True`'''
-        return self._inextend(lambda x: self._find(self._call, x))
+        return self._inappend(
+            lambda x: self._next(self._ifilter(self._call, x)),
+        )
 
     def partition(self):
         '''
@@ -248,7 +238,7 @@ class FilterMixin(local):
         '''
         self._pre()
         falsy, truey = self._split(self._iterable)
-        return self._extend(iter([
+        return self._xtend(iter([
             list(self._filterfalse(self._call, falsy)),
             list(self._ifilter(self._call, truey)),
         ]))

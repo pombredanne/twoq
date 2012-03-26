@@ -22,6 +22,7 @@ class MathMixin(local):
     _counter = lazier(Counter)
     _fsum = lazier(fsum)
     _max = lazier(max)
+    _min = lazier(min)
 
     @classmethod
     def _average(cls, iterable):
@@ -62,32 +63,30 @@ class MathMixin(local):
 
     def min(self):
         '''find minimum thing in incoming things using call as key function'''
-        call_ = self._call
+        call_, min_ = self._call, self._min
         if call_ is None:
-            return self._inappend(min)
-        return self._inappend(lambda x: min(x, key=call_))
+            return self._inappend(min_)
+        return self._inappend(lambda x: min_(x, key=call_))
 
     def minmax(self):
         '''minimum and maximum things among all incoming things'''
         self._pre()
         iterable1, iterable2 = self._split(self._iterable)
-        return self._extend(iter([min(iterable1), max(iterable2)]))
+        return self._xtend(iter([min(iterable1), max(iterable2)]))
 
     def mode(self):
         '''mode of all incoming things'''
-        return self._pre()._append(self._counter(
-            self._iterable
-        ).most_common(1)[0][0])
+        return self._inappend(lambda x: self._counter(x).most_common(1)[0][0])
 
     def uncommon(self):
         '''least common incoming thing'''
-        return self._pre()._append(
-            self._counter(self._iterable).most_common()[:-2:-1][0][0]
+        return self._inappend(
+            lambda x: self._counter(x).most_common()[:-2:-1][0][0]
         )
 
     def frequency(self):
         '''frequency of each incoming thing'''
-        return self._pre()._append(self._counter(self._iterable).most_common())
+        return self._inappend(lambda x: self._counter(x).most_common())
 
     def statrange(self):
         '''statistical range of all incoming things'''
@@ -189,7 +188,7 @@ class ReduceMixin(local):
         self._pre()
         a, b = self._split(self._iterable)
         next(b, None)
-        return self._extend(self._zip(a, b))
+        return self._xtend(self._zip(a, b))
 
     def reduce(self, initial=None):
         '''

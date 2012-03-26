@@ -11,7 +11,7 @@ class BaseQMixin(QueueingMixin):
     '''base lazy queue'''
 
     def __init__(self, *args):
-        iter_ = iter
+        iter_ = self._iterz
         incoming = iter_([args[0]]) if len(args) == 1 else iter_(args)
         self._work = iter_([])
         self._util = iter_([])
@@ -19,42 +19,42 @@ class BaseQMixin(QueueingMixin):
 
     def __len__(self):
         self.incoming, incoming = self._split(self.incoming)
-        return len(self._list(incoming))
+        return self._len(self._list(incoming))
 
-    def _extend(self, thing):
+    def _xtend(self, thing):
         '''build chain'''
         self._pre()
-        utilq_, sdict_ = self._utilq, self.__dict__
-        sdict_[utilq_] = self._join(thing, sdict_[utilq_])
+        UTILQ_, sdict_ = self._UTILQ, self.__dict__
+        sdict_[UTILQ_] = self._join(thing, sdict_[UTILQ_])
         self._post()
         return self
 
-    def _exreplace(self, thing):
+    def _xreplace(self, thing):
         '''build chain'''
-        self._pre().__dict__[self._utilq] = thing
+        self._pre().__dict__[self._UTILQ] = thing
         self._post()
         return self
 
-    __buildchain = _extend
+    __buildchain = _xtend
 
     def _append(self, args):
         '''append `args` to work queue'''
-        return self.__buildchain(iter([args]))
+        return self.__buildchain(self._iterz([args]))
 
     def _appendleft(self, args):
         '''append `args` to left side of work queue'''
-        return self.__buildchain(iter([args]))
+        return self.__buildchain(self._iterz([args]))
 
     def _clear(self):
         '''clear queue'''
         self._pre()
-        utilq_, sdict_ = self._utilq, self.__dict__
-        del sdict_[utilq_]
-        sdict_[utilq_] = iter([])
+        UTILQ_, sdict_ = self._UTILQ, self.__dict__
+        del sdict_[UTILQ_]
+        sdict_[UTILQ_] = iter([])
         self._post()
         return self
 
-    def _extendleft(self, args):
+    def _xtendleft(self, args):
         '''extend left side of work queue with `args`'''
         return self.__buildchain(self._reversed(args))
 
@@ -62,39 +62,39 @@ class BaseQMixin(QueueingMixin):
         '''extend work queue with `args` wrapped in iterator'''
         return self.__buildchain(iter(args))
 
-    def _iterator(self, attr='_workq'):
+    def _iterator(self, attr='_WORKQ'):
         '''iterator'''
         return self.__dict__[attr]
 
     def _clearwork(self):
         '''clear work queue and utility queue'''
-        sdict_, iter_ = self.__dict__, iter
-        workq_, utilq_ = self._workq, self._utilq
+        sdict_, iter_ = self.__dict__, self._iterz
+        WORKQ_, UTILQ_ = self._WORKQ, self._UTILQ
         # clear work queue
-        del sdict_[workq_]
-        sdict_[workq_] = iter_([])
+        del sdict_[WORKQ_]
+        sdict_[WORKQ_] = iter_([])
         # clear utility queue
-        del sdict_[utilq_]
-        sdict_[utilq_] = iter_([])
+        del sdict_[UTILQ_]
+        sdict_[UTILQ_] = iter_([])
 
     def _iq2wq(self):
         '''extend work queue with incoming queue'''
         self._clearwork()
-        sdict_, inq_ = self.__dict__, self._inq
-        sdict_[self._workq], sdict_[inq_] = self._split(sdict_[inq_])
+        sdict_, INQ_ = self.__dict__, self._INQ
+        sdict_[self._WORKQ], sdict_[INQ_] = self._split(sdict_[INQ_])
         return self
 
     def _uq2oq(self):
         '''extend outgoing queue with utility queue'''
         sdict_ = self.__dict__
-        sdict_[self._outq] = sdict_[self._utilq]
+        sdict_[self._OUTQ] = sdict_[self._UTILQ]
         self._clearwork()
         return self
 
     def _uq2iqoq(self):
         '''extend incoming queue and outgoing queue with utility queue'''
         sd_ = self.__dict__
-        sd_[self._inq], sd_[self._outq] = self._split(sd_[self._utilq])
+        sd_[self._INQ], sd_[self._OUTQ] = self._split(sd_[self._UTILQ])
         self._clearwork()
         return self
 
@@ -102,29 +102,29 @@ class BaseQMixin(QueueingMixin):
         '''extend work queue with outgoing queue'''
         self._clearwork()
         sd_ = self.__dict__
-        sd_[self._workq], sd_[self._outq] = self._split(sd_[self._outq])
+        sd_[self._WORKQ], sd_[self._OUTQ] = self._split(sd_[self._OUTQ])
         return self
 
     def outcount(self):
         '''count of outgoing things'''
         self.outgoing, outgoing = self._split(self.outgoing)
-        return len(list(outgoing))
+        return self._len(self._list(outgoing))
 
     def ro(self):
         '''switch to read-only mode'''
-        return self.ctx3(outq='_util')._pre()._exreplace(
+        return self.ctx3(outq=self._UTILVAR)._pre()._xreplace(
             self._iterable
-        ).ctx1(workq='_util')
+        ).ctx1(workq=self._UTILVAR)
 
-    def ctx3(self, **kw):
+    def ctx3(self, hard=False, **kw):
         '''switch to three-armed context manager'''
-        self._clearout = kw.pop('clearout', True)
-        self._workq = self._utilq = kw.pop('workq', '_work')
-        self._outq = kw.pop('outq', 'outgoing')
-        self._inq = kw.pop('inq', 'incoming')
-        self._pre = self._iq2wq
-        self._post = self._uq2oq
-        return self
+        return self.swap(
+            hard=hard,
+            utilq=kw.get(self._WORKCFG, self._WORKVAR),
+            pre=self._iq2wq,
+            post=self._uq2oq,
+            **kw
+        )
 
 
 class AutoQMixin(BaseQMixin):

@@ -17,6 +17,15 @@ class QueueingMixin(local):
 
     '''queue management mixin'''
 
+    _INCFG = 'inq'
+    _INVAR = 'incoming'
+    _OUTCFG = 'outq'
+    _OUTVAR = 'outgoing'
+    _WORKCFG = 'workq'
+    _WORKVAR = '_work'
+    _UTILCFG = 'utilq'
+    _UTILVAR = '_util'
+
     def __init__(self, incoming, outgoing):
         '''
         init
@@ -36,6 +45,7 @@ class QueueingMixin(local):
     ## lookup optimizations ###################################################
     ###########################################################################
 
+    _iterz = lazier(iter)
     _deek = lazier(deque)
     _filterfalse = lazier(filterfalse)
     _ichain = lazier(ichain)
@@ -64,12 +74,12 @@ class QueueingMixin(local):
 
     def __iter__(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
-        return self._iterator(self._outq)
+        return self._iterator(self._OUTQ)
 
     @property
     def _iterable(self):
         '''iterable'''
-        return self._iterator(self._workq)
+        return self._iterator(self._WORKQ)
 
     @property
     def balanced(self):
@@ -84,7 +94,7 @@ class QueueingMixin(local):
 
         @param n: number of steps to advance incoming things (default: None)
         '''
-        # use functions that consume iterators at C speed.
+        # use functions that consume iterators at C speed
         if n is None:
             # feed the entire iterator into a zero-length `deque`
             self.incoming = self._deek(self.incoming, maxlen=0)
@@ -99,79 +109,97 @@ class QueueingMixin(local):
 
     def _wclear(self):
         '''clear work queue'''
-        return self.ctx1(workq='_work')._pre()._clear().unswap()
+        return self.ctx1(workq=self._WORKVAR)._pre()._clear().reswap()
 
     def _uclear(self):
         '''clear utility queue'''
-        return self.ctx1(workq='_util')._pre()._clear().unswap()
+        return self.ctx1(workq=self._UTILVAR)._pre()._clear().reswap()
 
     def clear(self):
         '''clear every thing'''
-        return self.detap().outclear().inclear()
+        return self.detap().outclear().inclear()._wclear()._uclear()
 
     def inclear(self):
         '''clear incoming things'''
-        return self.ctx1()._pre()._clear().unswap()
+        return self.ctx1()._pre()._clear().reswap()
 
     def outclear(self):
         '''clear outgoing things'''
-        return self.ctx1(workq='outgoing')._pre()._clear().unswap()
+        return self.ctx1(workq=self._OUTVAR)._pre()._clear().reswap()
 
     ###########################################################################
     ## context management #####################################################
     ###########################################################################
 
-    def ctx1(self, **kw):
-        '''switch to ctx1-armed context manager'''
-        self._workq = self._utilq = kw.pop('workq', 'incoming')
+    def ctx1(self, hard=False, **kw):
+        '''
+        switch to one-armed context manager
+
+        @param hard: keep context-specific settings between context switches
+        '''
+        q = kw.pop(self._WORKCFG, self._INVAR)
+        ctx = lambda: self
+        return self.swap(hard=hard, workq=q, utilq=q, pre=ctx, post=ctx, **kw)
+
+    def ctx2(self, hard=False, **kw):
+        '''
+        switch to two-armed context manager
+
+        @param hard: keep context-specific settings between context switches
+        '''
+        return self.swap(
+            hard=hard,
+            outq=kw.get(self._OUTCFG, self._INVAR),
+            pre=self._oq2wq,
+            post=self._uq2oq,
+            **kw
+        )
+
+    def ctx4(self, hard=False, **kw):
+        '''
+        switch to four-armed context manager
+
+        @param hard: keep context-specific settings between context switches
+        '''
+        return self.swap(hard=hard, post=self._uq2oq, **kw)
+
+    def autoctx(self, hard=False, **kw):
+        '''
+        switch to auto-synchronizing context manager
+
+        @param hard: keep context-specific settings between context switches
+        '''
+        return self.swap(hard=hard, post=self._uq2iqoq, **kw)
+
+    def swap(self, hard=False, **kw):
+        '''
+        swap contexts
+
+        @param hard: keep context-specific settings between context switches
+        '''
+        self._pre = kw.get('pre', self._iq2wq)
+        self._post = kw.get('post', getattr(self, self._default_post))
         # clear out outgoing things before extending them?
-        self._clearout = kw.pop('clearout', True)
-        self._pre = lambda: self
-        self._post = lambda: self
-        return self
-
-    def ctx2(self, **kw):
-        '''switch to two-armed context manager'''
-        # clear out outgoing things before extending them?
-        self._clearout = kw.pop('clearout', True)
-        self._workq = kw.pop('workq', '_work')
-        self._outq = kw.pop('outq', 'incoming')
-        self._pre = self._oq2wq
-        self._post = self._uq2oq
-        return self
-
-    def ctx4(self, **kw):
-        '''switch to four-armed context manager'''
-        self._pre = self._iq2wq
-        self._post = self._uq2oq
-        self._clearout = kw.pop('clearout', True)
-        return self.swap(**kw)
-
-    def autoctx(self, **kw):
-        '''switch to auto-synchronizing context manager'''
-        self._pre = self._iq2wq
-        self._post = self._uq2iqoq
-        return self.swap(**kw)
-
-    def swap(self, **kw):
-        '''swap queues'''
-        # clear out outgoing things before extending them?
-        self._clearout = kw.pop('clearout', True)
+        self._clearout = kw.get('clearout', True)
         # incoming queue
-        self._inq = kw.get('inq', 'incoming')
-        # outcoming queue
-        self._outq = kw.get('outq', 'outgoing')
+        self._INQ = kw.get(self._INCFG, self._INVAR)
+        # outgoing queue
+        self._OUTQ = kw.get(self._OUTCFG, self._OUTVAR)
         # work queue
-        self._workq = kw.get('workq', '_work')
+        self._WORKQ = kw.get(self._WORKCFG, self._WORKVAR)
         # utility queue
-        self._utilq = kw.get('utilq', '_util')
+        self._UTILQ = kw.get(self._UTILCFG, self._UTILVAR)
+        # preserve configuration or return to defaults
+        self._CONFIG = kw if hard else {}
         return self
 
     def unswap(self):
         '''rotate queues to default'''
-        self._pre = getattr(self, '_iq2wq')
-        self._post = getattr(self, self._default_post)
         return self.swap()
+
+    def reswap(self):
+        '''rotate queues to current configuration'''
+        return self.swap(**self._CONFIG)
 
     rw = unswap
 
@@ -223,19 +251,19 @@ class QueueingMixin(local):
 
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
-        return self.ctx1()._pre()._append(list(self._iterable)).unswap()
+        return self.ctx1()._pre()._append(list(self._iterable)).reswap()
 
     def shift(self):
         '''shift outgoing things to incoming things'''
-        return self.autoctx(inq='outgoing', outq='incoming')._pre()._extend(
-            self._iterable
-        ).unswap()
+        return self.autoctx(
+            inq=self._OUTVAR, outq=self._INVAR
+        )._pre()._xtend(self._iterable).reswap()
 
     sync = shift
 
     def outshift(self):
         '''shift incoming things to outgoing things'''
-        return self.autoctx()._pre()._extend(self._iterable).unswap()
+        return self.autoctx()._pre()._xtend(self._iterable).reswap()
 
     outsync = outshift
 
@@ -249,29 +277,13 @@ class QueueingMixin(local):
     def _pappend(self, iterable):
         return self._pre()._append(iterable)
 
-    def _amap(self, call, iterable):
-        return self._pre()._append(self._imap(call, iterable))
-
-    def _astarmap(self, call, iterable):
-        return self._pre()._append(self._starmap(call, iterable))
-
-    def _ainmap(self, call):
-        return self._pre()._append(self._imap(call, self._iterable))
-
-    def _a2map(self, call1, call2):
-        imap_ = self._imap
-        return self._pre()._append(imap_(call1, imap_(call2, self._iterable)))
-
-    def _ainstarmap(self, call):
-        return self._pre()._append(self._starmap(call, self._iterable))
-
     def append(self, thing):
         '''
         append thing to right side of incoming things
 
         @param thing: some thing
         '''
-        return self.ctx1()._pre()._append(thing).unswap()
+        return self.ctx1()._pre()._append(thing).reswap()
 
     def appendleft(self, thing):
         '''
@@ -279,7 +291,7 @@ class QueueingMixin(local):
 
         @param thing: some thing
         '''
-        return self.ctx2()._pre()._appendleft(thing).unswap()
+        return self.ctx2()._pre()._appendleft(thing).reswap()
 
     def _areduce(self, call, initial=None):
         '''
@@ -298,9 +310,9 @@ class QueueingMixin(local):
     ## queue extension ########################################################
     ###########################################################################
 
-    def _x2map(self, call1, call2):
+    def _x2map(self, call1, iterator):
         imap_ = self._imap
-        return self._pre()._extend(imap_(call1, imap_(call2, self._iterable)))
+        return self._pre()._xtend(imap_(call1, iterator(self._iterable)))
 
     def _xreduce(self, call, initial=None):
         '''
@@ -310,33 +322,30 @@ class QueueingMixin(local):
         @param initial: initializer (default: None)
         '''
         if initial is None:
-            return self._pre()._extend(self._ireduce(call, self._iterable))
-        return self._pre()._extend(
+            return self._pre()._xtend(self._ireduce(call, self._iterable))
+        return self._pre()._xtend(
             self._ireduce(call, self._iterable, initial)
         )
 
     def _pextend(self, iterable):
-        return self._pre()._extend(iterable)
+        return self._pre()._xtend(iterable)
 
     def _inextend(self, call):
-        return self._pre()._extend(call(self._iterable))
-
-    def _xmap(self, call, iterable):
-        return self._pre()._extend(self._imap(call, iterable))
+        return self._pre()._xtend(call(self._iterable))
 
     def _xstarmap(self, call, iterable):
-        return self._pre()._extend(self._starmap(call, iterable))
+        return self._pre()._xtend(self._starmap(call, iterable))
 
-    def _x2starmap(self, call, iterable):
-        return self._pre()._extend(
-            self._starmap(call, iterable(self._iterable))
+    def _x2starmap(self, call, iterator):
+        return self._pre()._xtend(
+            self._starmap(call, iterator(self._iterable))
         )
 
     def _xinmap(self, call):
-        return self._pre()._extend(self._imap(call, self._iterable))
+        return self._pre()._xtend(self._imap(call, self._iterable))
 
     def _xinstarmap(self, call):
-        return self._pre()._extend(self._starmap(call, self._iterable))
+        return self._pre()._xtend(self._starmap(call, self._iterable))
 
     def extend(self, things):
         '''
@@ -344,7 +353,7 @@ class QueueingMixin(local):
 
         @param thing: some things
         '''
-        return self.ctx1()._pre()._extend(things).unswap()
+        return self.ctx1()._pre()._xtend(things).reswap()
 
     def extendleft(self, things):
         '''
@@ -352,7 +361,7 @@ class QueueingMixin(local):
 
         @param thing: some things
         '''
-        return self.ctx1()._pre()._extendleft(things).unswap()
+        return self.ctx1()._pre()._xtendleft(things).reswap()
 
     def outextend(self, things):
         '''
@@ -360,7 +369,7 @@ class QueueingMixin(local):
 
         @param thing: some things
         '''
-        return self.ctx1(workq='outgoing')._pre()._extend(things).unswap()
+        return self.ctx1(workq=self._OUTVAR)._pre()._xtend(things).reswap()
 
     ###########################################################################
     ## iteration runners ######################################################
@@ -368,9 +377,6 @@ class QueueingMixin(local):
 
     def _inmap(self, call):
         return self._imap(call, self._iterable)
-
-    def _instarmap(self, call):
-        return self._starmap(call, self._iterable)
 
     @classmethod
     def breakcount(cls, call, length):
@@ -387,8 +393,8 @@ class QueueingMixin(local):
         '''
         call next on an iterator until it's exhausted
 
-        @param iterable: an iterable to exhaust
-        @param exception: exception that marks end of iteration
+        @param iterable: iterable to exhaust
+        @param exception: exception marking end of iteration
         '''
         next_ = cls._next
         try:
@@ -441,19 +447,21 @@ class ResultMixin(local):
 
     '''result queue mixin'''
 
-    def end(self):
-        '''return outgoing things and clear everything'''
+    def __results(self, iterable):
         list_ = self._list
-        results, measure = self._split(self.outgoing)
-        results = self._next(results) if self._len(
-            list_(measure)
-        ) == 1 else list_(results)
+        self.unswap()
+        out, tell = self._split(iterable)
+        return self._next(out) if self._len(list_(tell)) == 1 else list_(out)
+
+    def end(self):
+        '''return outgoing things then clear out everything'''
+        out = self.__results(self.outgoing)
         self.clear()
-        return results
+        return out
 
     def first(self):
         '''first incoming thing'''
-        return self._pre()._append(self._next(self._iterable))
+        return self._inappend(self._next)
 
     def last(self):
         '''last incoming thing'''
@@ -463,8 +471,8 @@ class ResultMixin(local):
 
     def peek(self):
         '''results in read-only mode'''
-        results = self._list(self._util)
-        return results[0] if self._len(results) == 1 else results
+        out = self._list(self._util)
+        return out[0] if self._len(out) == 1 else out
 
     def results(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
@@ -472,10 +480,6 @@ class ResultMixin(local):
 
     def value(self):
         '''return outgoing things and clear outgoing things'''
-        list_ = self._list
-        results, measure = self._split(self.outgoing)
-        results = self._next(results) if self._len(
-            list_(measure)
-        ) == 1 else list_(results)
+        out = self.__results(self.outgoing)
         self.outclear()
-        return results
+        return out
