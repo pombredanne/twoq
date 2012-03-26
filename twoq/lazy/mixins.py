@@ -15,7 +15,9 @@ class BaseQMixin(QueueingMixin):
     def __init__(self, *things):
         iter_ = self._iterz
         incoming = iter_([things[0]]) if len(things) == 1 else iter_(things)
+        # work things
         self._work = iter_([])
+        # utility things
         self._util = iter_([])
         super(BaseQMixin, self).__init__(incoming, iter_([]))
 
@@ -132,7 +134,7 @@ class BaseQMixin(QueueingMixin):
     ###########################################################################
 
     @contextmanager
-    def _ctx1(self):
+    def _ctx2(self):
         sd = self._clearwork().__dict__
         OUTQ = self._OUTQ
         # extend work queue with outgoing queue
@@ -141,8 +143,8 @@ class BaseQMixin(QueueingMixin):
         # extend outgoing queue with utility queue
         sd[OUTQ] = sd[self._UTILQ]
         self._clearwork()
-
-    _ctx2 = _ctx1
+        # return to previous context
+        self.reswap()
 
     @contextmanager
     def _ctx3(self, **kw):
@@ -153,6 +155,8 @@ class BaseQMixin(QueueingMixin):
         # extend outgoing queue with utility queue
         sd[self._OUTQ] = sd[self._UTILQ]
         self._clearwork()
+        # return to previous context
+        self.reswap()
 
     _ctx4 = _ctx3
 
@@ -165,6 +169,8 @@ class BaseQMixin(QueueingMixin):
         # extend incoming queue and outgoing queue with utility queue
         sd[self._INQ], sd[self._OUTQ] = self._split(sd[self._UTILQ])
         self._clearwork()
+        # return to previous context
+        self.reswap()
 
     ###########################################################################
     ## switch context #########################################################

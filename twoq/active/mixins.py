@@ -128,6 +128,8 @@ class BaseQMixin(QueueingMixin):
     @contextmanager
     def _ctx1(self):
         yield
+        # return to previous context
+        self.reswap()
 
     @contextmanager
     def _ctx2(self):
@@ -147,6 +149,8 @@ class BaseQMixin(QueueingMixin):
         outq.extend(utilq)
         # clear utility things
         utilq.clear()
+        # return to previous context
+        self.reswap()
 
     @contextmanager
     def _ctx3(self, **kw):
@@ -166,6 +170,8 @@ class BaseQMixin(QueueingMixin):
         outq.extend(utilq)
         # clear utility things
         utilq.clear()
+        # return to previous context
+        self.reswap()
 
     @contextmanager
     def _ctx4(self):
@@ -185,6 +191,8 @@ class BaseQMixin(QueueingMixin):
         outq.extend(utilq)
         # clear utility things
         utilq.clear()
+        # return to previous context
+        self.reswap()
 
     @contextmanager
     def _autoctx(self):
@@ -207,6 +215,8 @@ class BaseQMixin(QueueingMixin):
         inq.extend(utilq)
         # clear utility things
         utilq.clear()
+        # return to previous context
+        self.reswap()
 
     ###########################################################################
     ## rotate context #########################################################
@@ -217,7 +227,7 @@ class BaseQMixin(QueueingMixin):
         self.ctx3(outq=self._UTILVAR)
         with self._context():
             self._xtend(self._iterable)
-        self.ctx1(workq=self._UTILVAR)
+        self.ctx1(hard=True, workq=self._UTILVAR)
         return self
 
 
