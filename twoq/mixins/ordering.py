@@ -76,7 +76,7 @@ class OrderMixin(local):
             )
 
     def reverse(self):
-        '''reverse incoming things'''
+        '''reverse order of incoming things'''
         with self._context():
             return self._xtend(self._reversed(self._list(self._iterable)))
 

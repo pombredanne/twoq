@@ -3,25 +3,25 @@
 
 from contextlib import contextmanager
 
-from twoq.mixins.queuing import QueueingMixin, ResultMixin
+from twoq.mixins.queuing import ThingsMixin, ResultMixin
+
+__all__ = ('AutoQMixin', 'ManQMixin', 'AutoResultMixin', 'ManResultMixin')
 
 
-__all__ = ('AutoQMixin', 'ManQMixin')
-
-
-class BaseQMixin(QueueingMixin):
+class BaseQMixin(ThingsMixin):
 
     '''base active things'''
 
     def __init__(self, *things):
         deque_ = self._deek
         incoming = deque_(things[0]) if len(things) == 1 else deque_(things)
+        super(BaseQMixin, self).__init__(incoming, deque_())
+        # set iterator
         self._iterator = self._iterexcept
         # work things
         self._work = deque_()
         # utility things
         self._util = deque_()
-        super(BaseQMixin, self).__init__(incoming, deque_())
 
     ###########################################################################
     ## thing length ###########################################################
@@ -41,7 +41,7 @@ class BaseQMixin(QueueingMixin):
 
     def __iter__(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
-        return self._iterator(self._OUTQ)
+        return self.iterexcept(self.outgoing.popleft, IndexError)
 
     @property
     def _iterable(self):
@@ -62,9 +62,9 @@ class BaseQMixin(QueueingMixin):
 
         @param attr: things to iterate over
         '''
-        return self.breakcount(
-            self._getr(attr).popleft, self.__len__(), IndexError,
-        )
+        dq = self._getr(attr)
+        length = len(dq)
+        return self.breakcount(dq.popleft, length, IndexError,)
 
     ###########################################################################
     ## clear things ###########################################################
@@ -129,7 +129,7 @@ class BaseQMixin(QueueingMixin):
 
     @contextmanager
     def ctx2(self, **kw):
-        '''swap context to two-armed context manager'''
+        '''swap to two-armed context'''
         self.swap(
             outq=kw.get(self._OUTCFG, self._INVAR), context=self.ctx2(), **kw
         )
@@ -156,7 +156,7 @@ class BaseQMixin(QueueingMixin):
 
     @contextmanager
     def ctx3(self, **kw):
-        '''swap context to three-armed context'''
+        '''swap to three-armed context'''
         self.swap(
             utilq=kw.get(self._WORKCFG, self._WORKVAR), context=self.ctx3, **kw
         )
@@ -183,7 +183,7 @@ class BaseQMixin(QueueingMixin):
 
     @contextmanager
     def ctx4(self, **kw):
-        '''swap context to four-armed context manager'''
+        '''swap to four-armed context'''
         self.swap(context=self.ctx4, **kw)
         getr_ = self._getr
         outq = getr_(self._OUTQ)
@@ -208,7 +208,7 @@ class BaseQMixin(QueueingMixin):
 
     @contextmanager
     def autoctx(self, **kw):
-        '''swap context to auto-synchronizing context manager'''
+        '''swap to auto-synchronizing context'''
         self.swap(context=self.autoctx, **kw)
         getr_ = self._getr
         outq = getr_(self._OUTQ)
@@ -235,7 +235,7 @@ class BaseQMixin(QueueingMixin):
         self.reswap()
 
     def ro(self):
-        '''swap context to read-only context'''
+        '''swap to read-only context'''
         with self.ctx3(outq=self._UTILVAR):
             self._xtend(self._iterable)
         with self.ctx1(hard=True, workq=self._UTILVAR):
