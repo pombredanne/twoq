@@ -54,7 +54,7 @@ class BaseQMixin(QueueingMixin):
 
         @param attr: things to iterate over
         '''
-        return self.iterexcept(self.__dict__[attr].popleft, IndexError)
+        return self.iterexcept(self._getr(attr).popleft, IndexError)
 
     def _breakcount(self, attr='_UTILQ'):
         '''
@@ -62,7 +62,9 @@ class BaseQMixin(QueueingMixin):
 
         @param attr: things to iterate over
         '''
-        return self.breakcount(self.__dict__[attr].popleft, self.__len__())
+        return self.breakcount(
+            self._getr(attr).popleft, self.__len__(), IndexError,
+        )
 
     ###########################################################################
     ## clear things ###########################################################
@@ -94,17 +96,17 @@ class BaseQMixin(QueueingMixin):
 
     def _xtend(self, things):
         '''extend utility things with `things` wrapped'''
-        self.__dict__[self._UTILQ].extend(things)
+        self._getr(self._UTILQ).extend(things)
         return self
 
     def _xtendleft(self, things):
         '''extend left side of utility things with `things`'''
-        self.__dict__[self._UTILQ].extendleft(things)
+        self._getr(self._UTILQ).extendleft(things)
         return self
 
     def _iter(self, things):
         '''extend work things with `things` wrapped in iterator'''
-        self.__dict__[self._UTILQ].extend(iter(things))
+        self._getr(self._UTILQ).extend(iter(things))
         return self
 
     ###########################################################################
@@ -113,12 +115,12 @@ class BaseQMixin(QueueingMixin):
 
     def _append(self, things):
         '''append `things` to utility things'''
-        self.__dict__[self._UTILQ].append(things)
+        self._getr(self._UTILQ).append(things)
         return self
 
     def _appendleft(self, things):
         '''append `things` to left side of utility things'''
-        self.__dict__[self._UTILQ].appendleft(things)
+        self._getr(self._UTILQ).appendleft(things)
         return self
 
     ###########################################################################
@@ -128,10 +130,13 @@ class BaseQMixin(QueueingMixin):
     @contextmanager
     def ctx2(self, **kw):
         '''swap context to two-armed context manager'''
-        sd = self.swap(
-            outq=kw.get(self._OUTCFG, self._INVAR), context=self.ctx2(),
-        **kw).__dict__
-        outq, utilq, workq = sd[self._OUTQ], sd[self._UTILQ], sd[self._WORKQ]
+        self.swap(
+            outq=kw.get(self._OUTCFG, self._INVAR), context=self.ctx2(), **kw
+        )
+        getr_ = self._getr
+        outq = getr_(self._OUTQ)
+        utilq = getr_(self._UTILQ)
+        workq = getr_(self._WORKQ)
         # clear all work things
         workq.clear()
         # extend work things with outgoing things
@@ -152,16 +157,17 @@ class BaseQMixin(QueueingMixin):
     @contextmanager
     def ctx3(self, **kw):
         '''swap context to three-armed context'''
-        sd = self.swap(
-            utilq=kw.get(self._WORKCFG, self._WORKVAR),
-            context=self.ctx3,
-            **kw
-        ).__dict__
-        outq, utilq, workq = sd[self._OUTQ], sd[self._UTILQ], sd[self._WORKQ]
+        self.swap(
+            utilq=kw.get(self._WORKCFG, self._WORKVAR), context=self.ctx3, **kw
+        )
+        getr_ = self._getr
+        outq = getr_(self._OUTQ)
+        utilq = getr_(self._UTILQ)
+        workq = getr_(self._WORKQ)
         # clear work things
         workq.clear()
         # extend work things with incoming things
-        workq.extend(sd[self._INQ])
+        workq.extend(getr_(self._INQ))
         # swap iterators
         self._iterator = self._breakcount
         yield
@@ -178,12 +184,15 @@ class BaseQMixin(QueueingMixin):
     @contextmanager
     def ctx4(self, **kw):
         '''swap context to four-armed context manager'''
-        sd = self.swap(context=self.ctx4, **kw).__dict__
-        outq, utilq, workq = sd[self._OUTQ], sd[self._UTILQ], sd[self._WORKQ]
+        self.swap(context=self.ctx4, **kw)
+        getr_ = self._getr
+        outq = getr_(self._OUTQ)
+        utilq = getr_(self._UTILQ)
+        workq = getr_(self._WORKQ)
         # clear work things
         workq.clear()
         # extend work things with incoming things
-        workq.extend(sd[self._INQ])
+        workq.extend(getr_(self._INQ))
         # swap iterators
         self._iterator = self._iterexcept
         yield
@@ -200,9 +209,12 @@ class BaseQMixin(QueueingMixin):
     @contextmanager
     def autoctx(self, **kw):
         '''swap context to auto-synchronizing context manager'''
-        sd = self.swap(context=self.autoctx, **kw).__dict__
-        outq, utilq, workq = sd[self._OUTQ], sd[self._UTILQ], sd[self._WORKQ]
-        inq = sd[self._INQ]
+        self.swap(context=self.autoctx, **kw)
+        getr_ = self._getr
+        outq = getr_(self._OUTQ)
+        utilq = getr_(self._UTILQ)
+        workq = getr_(self._WORKQ)
+        inq = getr_(self._INQ)
         # clear work things
         workq.clear()
         # extend work things with incoming things

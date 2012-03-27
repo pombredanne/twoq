@@ -41,12 +41,12 @@ class BaseQMixin(QueueingMixin):
 
     def __iter__(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
-        return self.__dict__[self._OUTQ]
+        return self._getr(self._OUTQ)
 
     @property
     def _iterable(self):
         '''iterable'''
-        return self.__dict__[self._WORKQ]
+        return self._getr(self._WORKQ)
 
     ###########################################################################
     ## clear things ###########################################################
@@ -54,42 +54,43 @@ class BaseQMixin(QueueingMixin):
 
     def _clearwork(self):
         '''clear work queue and utility queue'''
-        sdict, iter_ = self.__dict__, self._iterz
+        iter_ = self._iterz
+        setr_, delr_ = self._setr, self._delr
         WORKQ, UTILQ = self._WORKQ, self._UTILQ
         # clear work queue
-        del sdict[WORKQ]
-        sdict[WORKQ] = iter_([])
+        delr_(WORKQ)
+        setr_(WORKQ, iter_([]))
         # clear utility queue
-        del sdict[UTILQ]
-        sdict[UTILQ] = iter_([])
+        delr_(UTILQ)
+        setr_(UTILQ, iter_([]))
         return self
 
     def _uclear(self):
         '''clear utility queue'''
-        UTILQ, sdict = self._UTILQ, self.__dict__
-        del sdict[UTILQ]
-        sdict[UTILQ] = iter([])
+        UTILQ = self._UTILQ
+        self._delr(UTILQ)
+        self._setr(UTILQ, self._iterz([]))
         return self
 
     def _wclear(self):
         '''clear work queue'''
-        WORKQ, sdict = self._WORKQ, self.__dict__
-        del sdict[WORKQ]
-        sdict[WORKQ] = iter([])
+        WORKQ = self._WORKQ
+        self._delr(WORKQ)
+        self._setr(WORKQ, self._iterz([]))
         return self
 
     def inclear(self):
         '''clear incoming things'''
-        INQ, sdict = self._INQ, self.__dict__
-        del sdict[INQ]
-        sdict[INQ] = iter([])
+        INQ = self._INQ
+        self._delr(INQ)
+        self._setr(INQ, self._iterz([]))
         return self
 
     def outclear(self):
         '''clear outgoing things'''
-        OUTQ, sdict = self._OUTQ, self.__dict__
-        del sdict[OUTQ]
-        sdict[OUTQ] = iter([])
+        OUTQ = self._OUTQ
+        self._delr(OUTQ)
+        self._setr(OUTQ, self._iterz([]))
         return self
 
     ###########################################################################
@@ -98,8 +99,8 @@ class BaseQMixin(QueueingMixin):
 
     def _xtend(self, thing):
         '''build chain'''
-        UTILQ, sdict = self._UTILQ, self.__dict__
-        sdict[UTILQ] = self._join(thing, sdict[UTILQ])
+        UTILQ = self._UTILQ
+        self._setr(UTILQ, self._join(thing, self._getr(UTILQ)))
         return self
 
     __buildchain = _xtend
@@ -110,7 +111,7 @@ class BaseQMixin(QueueingMixin):
 
     def _xreplace(self, thing):
         '''build chain'''
-        self.__dict__[self._UTILQ] = thing
+        self._setr(self._UTILQ, thing)
         return self
 
     def _iter(self, things):
@@ -136,15 +137,21 @@ class BaseQMixin(QueueingMixin):
     @contextmanager
     def ctx2(self, **kw):
         '''swap context to two-armed context'''
-        sd = self.swap(
+        self.swap(
             context=self.ctx2, outq=kw.get(self._OUTCFG, self._INVAR), **kw
-        )._clearwork().__dict__
-        OUTQ = self._OUTQ
+        )._clearwork()
+        setr_, getr_, OUTQ = self._setr, self._getr, self._OUTQ
         # extend work queue with outgoing queue
-        sd[self._WORKQ], sd[OUTQ] = self._split(sd[OUTQ])
+        work, out = self._split(getr_(OUTQ))
+        setr_(self._WORKQ, work)
+        setr_(OUTQ, out)
         yield
         # extend outgoing queue with utility queue
-        sd[OUTQ] = sd[self._UTILQ]
+        util = getr_(self._UTILQ)
+        setr_(
+            self._OUTQ,
+            util if self._clearout else self._join(util, getr_(self._OUTQ)),
+        )
         self._clearwork()
         # return to global context
         self.reswap()
@@ -152,14 +159,21 @@ class BaseQMixin(QueueingMixin):
     @contextmanager
     def ctx3(self, **kw):
         '''swap context to three-armed context'''
-        sd = self.swap(
+        self.swap(
             utilq=kw.get(self._WORKCFG, self._WORKVAR), context=self.ctx3, **kw
-        )._clearwork().__dict__
+        )._clearwork()
+        setr_, getr_, INQ = self._setr, self._getr, self._INQ
         # extend work queue with incoming queue
-        sd[self._WORKQ], sd[self._INQ] = self._split(sd[self._INQ])
+        work, inq = self._split(getr_(INQ))
+        setr_(self._WORKQ, work)
+        setr_(INQ, inq)
         yield
         # extend outgoing queue with utility queue
-        sd[self._OUTQ] = sd[self._UTILQ]
+        util = getr_(self._UTILQ)
+        setr_(
+            self._OUTQ,
+            util if self._clearout else self._join(util, getr_(self._OUTQ)),
+        )
         self._clearwork()
         # return to global context
         self.reswap()
@@ -167,12 +181,19 @@ class BaseQMixin(QueueingMixin):
     @contextmanager
     def ctx4(self, **kw):
         '''swap context to three-armed context'''
-        sd = self.swap(context=self.ctx4, **kw)._clearwork().__dict__
+        self.swap(context=self.ctx4, **kw)._clearwork()
+        setr_, getr_, INQ = self._setr, self._getr, self._INQ
         # extend work queue with incoming queue
-        sd[self._WORKQ], sd[self._INQ] = self._split(sd[self._INQ])
+        work, inq = self._split(getr_(INQ))
+        setr_(self._WORKQ, work)
+        setr_(INQ, inq)
         yield
         # extend outgoing queue with utility queue
-        sd[self._OUTQ] = sd[self._UTILQ]
+        util = getr_(self._UTILQ)
+        setr_(
+            self._OUTQ,
+            util if self._clearout else self._join(util, getr_(self._OUTQ)),
+        )
         self._clearwork()
         # return to global context
         self.reswap()
@@ -180,13 +201,21 @@ class BaseQMixin(QueueingMixin):
     @contextmanager
     def autoctx(self, **kw):
         '''swap context to four-armed context'''
-        sd = self.swap(context=self.autoctx, **kw)._clearwork().__dict__
+        self.swap(context=self.autoctx, **kw)._clearwork()
+        setr_, getr_ = self._setr, self._getr
         INQ, split_ = self._INQ, self._split
         # extend work queue with incoming queue
-        sd[self._WORKQ], sd[INQ] = split_(sd[INQ])
+        work, inq = self._split(getr_(INQ))
+        setr_(self._WORKQ, work)
+        setr_(INQ, inq)
         yield
         # extend incoming queue and outgoing queue with utility queue
-        sd[INQ], sd[self._OUTQ] = split_(sd[self._UTILQ])
+        inq, out = split_(getr_(self._UTILQ))
+        setr_(
+            self._OUTQ,
+            out if self._clearout else self._join(out, getr_(self._OUTQ)),
+        )
+        setr_(INQ, inq)
         self._clearwork()
         # return to global context
         self.reswap()
