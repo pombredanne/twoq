@@ -9,6 +9,7 @@ from operator import methodcaller
 from contextlib import contextmanager
 
 from twoq.support import lazier, filterfalse, imap, ifilter, items, range
+from stuf.utils import lazy
 
 __all__ = ['QueueingMixin']
 
@@ -74,6 +75,21 @@ class QueueingMixin(local):
     _starmap = lazier(itertools.starmap)
     _sum = lazier(sum)
 
+    @lazy
+    def _getr(self):
+        '''local getter'''
+        return self._partial(local.__getattribute__, self)
+
+    @lazy
+    def _setr(self):
+        '''local setter'''
+        return self._partial(local.__setattr__, self)
+
+    @lazy
+    def _delr(self):
+        '''local deleter'''
+        return self._partial(local.__delattr__, self)
+
     ###########################################################################
     ## iteration ##############################################################
     ###########################################################################
@@ -110,7 +126,7 @@ class QueueingMixin(local):
 
         @param hard: keep context-specific settings between context switches
         '''
-        self._context = kw.get('context', getattr(self, self._default_context))
+        self._context = kw.get('context', self._getr(self._default_context))
         # clear out outgoing things before extending them?
         self._clearout = kw.get('clearout', True)
         # incoming queue
@@ -264,14 +280,17 @@ class QueueingMixin(local):
     ###########################################################################
 
     @classmethod
-    def breakcount(cls, call, length):
+    def breakcount(cls, call, length, exception=StopIteration):
         '''
         rotate through iterator until it reaches its original length
 
         @param iterable: an iterable to exhaust
         '''
         for i in cls._range(0, length):  # @UnusedVariable
-            yield call()
+            try:
+                yield call()
+            except exception:
+                pass
 
     @classmethod
     def exhaust(cls, iterable, exception=StopIteration):

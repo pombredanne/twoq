@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-'''setup twoq'''
+'''setup for twoq'''
 
 import os
 
@@ -13,7 +13,7 @@ install_requires = ['stuf>=0.8.9']
 
 setup(
     name='twoq',
-    version='0.4.4',
+    version='0.4.5',
     description='iterator chaining, underscored by a two-headed queue',
     long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'r').read(),
     author='L. C. Rees',
