@@ -3,23 +3,23 @@
 
 from contextlib import contextmanager
 
-from twoq.mixins.queuing import QueueingMixin, ResultMixin
+from twoq.mixins.queuing import ResultMixin, ThingsMixin
 
-__all__ = ['AutoQMixin', 'ManQMixin']
+__all__ = ('AutoQMixin', 'ManQMixin', 'AutoResultMixin', 'ManResultMixin')
 
 
-class BaseQMixin(QueueingMixin):
+class BaseQMixin(ThingsMixin):
 
-    '''base lazy queue'''
+    '''base lazy things'''
 
     def __init__(self, *things):
         iter_ = self._iterz
         incoming = iter_([things[0]]) if len(things) == 1 else iter_(things)
+        super(BaseQMixin, self).__init__(incoming, iter_([]))
         # work things
         self._work = iter_([])
         # utility things
         self._util = iter_([])
-        super(BaseQMixin, self).__init__(incoming, iter_([]))
 
     ###########################################################################
     ## length #################################################################
@@ -53,27 +53,27 @@ class BaseQMixin(QueueingMixin):
     ###########################################################################
 
     def _clearwork(self):
-        '''clear work queue and utility queue'''
+        '''clear work things and utility things'''
         iter_ = self._iterz
         setr_, delr_ = self._setr, self._delr
         WORKQ, UTILQ = self._WORKQ, self._UTILQ
-        # clear work queue
+        # clear work things
         delr_(WORKQ)
         setr_(WORKQ, iter_([]))
-        # clear utility queue
+        # clear utility things
         delr_(UTILQ)
         setr_(UTILQ, iter_([]))
         return self
 
     def _uclear(self):
-        '''clear utility queue'''
+        '''clear utility things'''
         UTILQ = self._UTILQ
         self._delr(UTILQ)
         self._setr(UTILQ, self._iterz([]))
         return self
 
     def _wclear(self):
-        '''clear work queue'''
+        '''clear work things'''
         WORKQ = self._WORKQ
         self._delr(WORKQ)
         self._setr(WORKQ, self._iterz([]))
@@ -106,7 +106,7 @@ class BaseQMixin(QueueingMixin):
     __buildchain = _xtend
 
     def _xtendleft(self, things):
-        '''extend left side of work queue with `things`'''
+        '''extend left side of work things with `things`'''
         return self.__buildchain(self._reversed(things))
 
     def _xreplace(self, thing):
@@ -115,7 +115,7 @@ class BaseQMixin(QueueingMixin):
         return self
 
     def _iter(self, things):
-        '''extend work queue with `things` wrapped in iterator'''
+        '''extend work things with `things` wrapped in iterator'''
         return self.__buildchain(iter(things))
 
     ###########################################################################
@@ -123,11 +123,11 @@ class BaseQMixin(QueueingMixin):
     ###########################################################################
 
     def _append(self, things):
-        '''append `things` to work queue'''
+        '''append `things` to work things'''
         return self.__buildchain(self._iterz([things]))
 
     def _appendleft(self, things):
-        '''append `things` to left side of work queue'''
+        '''append `things` to left side of work things'''
         return self.__buildchain(self._iterz([things]))
 
     ###########################################################################
@@ -136,17 +136,17 @@ class BaseQMixin(QueueingMixin):
 
     @contextmanager
     def ctx2(self, **kw):
-        '''swap context to two-armed context'''
+        '''swap to two-armed context'''
         self.swap(
             context=self.ctx2, outq=kw.get(self._OUTCFG, self._INVAR), **kw
         )._clearwork()
         setr_, getr_, OUTQ = self._setr, self._getr, self._OUTQ
-        # extend work queue with outgoing queue
+        # extend work things with outgoing things
         work, out = self._split(getr_(OUTQ))
         setr_(self._WORKQ, work)
         setr_(OUTQ, out)
         yield
-        # extend outgoing queue with utility queue
+        # extend outgoing things with utility things
         util = getr_(self._UTILQ)
         setr_(
             self._OUTQ,
@@ -158,17 +158,17 @@ class BaseQMixin(QueueingMixin):
 
     @contextmanager
     def ctx3(self, **kw):
-        '''swap context to three-armed context'''
+        '''swap to three-armed context'''
         self.swap(
             utilq=kw.get(self._WORKCFG, self._WORKVAR), context=self.ctx3, **kw
         )._clearwork()
         setr_, getr_, INQ = self._setr, self._getr, self._INQ
-        # extend work queue with incoming queue
+        # extend work things with incoming things
         work, inq = self._split(getr_(INQ))
         setr_(self._WORKQ, work)
         setr_(INQ, inq)
         yield
-        # extend outgoing queue with utility queue
+        # extend outgoing things with utility things
         util = getr_(self._UTILQ)
         setr_(
             self._OUTQ,
@@ -180,15 +180,15 @@ class BaseQMixin(QueueingMixin):
 
     @contextmanager
     def ctx4(self, **kw):
-        '''swap context to three-armed context'''
+        '''swap to four-armed context'''
         self.swap(context=self.ctx4, **kw)._clearwork()
         setr_, getr_, INQ = self._setr, self._getr, self._INQ
-        # extend work queue with incoming queue
+        # extend work things with incoming things
         work, inq = self._split(getr_(INQ))
         setr_(self._WORKQ, work)
         setr_(INQ, inq)
         yield
-        # extend outgoing queue with utility queue
+        # extend outgoing things with utility things
         util = getr_(self._UTILQ)
         setr_(
             self._OUTQ,
@@ -200,16 +200,16 @@ class BaseQMixin(QueueingMixin):
 
     @contextmanager
     def autoctx(self, **kw):
-        '''swap context to four-armed context'''
+        '''swap to auto-synchronizing context'''
         self.swap(context=self.autoctx, **kw)._clearwork()
         setr_, getr_ = self._setr, self._getr
         INQ, split_ = self._INQ, self._split
-        # extend work queue with incoming queue
+        # extend work things with incoming things
         work, inq = self._split(getr_(INQ))
         setr_(self._WORKQ, work)
         setr_(INQ, inq)
         yield
-        # extend incoming queue and outgoing queue with utility queue
+        # extend incoming things and outgoing things with utility things
         inq, out = split_(getr_(self._UTILQ))
         setr_(
             self._OUTQ,
@@ -221,7 +221,7 @@ class BaseQMixin(QueueingMixin):
         self.reswap()
 
     def ro(self):
-        '''swap context to read-only context'''
+        '''swap to read-only context'''
         with self.ctx3(outq=self._UTILVAR):
             self._xreplace(self._iterable)
         with self.ctx1(hard=True, workq=self._UTILVAR):
@@ -230,23 +230,23 @@ class BaseQMixin(QueueingMixin):
 
 class AutoQMixin(BaseQMixin):
 
-    '''auto-balancing queue mixin'''
+    '''auto-balancing things mixin'''
 
     _default_context = 'autoctx'
 
 
 class ManQMixin(BaseQMixin):
 
-    '''manually balanced queue mixin'''
+    '''manually balanced things mixin'''
 
     _default_context = 'ctx4'
 
 
 class AutoResultMixin(ResultMixin, AutoQMixin):
 
-    '''auto-balancing queue (with results extraction) mixin'''
+    '''auto-balancing things (with results extraction) mixin'''
 
 
 class ManResultMixin(ResultMixin, ManQMixin):
 
-    '''manually balanced queue (with results extraction) mixin'''
+    '''manually balanced things (with results extraction) mixin'''

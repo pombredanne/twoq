@@ -8,15 +8,18 @@ from collections import deque
 from operator import methodcaller
 from contextlib import contextmanager
 
-from twoq.support import lazier, filterfalse, imap, ifilter, items, range
 from stuf.utils import lazy
 
-__all__ = ['QueueingMixin']
+from twoq import support
+
+__all__ = ('ResultMixin', 'ThingsMixin')
+
+lazier = support.lazier
 
 
-class QueueingMixin(local):
+class ThingsMixin(local):
 
-    '''queue management mixin'''
+    '''things management mixin'''
 
     _INCFG = 'inq'
     _INVAR = 'incoming'
@@ -34,10 +37,10 @@ class QueueingMixin(local):
         @param incoming: incoming things
         @param outgoing: outgoing things
         '''
-        super(QueueingMixin, self).__init__()
-        # incoming queue
+        super(ThingsMixin, self).__init__()
+        # incoming things
         self.incoming = incoming
-        # outgoing queue
+        # outgoing things
         self.outgoing = outgoing
         # current callable
         self._call = None
@@ -53,13 +56,13 @@ class QueueingMixin(local):
     ###########################################################################
 
     _deek = lazier(deque)
-    _filterfalse = lazier(filterfalse)
+    _filterfalse = lazier(support.filterfalse)
     _ichain = lazier(itertools.chain.from_iterable)
-    _ifilter = lazier(ifilter)
-    _imap = lazier(imap)
+    _ifilter = lazier(support.ifilter)
+    _imap = lazier(support.imap)
     _ireduce = lazier(functools.reduce)
     _islice = lazier(itertools.islice)
-    _items = lazier(items)
+    _items = lazier(support.items)
     _iterz = lazier(iter)
     _join = lazier(itertools.chain)
     _len = lazier(len)
@@ -100,7 +103,7 @@ class QueueingMixin(local):
         return self.outcount() == self.__len__()
 
     ###########################################################################
-    ## queue clearance ########################################################
+    ## things clearance #######################################################
     ###########################################################################
 
     def clear(self):
@@ -121,34 +124,30 @@ class QueueingMixin(local):
         self.reswap()
 
     def swap(self, hard=False, **kw):
-        '''
-        swap contexts
-
-        @param hard: keep context-specific settings between context switches
-        '''
+        '''swap contexts'''
         self._context = kw.get('context', self._getr(self._default_context))
         # clear out outgoing things before extending them?
         self._clearout = kw.get('clearout', True)
-        # incoming queue
+        # incoming things
         self._INQ = kw.get(self._INCFG, self._INVAR)
-        # outgoing queue
+        # outgoing things
         self._OUTQ = kw.get(self._OUTCFG, self._OUTVAR)
-        # work queue
+        # work things
         self._WORKQ = kw.get(self._WORKCFG, self._WORKVAR)
-        # utility queue
+        # utility things
         self._UTILQ = kw.get(self._UTILCFG, self._UTILVAR)
-        # preserve configuration or return to defaults
+        # keep context-specific settings between context swaps
         self._CONFIG = kw if kw.get('hard', False) else {}
         return self
 
     def unswap(self):
-        '''rotate queues to default'''
+        '''swap context to default context'''
         return self.swap()
 
     rw = unswap
 
     def reswap(self):
-        '''rotate queues to current configuration'''
+        '''swap contexts to current preferred context'''
         return self.swap(**self._CONFIG)
 
     ###########################################################################
@@ -200,7 +199,7 @@ class QueueingMixin(local):
         return self.tap(factory)
 
     ###########################################################################
-    ## queue rotation #########################################################
+    ## things rotation ########################################################
     ###########################################################################
 
     def outshift(self):
@@ -223,7 +222,7 @@ class QueueingMixin(local):
     sync = shift
 
     ###########################################################################
-    ## queue appending ########################################################
+    ## things appending #######################################################
     ###########################################################################
 
     def append(self, thing):
@@ -245,7 +244,7 @@ class QueueingMixin(local):
             return self._appendleft(thing)
 
     ###########################################################################
-    ## queue extension ########################################################
+    ## things extension #######################################################
     ###########################################################################
 
     def extend(self, things):
@@ -347,7 +346,7 @@ class QueueingMixin(local):
 
 class ResultMixin(local):
 
-    '''result queue mixin'''
+    '''result things mixin'''
 
     def end(self):
         '''return outgoing things then clear out everything'''
@@ -370,7 +369,7 @@ class ResultMixin(local):
             return self._append(self._deek(i1, maxlen=1).pop())
 
     def peek(self):
-        '''results in read-only mode'''
+        '''results from read-only context'''
         out = self._list(self._util)
         return out[0] if self._len(out) == 1 else out
 
