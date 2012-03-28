@@ -42,6 +42,7 @@ def release():
         local('hg push ssh://hg@bitbucket.org/lcrees/twoq')
         local('hg push git+ssh://git@github.com:kwarterthieves/twoq.git')
     local('./setup.py register sdist --format=bztar,gztar,zip upload')
+    local('rm -rf build')
 
 
 def release_next():
@@ -58,3 +59,4 @@ def release_next():
         local('hg push ssh://hg@bitbucket.org/lcrees/twoq')
         local('hg push git+ssh://git@github.com:kwarterthieves/twoq.git')
     local('./setup.py register sdist --format=bztar,gztar,zip upload')
+    local('rm -rf build')
