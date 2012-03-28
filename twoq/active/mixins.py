@@ -5,6 +5,7 @@ from contextlib import contextmanager
 
 from twoq.mixins.queuing import ThingsMixin, ResultMixin
 
+
 __all__ = ('AutoQMixin', 'ManQMixin', 'AutoResultMixin', 'ManResultMixin')
 
 
@@ -22,6 +23,25 @@ class BaseQMixin(ThingsMixin):
         self._work = deque_()
         # utility things
         self._util = deque_()
+
+    def __repr__(self):
+        getr_, list_ = self._getr, self._list
+        return (
+            '<{}.{}([IN: {}({}) => WORK: {}({}) => UTIL: {}({}) => '
+            'OUT: {}: ({})]) at {}'
+        ).format(
+            self.__module__,
+            self._clsname(self),
+            self._INQ,
+            list_(getr_(self._INQ)),
+            self._WORKQ,
+            list_(getr_(self._WORKQ)),
+            self._UTILQ,
+            list_(getr_(self._UTILQ)),
+            self._OUTQ,
+            list_(getr_(self._OUTQ)),
+            id(self),
+        )
 
     ###########################################################################
     ## thing length ###########################################################
