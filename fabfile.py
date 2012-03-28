@@ -42,11 +42,11 @@ def release():
         local('hg push ssh://hg@bitbucket.org/lcrees/twoq')
         local('hg push git+ssh://git@github.com:kwarterthieves/twoq.git')
     local('./setup.py register sdist --format=bztar,gztar,zip upload')
-    local('rm -rf build')
+    local('rm -rf dist')
 
 
 def release_next():
-    '''release twoq'''
+    '''release twoq from next branch'''
     local('hg update maint')
     local('hg merge default; hg ci -m automerge')
     local('hg update default')
@@ -59,4 +59,4 @@ def release_next():
         local('hg push ssh://hg@bitbucket.org/lcrees/twoq')
         local('hg push git+ssh://git@github.com:kwarterthieves/twoq.git')
     local('./setup.py register sdist --format=bztar,gztar,zip upload')
-    local('rm -rf build')
+    local('rm -rf dist')
