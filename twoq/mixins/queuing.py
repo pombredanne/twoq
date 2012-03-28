@@ -8,7 +8,8 @@ from collections import deque
 from operator import methodcaller
 from contextlib import contextmanager
 
-from stuf.utils import lazy
+from stuf.six import u
+from stuf.utils import lazy, clsname
 
 from twoq import support
 
@@ -55,6 +56,7 @@ class ThingsMixin(local):
     ## optimize lookups #######################################################
     ###########################################################################
 
+    _clsname = lazier(clsname)
     _deek = lazier(deque)
     _filterfalse = lazier(support.filterfalse)
     _ichain = lazier(itertools.chain.from_iterable)
@@ -77,6 +79,7 @@ class ThingsMixin(local):
     _split = lazier(itertools.tee)
     _starmap = lazier(itertools.starmap)
     _sum = lazier(sum)
+    _u = lazier(u)
 
     @lazy
     def _getr(self):
@@ -316,11 +319,30 @@ class ThingsMixin(local):
         @param filter: a filter to apply to mapping (default: `None`)
         @param exception: exception sentinel (default: `StopIteration`)
         '''
-        next_, starmap_, items_ = cls._next, cls._starmap, cls._items
-        subiter = cls._ifilter(filter, items_(map)) if filter else items_(map)
+        next_, items_ = cls._next, cls._items
+        iterable = cls._starmap(
+            call, cls._ifilter(filter, items_(map)) if filter else items_(map),
+        )
         try:
             while 1:
-                next_(starmap_(call, subiter))
+                next_(iterable)
+        except exception:
+            pass
+
+    @classmethod
+    def exhaustcall(cls, call, iterable, exception=StopIteration):
+        '''
+        call function on an iterator until it's exhausted
+
+        @param call: call that does the exhausting
+        @param iterable: iterable to exhaust
+        @param exception: exception marking end of iteration
+        '''
+        next_ = cls._next
+        iterable = cls._imap(call, iterable)
+        try:
+            while True:
+                next_(iterable)
         except exception:
             pass
 
