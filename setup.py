@@ -13,13 +13,13 @@ install_requires = ['stuf>=0.8.11']
 
 setup(
     name='twoq',
-    version='0.4.7',
+    version='0.4.8',
     description='iterator chaining, underscored by a two-headed queue',
     long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'r').read(),
     author='L. C. Rees',
     url='https://bitbucket.org/lcrees/twoq/',
     author_email='lcrees@gmail.com',
-    license='MIT',
+    license='BSD',
     packages=['twoq', 'twoq.mixins', 'twoq.active', 'twoq.lazy'],
     test_suite='twoq.tests',
     zip_safe=False,
