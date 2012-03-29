@@ -8,7 +8,6 @@ from collections import deque
 from operator import methodcaller
 from contextlib import contextmanager
 
-from stuf.six import u
 from stuf.utils import lazy, clsname
 
 from twoq import support
@@ -22,14 +21,18 @@ class ThingsMixin(local):
 
     '''things management mixin'''
 
+    # 1. incoming things
     _INCFG = 'inq'
     _INVAR = 'incoming'
-    _OUTCFG = 'outq'
-    _OUTVAR = 'outgoing'
+    # 2. utility things
     _UTILCFG = 'utilq'
     _UTILVAR = '_util'
+    # 3. work things
     _WORKCFG = 'workq'
     _WORKVAR = '_work'
+    # 4. outgoing things
+    _OUTCFG = 'outq'
+    _OUTVAR = 'outgoing'
 
     def __init__(self, incoming, outgoing):
         '''
@@ -79,7 +82,6 @@ class ThingsMixin(local):
     _split = lazier(itertools.tee)
     _starmap = lazier(itertools.starmap)
     _sum = lazier(sum)
-    _u = lazier(u)
 
     @lazy
     def _getr(self):
@@ -131,16 +133,16 @@ class ThingsMixin(local):
         self._context = kw.get('context', self._getr(self._default_context))
         # clear out outgoing things before extending them?
         self._clearout = kw.get('clearout', True)
-        # incoming things
-        self._INQ = kw.get(self._INCFG, self._INVAR)
-        # outgoing things
-        self._OUTQ = kw.get(self._OUTCFG, self._OUTVAR)
-        # work things
-        self._WORKQ = kw.get(self._WORKCFG, self._WORKVAR)
-        # utility things
-        self._UTILQ = kw.get(self._UTILCFG, self._UTILVAR)
         # keep context-specific settings between context swaps
         self._CONFIG = kw if kw.get('hard', False) else {}
+        # 1. incoming things
+        self._INQ = kw.get(self._INCFG, self._INVAR)
+        # 2. work things
+        self._WORKQ = kw.get(self._WORKCFG, self._WORKVAR)
+        # 3. utility things
+        self._UTILQ = kw.get(self._UTILCFG, self._UTILVAR)
+        # 4. outgoing things
+        self._OUTQ = kw.get(self._OUTCFG, self._OUTVAR)
         return self
 
     def unswap(self):
@@ -294,58 +296,6 @@ class ThingsMixin(local):
             except exception:
                 pass
 
-    @classmethod
-    def exhaust(cls, iterable, exception=StopIteration):
-        '''
-        call next on an iterator until it's exhausted
-
-        @param iterable: iterable to exhaust
-        @param exception: exception marking end of iteration
-        '''
-        next_ = cls._next
-        try:
-            while 1:
-                next_(iterable)
-        except exception:
-            pass
-
-    @classmethod
-    def exhaustmap(cls, map, call, filter=False, exception=StopIteration):
-        '''
-        call `next` on an iterator until it's exhausted
-
-        @param mapping: a mapping to exhaust
-        @param call: call to handle what survives the filter
-        @param filter: a filter to apply to mapping (default: `None`)
-        @param exception: exception sentinel (default: `StopIteration`)
-        '''
-        next_, items_ = cls._next, cls._items
-        iterable = cls._starmap(
-            call, cls._ifilter(filter, items_(map)) if filter else items_(map),
-        )
-        try:
-            while 1:
-                next_(iterable)
-        except exception:
-            pass
-
-    @classmethod
-    def exhaustcall(cls, call, iterable, exception=StopIteration):
-        '''
-        call function on an iterator until it's exhausted
-
-        @param call: call that does the exhausting
-        @param iterable: iterable to exhaust
-        @param exception: exception marking end of iteration
-        '''
-        next_ = cls._next
-        iterable = cls._imap(call, iterable)
-        try:
-            while True:
-                next_(iterable)
-        except exception:
-            pass
-
     @staticmethod
     def iterexcept(call, exception, start=None):
         '''
@@ -365,6 +315,61 @@ class ThingsMixin(local):
         except exception:
             pass
 
+    ###########################################################################
+    ## exhaustion iterators ###################################################
+    ###########################################################################
+
+    def exhaust(self, iterable, exception=StopIteration):
+        '''
+        call next on an iterator until it's exhausted
+
+        @param iterable: iterable to exhaust
+        @param exception: exception marking end of iteration
+        '''
+        next_ = self._next
+        try:
+            while 1:
+                next_(iterable)
+        except exception:
+            pass
+
+    def exhaustcall(self, call, iterable, exception=StopIteration):
+        '''
+        call function on an iterator until it's exhausted
+
+        @param call: call that does the exhausting
+        @param iterable: iterable to exhaust
+        @param exception: exception marking end of iteration
+        '''
+        next_ = self._next
+        iterable = self._imap(call, iterable)
+        try:
+            while True:
+                next_(iterable)
+        except exception:
+            pass
+        return self
+
+    def exhaustitems(self, maps, call, filter=False, exception=StopIteration):
+        '''
+        call `next` on an iterator until it's exhausted
+
+        @param mapping: a mapping to exhaust
+        @param call: call to handle what survives the filter
+        @param filter: a filter to apply to mapping (default: `None`)
+        @param exception: exception sentinel (default: `StopIteration`)
+        '''
+        next_, items = self._next, self._items
+        iterable = self._starmap(
+            call, self._ifilter(filter, items(maps)) if filter else items(maps)
+        )
+        try:
+            while 1:
+                next_(iterable)
+        except exception:
+            pass
+        return self
+
 
 class ResultMixin(local):
 
@@ -372,10 +377,12 @@ class ResultMixin(local):
 
     def end(self):
         '''return outgoing things then clear out everything'''
+        # return to default context
         self.unswap()
         out, tell = self._split(self.outgoing)
         list_ = self._list
         out = self._next(out) if self._len(list_(tell)) == 1 else list_(out)
+        # clear every last thing
         self.clear()
         return out
 
@@ -401,9 +408,11 @@ class ResultMixin(local):
 
     def value(self):
         '''return outgoing things and clear outgoing things'''
+        # return to default context
         self.unswap()
         out, tell = self._split(self.outgoing)
         list_ = self._list
         out = self._next(out) if self._len(list_(tell)) == 1 else list_(out)
+        # clear outgoing things
         self.outclear()
         return out
