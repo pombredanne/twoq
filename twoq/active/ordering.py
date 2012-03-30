@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq active ordering queues'''
 
-from twoq.mixins.ordering import RandomMixin, OrderingMixin
+from twoq.mixins.ordering import RandomMixin, OrderingMixin, PermutationMixin
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin
 
@@ -36,3 +36,20 @@ orderq = aorderq
 class morderq(ManResultMixin, OrderingMixin):
 
     '''manually balanced order queue'''
+
+
+###############################################################################
+## active permutation queues #####EEE##########################################
+###############################################################################
+
+
+class apermutationq(AutoResultMixin, PermutationMixin):
+
+    '''auto-balanced permutation queue'''
+
+permutationq = apermutationq
+
+
+class mpermutationq(ManResultMixin, PermutationMixin):
+
+    '''manually balanced permutation queue'''

@@ -24,5 +24,13 @@ class TestManRandomQ(Manning, MQMixin, MRandomQMixin):
         from twoq.active.ordering import mrandomq
         self.qclass = mrandomq
 
+
+class TestManPermutationQ(Manning, MQMixin, APermutationQMixin):
+
+    def setUp(self):
+        from twoq.active.ordering import mpermutationq
+        self.qclass = mpermutationq
+
+
 if __name__ == '__main__':
     unittest.main()

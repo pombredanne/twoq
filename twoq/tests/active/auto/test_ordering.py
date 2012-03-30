@@ -23,5 +23,13 @@ class TestAutoRandomQ(unittest.TestCase, AQMixin, ARandomQMixin):
         from twoq.active.ordering import arandomq
         self.qclass = arandomq
 
+
+class TestAutoPermutationQ(unittest.TestCase, AQMixin, APermutationQMixin):
+
+    def setUp(self):
+        from twoq.active.ordering import apermutationq
+        self.qclass = apermutationq
+
+
 if __name__ == '__main__':
     unittest.main()
