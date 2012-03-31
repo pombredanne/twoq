@@ -20,3 +20,5 @@ media/
 *.orig
 syntax: glob
 .tox/*
+syntax: regexp
+^stuff$
