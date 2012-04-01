@@ -21,7 +21,7 @@ class ARandomQMixin(object):
         )
 
 
-class APermutationQMixin(object):
+class ACombineQMixin(object):
 
 #    def test_combinations(self):
 #        foo = self.qclass('ABCD').combinations(2).value(),
@@ -52,7 +52,7 @@ class APermutationQMixin(object):
         )
 
 
-class AOrderQMixin(ARandomQMixin, APermutationQMixin):
+class AOrderQMixin(ARandomQMixin, ACombineQMixin):
 
     '''combination mixin'''
 

@@ -33,7 +33,7 @@ class MRandomQMixin(object):
         self.assertTrue(manq.balanced)
 
 
-class APermutationQMixin(object):
+class MCombineQMixin(object):
 
 #    def test_combinations(self):
 #        self._false_true_false(
@@ -61,7 +61,7 @@ class APermutationQMixin(object):
         )
 
 
-class MOrderQMixin(MRandomQMixin, APermutationQMixin):
+class MOrderQMixin(MRandomQMixin, MCombineQMixin):
 
     def test_group(self,):
         from math import floor

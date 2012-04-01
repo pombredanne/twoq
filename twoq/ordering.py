@@ -91,9 +91,9 @@ class OrderMixin(local):
             return self._xtend(self._sorted(self._iterable, key=call_))
 
 
-class PermutationMixin(local):
+class CombineMixin(local):
 
-    '''permutation mixin'''
+    '''combination mixin'''
 
 #    def combinations(self, r):
 #        '''
@@ -123,6 +123,6 @@ class PermutationMixin(local):
             return self._xtend(product(*self._iterable, repeat=n))
 
 
-class OrderingMixin(OrderMixin, RandomMixin, PermutationMixin):
+class OrderingMixin(OrderMixin, RandomMixin, CombineMixin):
 
     '''ordering mixin'''

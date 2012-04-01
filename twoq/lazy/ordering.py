@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq lazy ordering queues'''
 
-from twoq.ordering import RandomMixin, OrderingMixin, PermutationMixin
+from twoq.ordering import RandomMixin, OrderingMixin, CombineMixin
 
 from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
 
@@ -39,17 +39,17 @@ class morderq(ManResultMixin, OrderingMixin):
 
 
 ###############################################################################
-## active permutation queues #####EEE##########################################
+## active combination queues #####EEE##########################################
 ###############################################################################
 
 
-class apermutationq(AutoResultMixin, PermutationMixin):
+class acombineq(AutoResultMixin, CombineMixin):
 
-    '''auto-balanced permutation queue'''
+    '''auto-balanced combination queue'''
 
-permutationq = apermutationq
+combineq = acombineq
 
 
-class mpermutationq(ManResultMixin, PermutationMixin):
+class mcombineq(ManResultMixin, CombineMixin):
 
-    '''manually balanced permutation queue'''
+    '''manually balanced combination queue'''
