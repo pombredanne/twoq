@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq active filtering queues'''
 
-from twoq.mixins.filtering import (
+from twoq.filtering import (
     FilteringMixin, CollectMixin, SetMixin, SliceMixin)
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin

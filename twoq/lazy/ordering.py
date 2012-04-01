@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq lazy ordering queues'''
 
-from twoq.mixins.ordering import RandomMixin, OrderingMixin, PermutationMixin
+from twoq.ordering import RandomMixin, OrderingMixin, PermutationMixin
 
 from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
 

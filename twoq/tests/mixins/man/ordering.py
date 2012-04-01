@@ -35,22 +35,22 @@ class MRandomQMixin(object):
 
 class APermutationQMixin(object):
 
-    def test_combinations(self):
-        self._false_true_false(
-            self.qclass('ABCD').combinations(2),
-            self.assertListEqual,
-            [('A', 'B'), ('A', 'C'), ('A', 'D'), ('B', 'C'), ('B', 'D'),
-            ('C', 'D')],
-        )
-
-    def test_permutations(self):
-        self._false_true_false(
-            self.qclass('ABCD').permutations(2),
-            self.assertListEqual,
-            [('A', 'B'), ('A', 'C'), ('A', 'D'), ('B', 'A'), ('B', 'C'),
-            ('B', 'D'), ('C', 'A'), ('C', 'B'), ('C', 'D'), ('D', 'A'),
-            ('D', 'B'), ('D', 'C')]
-        )
+#    def test_combinations(self):
+#        self._false_true_false(
+#            self.qclass('ABCD').combinations(2),
+#            self.assertListEqual,
+#            [('A', 'B'), ('A', 'C'), ('A', 'D'), ('B', 'C'), ('B', 'D'),
+#            ('C', 'D')],
+#        )
+#
+#    def test_permutations(self):
+#        self._false_true_false(
+#            self.qclass('ABCD').permutations(2),
+#            self.assertListEqual,
+#            [('A', 'B'), ('A', 'C'), ('A', 'D'), ('B', 'A'), ('B', 'C'),
+#            ('B', 'D'), ('C', 'A'), ('C', 'B'), ('C', 'D'), ('D', 'A'),
+#            ('D', 'B'), ('D', 'C')]
+#        )
 
     def test_product(self):
         self._false_true_false(

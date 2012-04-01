@@ -3,7 +3,7 @@
 
 from threading import local
 from random import choice, shuffle, sample
-from itertools import groupby, permutations, combinations, product
+from itertools import groupby, product  # , permutations, combinations,
 
 from twoq.support import zip_longest, lazier
 
@@ -95,23 +95,23 @@ class PermutationMixin(local):
 
     '''permutation mixin'''
 
-    def combinations(self, r):
-        '''
-        `r` length slices of incoming things
-
-        @param r: length of combinations
-        '''
-        with self._context():
-            return self._xtend(combinations(self._iterable, r))
-
-    def permutations(self, r):
-        '''
-        successive `r` length permutations of incoming things
-
-        @param r: length of permutations
-        '''
-        with self._context():
-            return self._xtend(permutations(self._iterable, r))
+#    def combinations(self, r):
+#        '''
+#        `r` length slices of incoming things
+#
+#        @param r: length of combinations
+#        '''
+#        with self._context():
+#            return self._xtend(combinations(self._iterable, r))
+#
+#    def permutations(self, r):
+#        '''
+#        successive `r` length permutations of incoming things
+#
+#        @param r: length of permutations
+#        '''
+#        with self._context():
+#            return self._xtend(permutations(self._iterable, r))
 
     def product(self, n=1):
         '''

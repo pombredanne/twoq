@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq active mapping queues'''
 
-from twoq.mixins.mapping import DelayMixin, RepeatMixin, MappingMixin
+from twoq.mapping import DelayMixin, RepeatMixin, MappingMixin
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin
 

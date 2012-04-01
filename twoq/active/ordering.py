@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq active ordering queues'''
 
-from twoq.mixins.ordering import RandomMixin, OrderingMixin, PermutationMixin
+from twoq.ordering import RandomMixin, OrderingMixin, PermutationMixin
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin
 
