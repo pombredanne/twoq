@@ -22,7 +22,7 @@ setup(
     license='BSD',
     author='L. C. Rees',
     author_email='lcrees@gmail.com',
-    url='https://bitbucket.org/lcrees/twoq/',
+    url='https://bitbucket.org/lcrees/twoq',
     packages=[
         l.strip() for l in open(join(getcwd(), 'packages'), 'r').readlines()
     ],
