@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq active reducing queues'''
 
-from twoq.mixins.reducing import MathMixin, TruthMixin, ReducingMixin
+from twoq.reducing import MathMixin, TruthMixin, ReducingMixin
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin
 

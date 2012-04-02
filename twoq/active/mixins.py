@@ -3,7 +3,7 @@
 
 from contextlib import contextmanager
 
-from twoq.mixins.queuing import ThingsMixin, ResultMixin
+from twoq.queuing import ThingsMixin, ResultMixin
 
 
 __all__ = ('AutoQMixin', 'ManQMixin', 'AutoResultMixin', 'ManResultMixin')

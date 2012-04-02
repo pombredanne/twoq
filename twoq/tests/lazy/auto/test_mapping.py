@@ -6,8 +6,8 @@ except ImportError:
     import unittest
 
 #pylint: disable-msg=w0614,w0401
-from twoq.tests.mixins.auto.mapping import *  # @UnusedWildImport
-from twoq.tests.mixins.auto.queuing import AQMixin
+from twoq.tests.auto.mapping import *  # @UnusedWildImport
+from twoq.tests.auto.queuing import AQMixin
 
 
 class TestAutoMap(unittest.TestCase, AQMixin, AMapQMixin):

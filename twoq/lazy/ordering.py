@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq lazy ordering queues'''
 
-from twoq.mixins.ordering import RandomMixin, OrderingMixin
+from twoq.ordering import RandomMixin, OrderingMixin, CombineMixin
 
 from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
 
@@ -36,3 +36,20 @@ orderq = aorderq
 class morderq(ManResultMixin, OrderingMixin):
 
     '''manually balanced order queue'''
+
+
+###############################################################################
+## active combination queues #####EEE##########################################
+###############################################################################
+
+
+class acombineq(AutoResultMixin, CombineMixin):
+
+    '''auto-balanced combination queue'''
+
+combineq = acombineq
+
+
+class mcombineq(ManResultMixin, CombineMixin):
+
+    '''manually balanced combination queue'''

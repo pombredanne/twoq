@@ -75,7 +75,7 @@ class ThingsMixin(local):
     _methodcaller = lazier(methodcaller)
     _next = lazier(next)
     _partial = lazier(functools.partial)
-    _range = lazier(range)
+    _range = lazier(support.range)
     _repeat = lazier(itertools.repeat)
     _reversed = lazier(reversed)
     _sorted = lazier(sorted)
@@ -290,7 +290,7 @@ class ThingsMixin(local):
 
         @param iterable: an iterable to exhaust
         '''
-        for i in cls._range(0, length):  # @UnusedVariable
+        for i in cls._repeat(None, length):  # @UnusedVariable
             try:
                 yield call()
             except exception:

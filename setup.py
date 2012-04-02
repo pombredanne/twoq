@@ -2,33 +2,37 @@
 # -*- coding: utf-8 -*-
 '''setup for twoq'''
 
-import os
-
+from os import getcwd
+from os.path import join
 try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
 
-install_requires = ['stuf>=0.8.11']
+install_requires = list(l.strip() for l in open(
+    join(getcwd(), 'requirements.txt'), 'r',
+).readlines())
 
 setup(
     name='twoq',
-    version='0.4.8',
+    version='0.4.9',
     description='iterator chaining, underscored by a two-headed queue',
-    long_description=open(os.path.join(os.getcwd(), 'README.rst'), 'r').read(),
-    author='L. C. Rees',
-    url='https://bitbucket.org/lcrees/twoq/',
-    author_email='lcrees@gmail.com',
+    long_description=open(join(getcwd(), 'README.rst'), 'r').read(),
+    keywords='queue generator utility iterator functional programming',
     license='BSD',
-    packages=['twoq', 'twoq.mixins', 'twoq.active', 'twoq.lazy'],
+    author='L. C. Rees',
+    author_email='lcrees@gmail.com',
+    url='https://bitbucket.org/lcrees/twoq/',
+    packages=[
+        l.strip() for l in open(join(getcwd(), 'packages'), 'r').readlines()
+    ],
     test_suite='twoq.tests',
     zip_safe=False,
-    keywords='queue generator utility iterator functional programming',
     install_requires=install_requires,
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
@@ -38,6 +42,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: Implementation :: CPython',
+        'Topic :: Software Development',
         'Topic :: Software Development :: Libraries',
         'Topic :: Utilities',
     ],
