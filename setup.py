@@ -9,15 +9,13 @@ try:
 except ImportError:
     from distutils.core import setup
 
-from twoq import __version__
-
 install_requires = list(l for l in open(
     join(getcwd(), 'requirements.txt'), 'r',
 ).readlines())
 
 setup(
     name='twoq',
-    version='{}.{}.{}'.format(*__version__),
+    version='0.4.9',
     description='iterator chaining, underscored by a two-headed queue',
     long_description=open(join(getcwd(), 'README.rst'), 'r').read(),
     keywords='queue generator utility iterator functional programming',
