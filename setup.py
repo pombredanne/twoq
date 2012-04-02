@@ -23,7 +23,9 @@ setup(
     author='L. C. Rees',
     author_email='lcrees@gmail.com',
     url='https://bitbucket.org/lcrees/twoq/',
-    packages=[l for l in open(join(getcwd(), 'packages'), 'r').readlines()],
+    packages=[
+        l.strip() for l in open(join(getcwd(), 'packages'), 'r').xreadlines()
+    ],
     test_suite='twoq.tests',
     zip_safe=False,
     install_requires=install_requires,
