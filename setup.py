@@ -9,7 +9,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
-install_requires = list(l for l in open(
+install_requires = list(l.strip() for l in open(
     join(getcwd(), 'requirements.txt'), 'r',
 ).readlines())
 
@@ -24,7 +24,7 @@ setup(
     author_email='lcrees@gmail.com',
     url='https://bitbucket.org/lcrees/twoq/',
     packages=[
-        l.strip() for l in open(join(getcwd(), 'packages'), 'r').xreadlines()
+        l.strip() for l in open(join(getcwd(), 'packages'), 'r').readlines()
     ],
     test_suite='twoq.tests',
     zip_safe=False,
