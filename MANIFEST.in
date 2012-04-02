@@ -1,4 +1,6 @@
 include LICENSE.txt
 include MANIFEST.in
 include README.rst
+include packages
+inclued requirements.txt
 recursive-include twoq *.py
