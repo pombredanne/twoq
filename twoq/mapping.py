@@ -1,20 +1,13 @@
 # -*- coding: utf-8 -*-
 '''twoq mapping mixins'''
 
-import time
 from copy import deepcopy
 from threading import local
-
-from twoq.support import lazier
-
-__all__ = ('DelayMixin', 'RepeatMixin', 'MapMixin', 'MappingMixin')
 
 
 class DelayMixin(local):
 
     '''delayed map mixin'''
-
-    _sleep = lazier(time.sleep)
 
     @classmethod
     def _delay_each(cls, x, y, wait=0, caller=None):
