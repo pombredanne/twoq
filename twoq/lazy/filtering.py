@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq lazy filtering queues'''
 
+from twoq.imps import LookupsMixin
 from twoq.filtering import (
     FilteringMixin, CollectMixin, SetMixin, SliceMixin)
 
@@ -11,14 +12,14 @@ from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
 ###############################################################################
 
 
-class acollectq(AutoResultMixin, CollectMixin):
+class acollectq(LookupsMixin, AutoResultMixin, CollectMixin):
 
     '''auto-balanced collecting queue'''
 
 collectq = acollectq
 
 
-class mcollectq(ManResultMixin, CollectMixin):
+class mcollectq(LookupsMixin, ManResultMixin, CollectMixin):
 
     '''manually balanced collecting queue'''
 
@@ -27,14 +28,14 @@ class mcollectq(ManResultMixin, CollectMixin):
 ###############################################################################
 
 
-class asetq(AutoResultMixin, SetMixin):
+class asetq(LookupsMixin, AutoResultMixin, SetMixin):
 
     '''auto-balanced set queue'''
 
 setq = asetq
 
 
-class msetq(ManResultMixin, SetMixin):
+class msetq(LookupsMixin, ManResultMixin, SetMixin):
 
     '''manually balanced set queue'''
 
@@ -43,14 +44,14 @@ class msetq(ManResultMixin, SetMixin):
 ###############################################################################
 
 
-class asliceq(AutoResultMixin, SliceMixin):
+class asliceq(LookupsMixin, AutoResultMixin, SliceMixin):
 
     '''auto-balanced slice queue'''
 
 sliceq = asliceq
 
 
-class msliceq(ManResultMixin, SliceMixin):
+class msliceq(LookupsMixin, ManResultMixin, SliceMixin):
 
     '''manually balanced slice queue'''
 
@@ -59,13 +60,13 @@ class msliceq(ManResultMixin, SliceMixin):
 ###############################################################################
 
 
-class afilterq(AutoResultMixin, FilteringMixin):
+class afilterq(LookupsMixin, AutoResultMixin, FilteringMixin):
 
     '''auto-balanced filter queue'''
 
 filterq = afilterq
 
 
-class mfilterq(ManResultMixin, FilteringMixin):
+class mfilterq(LookupsMixin, ManResultMixin, FilteringMixin):
 
     '''manually balanced filtering queue'''

@@ -8,10 +8,6 @@ from operator import attrgetter, itemgetter, truth
 from stuf.six import PY3
 from stuf.utils import getcls
 
-__all__ = (
-    'FilterMixin', 'CollectMixin', 'SetMixin', 'SliceMixin', 'FilteringMixin',
-)
-
 
 class CollectMixin(local):
 

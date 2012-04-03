@@ -1,27 +1,17 @@
 # -*- coding: utf-8 -*-
 '''twoq reducing mixins'''
 
-from math import fsum
 from heapq import merge
 from threading import local
 from itertools import cycle
 from collections import Iterable
-from operator import truediv, contains
 
-from twoq.support import Counter, isstring, zip, lazier
-
-__all__ = ('MathMixin', 'TruthMixin', 'ReduceMixin', 'ReducingMixin')
+from twoq.support import isstring
 
 
 class MathMixin(local):
 
     '''math mixin'''
-
-    _counter = lazier(Counter)
-    _fsum = lazier(fsum)
-    _max = lazier(max)
-    _min = lazier(min)
-    _truediv = lazier(truediv)
 
     @classmethod
     def _average(cls, iterable):
@@ -117,8 +107,6 @@ class TruthMixin(local):
 
     '''truth mixin'''
 
-    _contains = lazier(contains)
-
     def all(self):
         '''if `all` incoming things are `True`'''
         with self._context():
@@ -149,8 +137,6 @@ class TruthMixin(local):
 class ReduceMixin(local):
 
     '''reduce mixin'''
-
-    _zip = lazier(zip)
 
     @classmethod
     def _roundrobin(cls, iterable):

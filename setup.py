@@ -15,14 +15,14 @@ install_requires = list(l.strip() for l in open(
 
 setup(
     name='twoq',
-    version='0.4.9',
+    version='0.4.10',
     description='iterator chaining, underscored by a two-headed queue',
     long_description=open(join(getcwd(), 'README.rst'), 'r').read(),
     keywords='queue generator utility iterator functional programming',
     license='BSD',
     author='L. C. Rees',
     author_email='lcrees@gmail.com',
-    url='https://bitbucket.org/lcrees/twoq/',
+    url='https://bitbucket.org/lcrees/twoq',
     packages=[
         l.strip() for l in open(join(getcwd(), 'packages'), 'r').readlines()
     ],

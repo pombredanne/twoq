@@ -2,21 +2,14 @@
 '''twoq ordering mixins'''
 
 from threading import local
-from random import choice, shuffle, sample
-from itertools import groupby, product  # , permutations, combinations,
+from itertools import product
 
-from twoq.support import zip_longest, lazier
-
-__all__ = ('OrderMixin', 'RandomMixin', 'OrderingMixin')
+from twoq.support import zip_longest
 
 
 class RandomMixin(local):
 
     '''random mixin'''
-
-    _choice = lazier(choice)
-    _sample = lazier(sample)
-    _shuffle = lazier(shuffle)
 
     def choice(self):
         '''random choice of/from incoming things'''
@@ -43,8 +36,6 @@ class RandomMixin(local):
 class OrderMixin(local):
 
     '''order mixin'''
-
-    _groupby = lazier(groupby)
 
     def group(self):
         '''
@@ -94,24 +85,6 @@ class OrderMixin(local):
 class CombineMixin(local):
 
     '''combination mixin'''
-
-#    def combinations(self, r):
-#        '''
-#        `r` length slices of incoming things
-#
-#        @param r: length of combinations
-#        '''
-#        with self._context():
-#            return self._xtend(combinations(self._iterable, r))
-#
-#    def permutations(self, r):
-#        '''
-#        successive `r` length permutations of incoming things
-#
-#        @param r: length of permutations
-#        '''
-#        with self._context():
-#            return self._xtend(permutations(self._iterable, r))
 
     def product(self, n=1):
         '''

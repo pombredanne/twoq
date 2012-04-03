@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 '''twoq active ordering queues'''
 
+from twoq.imps import LookupsMixin
 from twoq.ordering import RandomMixin, OrderingMixin, CombineMixin
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin
@@ -10,14 +11,14 @@ from twoq.active.mixins import AutoResultMixin, ManResultMixin
 ###############################################################################
 
 
-class arandomq(AutoResultMixin, RandomMixin):
+class arandomq(LookupsMixin, AutoResultMixin, RandomMixin):
 
     '''auto-balanced random queue'''
 
 randomq = arandomq
 
 
-class mrandomq(ManResultMixin, RandomMixin):
+class mrandomq(LookupsMixin, ManResultMixin, RandomMixin):
 
     '''manually balanced random queue'''
 
@@ -26,14 +27,14 @@ class mrandomq(ManResultMixin, RandomMixin):
 ###############################################################################
 
 
-class aorderq(AutoResultMixin, OrderingMixin):
+class aorderq(LookupsMixin, AutoResultMixin, OrderingMixin):
 
     '''auto-balanced order queue'''
 
 orderq = aorderq
 
 
-class morderq(ManResultMixin, OrderingMixin):
+class morderq(LookupsMixin, ManResultMixin, OrderingMixin):
 
     '''manually balanced order queue'''
 
@@ -43,13 +44,13 @@ class morderq(ManResultMixin, OrderingMixin):
 ###############################################################################
 
 
-class acombineq(AutoResultMixin, CombineMixin):
+class acombineq(LookupsMixin, AutoResultMixin, CombineMixin):
 
     '''auto-balanced combination queue'''
 
 combineq = acombineq
 
 
-class mcombineq(ManResultMixin, CombineMixin):
+class mcombineq(LookupsMixin, ManResultMixin, CombineMixin):
 
     '''manually balanced combination queue'''

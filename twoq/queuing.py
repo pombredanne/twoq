@@ -1,20 +1,8 @@
 # -*- coding: utf-8 -*-
 '''twoq queuing mixins'''
 
-import itertools
-import functools
 from threading import local
-from collections import deque
-from operator import methodcaller
 from contextlib import contextmanager
-
-from stuf.utils import lazy, clsname
-
-from twoq import support
-
-__all__ = ('ResultMixin', 'ThingsMixin')
-
-lazier = support.lazier
 
 
 class ThingsMixin(local):
@@ -54,49 +42,6 @@ class ThingsMixin(local):
         self._kw = {}
         # set defaults
         self.unswap()
-
-    ###########################################################################
-    ## optimize lookups #######################################################
-    ###########################################################################
-
-    _clsname = lazier(clsname)
-    _deek = lazier(deque)
-    _filterfalse = lazier(support.filterfalse)
-    _ichain = lazier(itertools.chain.from_iterable)
-    _ifilter = lazier(support.ifilter)
-    _imap = lazier(support.imap)
-    _ireduce = lazier(functools.reduce)
-    _islice = lazier(itertools.islice)
-    _items = lazier(support.items)
-    _iterz = lazier(iter)
-    _join = lazier(itertools.chain)
-    _len = lazier(len)
-    _list = lazier(list)
-    _methodcaller = lazier(methodcaller)
-    _next = lazier(next)
-    _partial = lazier(functools.partial)
-    _range = lazier(support.range)
-    _repeat = lazier(itertools.repeat)
-    _reversed = lazier(reversed)
-    _sorted = lazier(sorted)
-    _split = lazier(itertools.tee)
-    _starmap = lazier(itertools.starmap)
-    _sum = lazier(sum)
-
-    @lazy
-    def _getr(self):
-        '''local getter'''
-        return self._partial(local.__getattribute__, self)
-
-    @lazy
-    def _setr(self):
-        '''local setter'''
-        return self._partial(local.__setattr__, self)
-
-    @lazy
-    def _delr(self):
-        '''local deleter'''
-        return self._partial(local.__delattr__, self)
 
     ###########################################################################
     ## iteration ##############################################################
