@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 '''twoq active filtering queues'''
 
-from twoq.imps import LookupsMixin
 from twoq.filtering import (
     FilteringMixin, CollectMixin, SetMixin, SliceMixin)
 
@@ -12,14 +11,14 @@ from twoq.active.mixins import AutoResultMixin, ManResultMixin
 ###############################################################################
 
 
-class acollectq(LookupsMixin, AutoResultMixin, CollectMixin):
+class acollectq(AutoResultMixin, CollectMixin):
 
     '''auto-balanced collecting queue'''
 
 collectq = acollectq
 
 
-class mcollectq(LookupsMixin, ManResultMixin, CollectMixin):
+class mcollectq(ManResultMixin, CollectMixin):
 
     '''manually balanced collecting queue'''
 
@@ -28,14 +27,14 @@ class mcollectq(LookupsMixin, ManResultMixin, CollectMixin):
 ###############################################################################
 
 
-class asetq(LookupsMixin, AutoResultMixin, SetMixin):
+class asetq(AutoResultMixin, SetMixin):
 
     '''auto-balanced set queue'''
 
 setq = asetq
 
 
-class msetq(LookupsMixin, ManResultMixin, SetMixin):
+class msetq(ManResultMixin, SetMixin):
 
     '''manually balanced set queue'''
 
@@ -44,14 +43,14 @@ class msetq(LookupsMixin, ManResultMixin, SetMixin):
 ###############################################################################
 
 
-class asliceq(LookupsMixin, AutoResultMixin, SliceMixin):
+class asliceq(AutoResultMixin, SliceMixin):
 
     '''auto-balanced slice queue'''
 
 sliceq = asliceq
 
 
-class msliceq(LookupsMixin, ManResultMixin, SliceMixin):
+class msliceq(ManResultMixin, SliceMixin):
 
     '''manually balanced slice queue'''
 
@@ -60,13 +59,13 @@ class msliceq(LookupsMixin, ManResultMixin, SliceMixin):
 ###############################################################################
 
 
-class afilterq(LookupsMixin, AutoResultMixin, FilteringMixin):
+class afilterq(AutoResultMixin, FilteringMixin):
 
     '''auto-balanced filter queue'''
 
 filterq = afilterq
 
 
-class mfilterq(LookupsMixin, ManResultMixin, FilteringMixin):
+class mfilterq(ManResultMixin, FilteringMixin):
 
     '''manually balanced filtering queue'''

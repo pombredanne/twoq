@@ -2,7 +2,11 @@
 '''twoq queuing mixins'''
 
 from threading import local
+from collections import deque
+from itertools import tee, starmap, repeat
 from contextlib import contextmanager
+
+from support import ifilter, items
 
 
 class ThingsMixin(local):
@@ -72,7 +76,7 @@ class ThingsMixin(local):
 
     def swap(self, hard=False, **kw):
         '''swap contexts'''
-        self._context = kw.get('context', self._getr(self._default_context))
+        self._context = kw.get('context', getattr(self, self._default_context))
         # clear out outgoing things before extending them?
         self._clearout = kw.get('clearout', True)
         # keep context-specific settings between context swaps
@@ -170,7 +174,7 @@ class ThingsMixin(local):
     
     def unwrap(self):
         '''clear current wrapper'''
-        self._wrapper = self._list
+        self._wrapper = list
         return self
 
     ###########################################################################
@@ -187,7 +191,7 @@ class ThingsMixin(local):
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
         with self.ctx2():
-            return self._append(self._list(self._iterable))
+            return self._append(list(self._iterable))
 
     def shift(self):
         '''shift outgoing things to incoming things'''
@@ -264,7 +268,7 @@ class ThingsMixin(local):
 
         @param iterable: an iterable to exhaust
         '''
-        for i in cls._repeat(None, length):  # @UnusedVariable
+        for i in repeat(None, length):  # @UnusedVariable
             try:
                 yield call()
             except exception:
@@ -300,7 +304,7 @@ class ThingsMixin(local):
         @param iterable: iterable to exhaust
         @param exception: exception marking end of iteration
         '''
-        next_ = self._next
+        next_ = next
         try:
             while 1:
                 next_(iterable)
@@ -333,9 +337,9 @@ class ThingsMixin(local):
         @param filter: a filter to apply to mapping (default: `None`)
         @param exception: exception sentinel (default: `StopIteration`)
         '''
-        next_, items = self._next, self._items
-        iterable = self._starmap(
-            call, self._ifilter(filter, items(maps)) if filter else items(maps)
+        next_ = next
+        iterable = starmap(
+            call, ifilter(filter, items(maps)) if filter else items(maps)
         )
         try:
             while 1:
@@ -353,9 +357,9 @@ class ResultMixin(local):
         '''return outgoing things then clear out everything'''
         # return to default context
         self.unswap()
-        out, tell = self._split(self.outgoing)
+        out, tell = tee(self.outgoing)
         wrap = self._wrapper
-        out = self._next(out) if self._len(wrap(tell)) == 1 else wrap(out)
+        out = next(out) if len(wrap(tell)) == 1 else wrap(out)
         # clear every last thing
         self.clear()
         return out
@@ -363,18 +367,18 @@ class ResultMixin(local):
     def first(self):
         '''first incoming thing'''
         with self._context():
-            return self._append(self._next(self._iterable))
+            return self._append(next(self._iterable))
 
     def last(self):
         '''last incoming thing'''
         with self._context():
-            i1, _ = self._split(self._iterable)
-            return self._append(self._deek(i1, maxlen=1).pop())
+            i1, _ = tee(self._iterable)
+            return self._append(deque(i1, maxlen=1).pop())
 
     def peek(self):
         '''results from read-only context'''
         out = self._wrapper(self._util)
-        return out[0] if self._len(out) == 1 else out
+        return out[0] if len(out) == 1 else out
 
     def results(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
@@ -384,9 +388,9 @@ class ResultMixin(local):
         '''return outgoing things and clear outgoing things'''
         # return to default context
         self.unswap()
-        out, tell = self._split(self.outgoing)
+        out, tell = tee(self.outgoing)
         wrap = self._wrapper
-        out = self._next(out) if self._len(wrap(tell)) == 1 else wrap(out)
+        out = next(out) if len(wrap(tell)) == 1 else wrap(out)
         # clear outgoing things
         self.outclear()
         return out

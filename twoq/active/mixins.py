@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 '''active twoq mixins'''
 
+from collections import deque
 from contextlib import contextmanager
 
 from twoq.queuing import ThingsMixin, ResultMixin
@@ -14,7 +15,7 @@ class BaseQMixin(ThingsMixin):
     '''base active things'''
 
     def __init__(self, *things):
-        deque_ = self._deek
+        deque_ = deque
         incoming = deque_(things[0]) if len(things) == 1 else deque_(things)
         super(BaseQMixin, self).__init__(incoming, deque_())
         # set iterator
@@ -25,7 +26,7 @@ class BaseQMixin(ThingsMixin):
         self._util = deque_()
 
     def __repr__(self):
-        getr_, list_ = self._getr, self._list
+        getr_, list_ = lambda x: getattr(self, x), list
         return (
             '<{}.{}([IN: {}({}) => WORK: {}({}) => UTIL: {}({}) => '
             'OUT: {}: ({})]) at {}'
@@ -49,11 +50,11 @@ class BaseQMixin(ThingsMixin):
 
     def __len__(self):
         '''number of incoming things'''
-        return self._len(self.incoming)
+        return len(self.incoming)
 
     def outcount(self):
         '''number of outgoing things'''
-        return self._len(self.outgoing)
+        return len(self.outgoing)
 
     ###########################################################################
     ## iterators ##############################################################
@@ -74,7 +75,7 @@ class BaseQMixin(ThingsMixin):
 
         @param attr: things to iterate over
         '''
-        return self.iterexcept(self._getr(attr).popleft, IndexError)
+        return self.iterexcept(getattr(self, attr).popleft, IndexError)
 
     def _breakcount(self, attr='_UTILQ'):
         '''
@@ -82,9 +83,8 @@ class BaseQMixin(ThingsMixin):
 
         @param attr: things to iterate over
         '''
-        dq = self._getr(attr)
-        length = len(dq)
-        return self.breakcount(dq.popleft, length, IndexError,)
+        dq = getattr(self, attr)
+        return self.breakcount(dq.popleft, len(dq), IndexError,)
 
     ###########################################################################
     ## clear things ###########################################################
@@ -116,17 +116,17 @@ class BaseQMixin(ThingsMixin):
 
     def _xtend(self, things):
         '''extend utility things with `things` wrapped'''
-        self._getr(self._UTILQ).extend(things)
+        getattr(self, self._UTILQ).extend(things)
         return self
 
     def _xtendleft(self, things):
         '''extend left side of utility things with `things`'''
-        self._getr(self._UTILQ).extendleft(things)
+        getattr(self, self._UTILQ).extendleft(things)
         return self
 
     def _iter(self, things):
         '''extend work things with `things` wrapped in iterator'''
-        self._getr(self._UTILQ).extend(iter(things))
+        getattr(self, self._UTILQ).extend(iter(things))
         return self
 
     ###########################################################################
@@ -135,12 +135,12 @@ class BaseQMixin(ThingsMixin):
 
     def _append(self, things):
         '''append `things` to utility things'''
-        self._getr(self._UTILQ).append(things)
+        getattr(self, self._UTILQ).append(things)
         return self
 
     def _appendleft(self, things):
         '''append `things` to left side of utility things'''
-        self._getr(self._UTILQ).appendleft(things)
+        getattr(self, self._UTILQ).appendleft(things)
         return self
 
     ###########################################################################
@@ -153,7 +153,7 @@ class BaseQMixin(ThingsMixin):
         self.swap(
             outq=kw.get(self._OUTCFG, self._INVAR), context=self.ctx2(), **kw
         )
-        getr_ = self._getr
+        getr_ = lambda x: getattr(self, x)
         outq = getr_(self._OUTQ)
         utilq = getr_(self._UTILQ)
         workq = getr_(self._WORKQ)
@@ -180,7 +180,7 @@ class BaseQMixin(ThingsMixin):
         self.swap(
             utilq=kw.get(self._WORKCFG, self._WORKVAR), context=self.ctx3, **kw
         )
-        getr_ = self._getr
+        getr_ = lambda x: getattr(self, x)
         outq = getr_(self._OUTQ)
         utilq = getr_(self._UTILQ)
         workq = getr_(self._WORKQ)
@@ -205,7 +205,7 @@ class BaseQMixin(ThingsMixin):
     def ctx4(self, **kw):
         '''swap to four-armed context'''
         self.swap(context=self.ctx4, **kw)
-        getr_ = self._getr
+        getr_ = lambda x: getattr(self, x)
         outq = getr_(self._OUTQ)
         utilq = getr_(self._UTILQ)
         workq = getr_(self._WORKQ)
@@ -230,7 +230,7 @@ class BaseQMixin(ThingsMixin):
     def autoctx(self, **kw):
         '''swap to auto-synchronizing context'''
         self.swap(context=self.autoctx, **kw)
-        getr_ = self._getr
+        getr_ = lambda x: getattr(self, x)
         outq = getr_(self._OUTQ)
         utilq = getr_(self._UTILQ)
         workq = getr_(self._WORKQ)
@@ -276,11 +276,36 @@ class ManQMixin(BaseQMixin):
     _default_context = 'ctx4'
 
 
-class AutoResultMixin(AutoQMixin, ResultMixin):
+class EndMixin(ResultMixin):
+
+    '''result things mixin'''
+
+    def end(self):
+        '''return outgoing things then clear out everything'''
+        # return to default context
+        self.unswap()
+        wrap, outgoing = self._wrapper, self.outgoing
+        out = self.outgoing.pop() if len(outgoing) == 1 else wrap(outgoing)
+        # clear every last thing
+        self.clear()
+        return out
+
+    def value(self):
+        '''return outgoing things and clear outgoing things'''
+        # return to default context
+        self.unswap()
+        wrap, outgoing = self._wrapper, self.outgoing
+        out = self.outgoing.pop() if len(outgoing) == 1 else wrap(outgoing)
+        # clear outgoing things
+        self.outclear()
+        return out
+
+
+class AutoResultMixin(AutoQMixin, EndMixin):
 
     '''auto-balancing manipulation things (with results extractor) mixin'''
 
 
-class ManResultMixin(ManQMixin, ResultMixin):
+class ManResultMixin(ManQMixin, EndMixin):
 
     '''manually balanced things (with results extractor) mixin'''

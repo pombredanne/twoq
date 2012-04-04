@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 '''twoq lazy reducing queues'''
 
-from twoq.imps import LookupsMixin
 from twoq.reducing import MathMixin, TruthMixin, ReducingMixin
 
 from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
@@ -11,14 +10,14 @@ from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
 ###############################################################################
 
 
-class amathq(LookupsMixin, AutoResultMixin, MathMixin):
+class amathq(AutoResultMixin, MathMixin):
 
     '''auto-balancing math queue'''
 
 mathq = amathq
 
 
-class mmathq(LookupsMixin, ManResultMixin, MathMixin):
+class mmathq(ManResultMixin, MathMixin):
 
     '''manually balanced math queue'''
 
@@ -27,14 +26,14 @@ class mmathq(LookupsMixin, ManResultMixin, MathMixin):
 ###############################################################################
 
 
-class atruthq(LookupsMixin, AutoResultMixin, TruthMixin):
+class atruthq(AutoResultMixin, TruthMixin):
 
     '''auto-balancing truth queue'''
 
 truthq = atruthq
 
 
-class mtruthq(LookupsMixin, ManResultMixin, TruthMixin):
+class mtruthq(ManResultMixin, TruthMixin):
 
     '''manually balanced truth queue'''
 
@@ -44,13 +43,13 @@ class mtruthq(LookupsMixin, ManResultMixin, TruthMixin):
 ###############################################################################
 
 
-class areduceq(LookupsMixin, AutoResultMixin, ReducingMixin):
+class areduceq(AutoResultMixin, ReducingMixin):
 
     '''auto-balancing reduce queue'''
 
 reduceq = areduceq
 
 
-class mreduceq(LookupsMixin, ManResultMixin, ReducingMixin):
+class mreduceq(ManResultMixin, ReducingMixin):
 
     '''manually balanced reduce queue'''
