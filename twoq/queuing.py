@@ -2,7 +2,15 @@
 '''twoq queuing mixins'''
 
 from threading import local
+from collections import deque
+from itertools import tee, repeat
 from contextlib import contextmanager
+
+SLOTS = [
+    '_work', 'outgoing', '_util', 'incoming', '_call', '_alt', '_wrapper',
+    '_args', '_kw', '_clearout', '_context', '_CONFIG', '_INQ', '_WORKQ',
+    '_UTILQ', '_OUTQ', '_iterator',
+]
 
 
 class ThingsMixin(local):
@@ -37,9 +45,9 @@ class ThingsMixin(local):
         # current callable
         self._call = lambda x: x
         # current alt callable
-        self._altcall = lambda x: x
+        self._alt = lambda x: x
         # clear wrapper
-        self._wrapper = self._list
+        self._wrapper = list
         # reset postitional arguments
         self._args = ()
         # reset keyword arguments
@@ -47,25 +55,15 @@ class ThingsMixin(local):
         # set defaults
         self.unswap()
 
-    ###########################################################################
-    ## iteration ##############################################################
-    ###########################################################################
-
     @property
     def balanced(self):
         '''if queues are balanced'''
         return self.outcount() == self.__len__()
 
-    ###########################################################################
-    ## things clearance #######################################################
-    ###########################################################################
-
     def clear(self):
         '''clear every thing'''
-        return (
-            self.detap().unwrap().dealt().outclear().inclear()._wclear()
-            ._uclear()
-        )
+        self.detap().unwrap().dealt()
+        return self.outclear().inclear()._wclear()._uclear()
 
     ###########################################################################
     ## context rotation #######################################################
@@ -82,7 +80,7 @@ class ThingsMixin(local):
 
     def swap(self, hard=False, **kw):
         '''swap contexts'''
-        self._context = kw.get('context', self._getr(self._default_context))
+        self._context = kw.get('context', getattr(self, self._default_context))
         # clear out outgoing things before extending them?
         self._clearout = kw.get('clearout', True)
         # keep context-specific settings between context swaps
@@ -132,14 +130,14 @@ class ThingsMixin(local):
         # set current callable
         self._call = call
         return self
-    
+
     def alt(self, call):
         '''
         set alternative current callable
 
         @param call: an alternative callable
         '''
-        self._altcall = call
+        self._alt = call
         return self
 
     def detap(self):
@@ -151,10 +149,10 @@ class ThingsMixin(local):
         # reset current callable (default is identity)
         self._call = lambda x: x
         return self
-    
+
     def dealt(self):
         '''clear current alternative callable'''
-        self._altcall = lambda x: x
+        self._alt = lambda x: x
         return self
 
     def factory(self, call):
@@ -166,9 +164,9 @@ class ThingsMixin(local):
         def wrap(*args, **kw):
             return call(*args, **kw)
         return self.tap(wrap)
-    
+
     defactory = detap
-    
+
     def wrap(self, wrapper):
         '''
         wrapper for outgoing things
@@ -177,10 +175,10 @@ class ThingsMixin(local):
         '''
         self._wrapper = wrapper
         return self
-    
+
     def unwrap(self):
         '''clear current wrapper'''
-        self._wrapper = self._list
+        self._wrapper = list
         return self
 
     ###########################################################################
@@ -197,7 +195,7 @@ class ThingsMixin(local):
     def reup(self):
         '''put incoming things in incoming things as one incoming thing'''
         with self.ctx2():
-            return self._append(self._list(self._iterable))
+            return self._append(list(self._iterable))
 
     def shift(self):
         '''shift outgoing things to incoming things'''
@@ -227,7 +225,7 @@ class ThingsMixin(local):
         '''
         with self.ctx1():
             return self._appendleft(thing)
-        
+
     appendleft = prepend
 
     ###########################################################################
@@ -243,7 +241,7 @@ class ThingsMixin(local):
         with self.ctx1():
             return self._xtend(things)
 
-    def preextend(self, things):
+    def prextend(self, things):
         '''
         extend left side of incoming things with `things`
 
@@ -251,8 +249,8 @@ class ThingsMixin(local):
         '''
         with self.ctx1():
             return self._xtendleft(things)
-        
-    extendleft = preextend
+
+    extendleft = prextend
 
     def outextend(self, things):
         '''
@@ -274,14 +272,14 @@ class ThingsMixin(local):
 
         @param iterable: an iterable to exhaust
         '''
-        for i in cls._repeat(None, length):  # @UnusedVariable
+        for i in repeat(None, length):  # @UnusedVariable
             try:
                 yield call()
             except exception:
                 pass
 
     @staticmethod
-    def iterexcept(call, exception, start=None):
+    def iterexcept(call, exception):
         '''
         call a function repeatedly until an exception is raised
 
@@ -292,111 +290,32 @@ class ThingsMixin(local):
         Raymond Hettinger, Python Cookbook recipe # 577155
         '''
         try:
-            if start is not None:
-                yield start()
             while 1:
                 yield call()
         except exception:
             pass
-
-    ###########################################################################
-    ## exhaustion iterators ###################################################
-    ###########################################################################
-
-    def exhaust(self, iterable, exception=StopIteration):
-        '''
-        call next on an iterator until it's exhausted
-
-        @param iterable: iterable to exhaust
-        @param exception: exception marking end of iteration
-        '''
-        next_ = self._next
-        try:
-            while 1:
-                next_(iterable)
-        except exception:
-            pass
-
-    def exhaustcall(self, call, iterable, exception=StopIteration):
-        '''
-        call function on an iterator until it's exhausted
-
-        @param call: call that does the exhausting
-        @param iterable: iterable to exhaust
-        @param exception: exception marking end of iteration
-        '''
-        next_ = self._next
-        iterable = self._imap(call, iterable)
-        try:
-            while True:
-                next_(iterable)
-        except exception:
-            pass
-        return self
-
-    def exhaustitems(self, maps, call, filter=False, exception=StopIteration):
-        '''
-        call `next` on an iterator until it's exhausted
-
-        @param mapping: a mapping to exhaust
-        @param call: call to handle what survives the filter
-        @param filter: a filter to apply to mapping (default: `None`)
-        @param exception: exception sentinel (default: `StopIteration`)
-        '''
-        next_, items = self._next, self._items
-        iterable = self._starmap(
-            call, self._ifilter(filter, items(maps)) if filter else items(maps)
-        )
-        try:
-            while 1:
-                next_(iterable)
-        except exception:
-            pass
-        return self
 
 
 class ResultMixin(local):
 
     '''result things mixin'''
 
-    def end(self):
-        '''return outgoing things then clear out everything'''
-        # return to default context
-        self.unswap()
-        out, tell = self._split(self.outgoing)
-        wrap = self._wrapper
-        out = self._next(out) if self._len(wrap(tell)) == 1 else wrap(out)
-        # clear every last thing
-        self.clear()
-        return out
-
     def first(self):
         '''first incoming thing'''
         with self._context():
-            return self._append(self._next(self._iterable))
+            return self._append(next(self._iterable))
 
     def last(self):
         '''last incoming thing'''
         with self._context():
-            i1, _ = self._split(self._iterable)
-            return self._append(self._deek(i1, maxlen=1).pop())
+            i1, _ = tee(self._iterable)
+            return self._append(deque(i1, maxlen=1).pop())
 
     def peek(self):
         '''results from read-only context'''
         out = self._wrapper(self._util)
-        return out[0] if self._len(out) == 1 else out
+        return out[0] if len(out) == 1 else out
 
     def results(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
         return self.__iter__()
-
-    def value(self):
-        '''return outgoing things and clear outgoing things'''
-        # return to default context
-        self.unswap()
-        out, tell = self._split(self.outgoing)
-        wrap = self._wrapper
-        out = self._next(out) if self._len(wrap(tell)) == 1 else wrap(out)
-        # clear outgoing things
-        self.outclear()
-        return out

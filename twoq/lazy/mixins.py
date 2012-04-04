@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 '''lazy twoq mixins'''
 
+from itertools import tee, chain
 from contextlib import contextmanager
+
+from stuf.utils import clsname
 
 from twoq.queuing import ResultMixin, ThingsMixin
 
@@ -13,7 +16,7 @@ class BaseQMixin(ThingsMixin):
     '''base lazy things'''
 
     def __init__(self, *things):
-        iter_ = self._iterz
+        iter_ = iter
         incoming = iter_([things[0]]) if len(things) == 1 else iter_(things)
         super(BaseQMixin, self).__init__(incoming, iter_([]))
         # work things
@@ -22,21 +25,23 @@ class BaseQMixin(ThingsMixin):
         self._util = iter_([])
 
     def __repr__(self):
-        getr_, setr_, list_ = self._getr, self._setr, self._list
-        in1, in2 = self._split(getr_(self._INQ))
+        list_, tee_ = list, tee
+        setr_ = lambda x, y: setattr(self, x, y)
+        getr_ = lambda x: getattr(self, x)
+        in1, in2 = tee_(getr_(self._INQ))
         setr_(self._INQ, in1)
-        out1, out2 = self._split(getr_(self._OUTQ))
+        out1, out2 = tee_(getr_(self._OUTQ))
         setr_(self._OUTQ, out1)
-        work1, work2 = self._split(getr_(self._WORKQ))
+        work1, work2 = tee_(getr_(self._WORKQ))
         setr_(self._WORKQ, work1)
-        util1, util2 = self._split(getr_(self._UTILQ))
+        util1, util2 = tee_(getr_(self._UTILQ))
         setr_(self._UTILQ, util1)
         return (
             '<{}.{}([IN: {}({}) => WORK: {}({}) => UTIL: {}({}) => '
             'OUT: {}: ({})]) at {}>'
         ).format(
             self.__module__,
-            self._clsname(self),
+            clsname(self),
             self._INQ,
             list_(in2),
             self._WORKQ,
@@ -54,13 +59,13 @@ class BaseQMixin(ThingsMixin):
 
     def __len__(self):
         '''number of incoming things'''
-        self.incoming, incoming = self._split(self.incoming)
-        return self._len(self._list(incoming))
+        self.incoming, incoming = tee(self.incoming)
+        return len(list(incoming))
 
     def outcount(self):
         '''number of outgoing things'''
-        self.outgoing, outgoing = self._split(self.outgoing)
-        return self._len(self._list(outgoing))
+        self.outgoing, outgoing = tee(self.outgoing)
+        return len(list(outgoing))
 
     ###########################################################################
     ## iterators ##############################################################
@@ -68,12 +73,12 @@ class BaseQMixin(ThingsMixin):
 
     def __iter__(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
-        return self._getr(self._OUTQ)
+        return getattr(self, self._OUTQ)
 
     @property
     def _iterable(self):
         '''iterable'''
-        return self._getr(self._WORKQ)
+        return getattr(self, self._WORKQ)
 
     ###########################################################################
     ## clear things ###########################################################
@@ -81,8 +86,9 @@ class BaseQMixin(ThingsMixin):
 
     def _clearwork(self):
         '''clear work things and utility things'''
-        iter_ = self._iterz
-        setr_, delr_ = self._setr, self._delr
+        iter_ = iter
+        setr_ = lambda x, y: setattr(self, x, y)
+        delr_ = lambda x: delattr(self, x)
         WORKQ, UTILQ = self._WORKQ, self._UTILQ
         # clear work things
         delr_(WORKQ)
@@ -95,29 +101,29 @@ class BaseQMixin(ThingsMixin):
     def _uclear(self):
         '''clear utility things'''
         UTILQ = self._UTILQ
-        self._delr(UTILQ)
-        self._setr(UTILQ, self._iterz([]))
+        delattr(self, UTILQ)
+        setattr(self, UTILQ, iter([]))
         return self
 
     def _wclear(self):
         '''clear work things'''
         WORKQ = self._WORKQ
-        self._delr(WORKQ)
-        self._setr(WORKQ, self._iterz([]))
+        delattr(self, WORKQ)
+        setattr(self, WORKQ, iter([]))
         return self
 
     def inclear(self):
         '''clear incoming things'''
         INQ = self._INQ
-        self._delr(INQ)
-        self._setr(INQ, self._iterz([]))
+        delattr(self, INQ)
+        setattr(self, INQ, iter([]))
         return self
 
     def outclear(self):
         '''clear outgoing things'''
         OUTQ = self._OUTQ
-        self._delr(OUTQ)
-        self._setr(OUTQ, self._iterz([]))
+        delattr(self, OUTQ)
+        setattr(self, OUTQ, iter([]))
         return self
 
     ###########################################################################
@@ -127,18 +133,18 @@ class BaseQMixin(ThingsMixin):
     def _xtend(self, thing):
         '''build chain'''
         UTILQ = self._UTILQ
-        self._setr(UTILQ, self._join(thing, self._getr(UTILQ)))
+        setattr(self, UTILQ, chain(thing, getattr(self, UTILQ)))
         return self
 
     __buildchain = _xtend
 
     def _xtendleft(self, things):
         '''extend left side of work things with `things`'''
-        return self.__buildchain(self._reversed(things))
+        return self.__buildchain(reversed(things))
 
     def _xreplace(self, thing):
         '''build chain'''
-        self._setr(self._UTILQ, thing)
+        setattr(self, self._UTILQ, thing)
         return self
 
     def _iter(self, things):
@@ -151,11 +157,11 @@ class BaseQMixin(ThingsMixin):
 
     def _append(self, things):
         '''append `things` to work things'''
-        return self.__buildchain(self._iterz([things]))
+        return self.__buildchain(iter([things]))
 
     def _appendleft(self, things):
         '''append `things` to left side of work things'''
-        return self.__buildchain(self._iterz([things]))
+        return self.__buildchain(iter([things]))
 
     ###########################################################################
     ## context rotation #######################################################
@@ -167,9 +173,11 @@ class BaseQMixin(ThingsMixin):
         self.swap(
             context=self.ctx2, outq=kw.get(self._OUTCFG, self._INVAR), **kw
         )._clearwork()
-        setr_, getr_, OUTQ = self._setr, self._getr, self._OUTQ
+        setr_ = lambda x, y: setattr(self, x, y)
+        getr_ = lambda x: getattr(self, x)
+        OUTQ = self._OUTQ
         # extend work things with outgoing things
-        work, out = self._split(getr_(OUTQ))
+        work, out = tee(getr_(OUTQ))
         setr_(self._WORKQ, work)
         setr_(OUTQ, out)
         yield
@@ -177,7 +185,7 @@ class BaseQMixin(ThingsMixin):
         util = getr_(self._UTILQ)
         setr_(
             self._OUTQ,
-            util if self._clearout else self._join(util, getr_(self._OUTQ)),
+            util if self._clearout else chain(util, getr_(self._OUTQ)),
         )
         self._clearwork()
         # return to global context
@@ -189,9 +197,11 @@ class BaseQMixin(ThingsMixin):
         self.swap(
             utilq=kw.get(self._WORKCFG, self._WORKVAR), context=self.ctx3, **kw
         )._clearwork()
-        setr_, getr_, INQ = self._setr, self._getr, self._INQ
+        setr_ = lambda x, y: setattr(self, x, y)
+        getr_ = lambda x: getattr(self, x)
+        INQ = self._INQ
         # extend work things with incoming things
-        work, inq = self._split(getr_(INQ))
+        work, inq = tee(getr_(INQ))
         setr_(self._WORKQ, work)
         setr_(INQ, inq)
         yield
@@ -199,7 +209,7 @@ class BaseQMixin(ThingsMixin):
         util = getr_(self._UTILQ)
         setr_(
             self._OUTQ,
-            util if self._clearout else self._join(util, getr_(self._OUTQ)),
+            util if self._clearout else chain(util, getr_(self._OUTQ)),
         )
         self._clearwork()
         # return to global context
@@ -209,9 +219,11 @@ class BaseQMixin(ThingsMixin):
     def ctx4(self, **kw):
         '''swap to four-armed context'''
         self.swap(context=self.ctx4, **kw)._clearwork()
-        setr_, getr_, INQ = self._setr, self._getr, self._INQ
+        setr_ = lambda x, y: setattr(self, x, y)
+        getr_ = lambda x: getattr(self, x)
+        INQ = self._INQ
         # extend work things with incoming things
-        work, inq = self._split(getr_(INQ))
+        work, inq = tee(getr_(INQ))
         setr_(self._WORKQ, work)
         setr_(INQ, inq)
         yield
@@ -219,7 +231,7 @@ class BaseQMixin(ThingsMixin):
         util = getr_(self._UTILQ)
         setr_(
             self._OUTQ,
-            util if self._clearout else self._join(util, getr_(self._OUTQ)),
+            util if self._clearout else chain(util, getr_(self._OUTQ)),
         )
         self._clearwork()
         # return to global context
@@ -229,18 +241,19 @@ class BaseQMixin(ThingsMixin):
     def autoctx(self, **kw):
         '''swap to auto-synchronizing context'''
         self.swap(context=self.autoctx, **kw)._clearwork()
-        setr_, getr_ = self._setr, self._getr
-        INQ, split_ = self._INQ, self._split
+        setr_ = lambda x, y: setattr(self, x, y)
+        getr_ = lambda x: getattr(self, x)
+        INQ = self._INQ
         # extend work things with incoming things
-        work, inq = self._split(getr_(INQ))
+        work, inq = tee(getr_(INQ))
         setr_(self._WORKQ, work)
         setr_(INQ, inq)
         yield
         # extend incoming things and outgoing things with utility things
-        inq, out = split_(getr_(self._UTILQ))
+        inq, out = tee(getr_(self._UTILQ))
         setr_(
             self._OUTQ,
-            out if self._clearout else self._join(out, getr_(self._OUTQ)),
+            out if self._clearout else chain(out, getr_(self._OUTQ)),
         )
         setr_(INQ, inq)
         self._clearwork()
@@ -267,13 +280,40 @@ class ManQMixin(BaseQMixin):
     '''manually balanced things mixin'''
 
     _default_context = 'ctx4'
+    
+    
+class EndMixin(ResultMixin):
+
+    '''result things mixin'''
+
+    def end(self):
+        '''return outgoing things then clear out everything'''
+        # return to default context
+        self.unswap()
+        out, tell = tee(self.outgoing)
+        wrap = self._wrapper
+        out = next(out) if len(wrap(tell)) == 1 else wrap(out)
+        # clear every last thing
+        self.clear()
+        return out
+
+    def value(self):
+        '''return outgoing things and clear outgoing things'''
+        # return to default context
+        self.unswap()
+        out, tell = tee(self.outgoing)
+        wrap = self._wrapper
+        out = next(out) if len(wrap(tell)) == 1 else wrap(out)
+        # clear outgoing things
+        self.outclear()
+        return out
 
 
-class AutoResultMixin(ResultMixin, AutoQMixin):
+class AutoResultMixin(EndMixin, AutoQMixin):
 
     '''auto-balancing things (with results extraction) mixin'''
 
 
-class ManResultMixin(ResultMixin, ManQMixin):
+class ManResultMixin(EndMixin, ManQMixin):
 
     '''manually balanced things (with results extraction) mixin'''

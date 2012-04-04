@@ -42,17 +42,6 @@ class AMathQMixin(object):
             self.qclass(11, 3, 5, 11, 7, 3, 11).mode().end(), 11,
         )
 
-    def test_uncommon(self):
-        self.assertEqual(
-            self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon().end(), 7,
-        )
-
-    def test_frequency(self):
-        self.assertEqual(
-            self.qclass(11, 3, 5, 11, 7, 3, 11).frequency().end(),
-            [(11, 3), (3, 2), (5, 1), (7, 1)]
-        )
-
     def test_statrange(self):
         self.assertEqual(self.qclass(3, 5, 7, 3, 11).statrange().end(), 8)
 
@@ -93,6 +82,17 @@ class ATruthQMixin(object):
         )
         self.assertEqual(
             self.qclass(None, 0, 'yes', False).tap(bool).quantify().end(), 1,
+        )
+
+    def test_uncommon(self):
+        self.assertEqual(
+            self.qclass(11, 3, 5, 11, 7, 3, 11).uncommon().end(), 7,
+        )
+
+    def test_frequency(self):
+        self.assertEqual(
+            self.qclass(11, 3, 5, 11, 7, 3, 11).frequency().end(),
+            [(11, 3), (3, 2), (5, 1), (7, 1)]
         )
 
 

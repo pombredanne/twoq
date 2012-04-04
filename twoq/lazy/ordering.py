@@ -1,56 +1,49 @@
 # -*- coding: utf-8 -*-
 '''twoq lazy ordering queues'''
 
-from twoq.imps import LookupsMixin
+from twoq.queuing import SLOTS
 from twoq.ordering import RandomMixin, OrderingMixin, CombineMixin
 
 from twoq.lazy.mixins import AutoResultMixin, ManResultMixin
 
-###############################################################################
-## lazy random queues #######################################################
-###############################################################################
 
-
-class arandomq(LookupsMixin, AutoResultMixin, RandomMixin):
+class randomq(AutoResultMixin, RandomMixin):
 
     '''auto-balanced random queue'''
 
-randomq = arandomq
+    __slots__ = SLOTS
 
 
-class mrandomq(LookupsMixin, ManResultMixin, RandomMixin):
+class mrandomq(ManResultMixin, RandomMixin):
 
     '''manually balanced random queue'''
 
-###############################################################################
-## lazy order queues #####EEE################################################
-###############################################################################
+    __slots__ = SLOTS
 
 
-class aorderq(LookupsMixin, AutoResultMixin, OrderingMixin):
+class orderq(AutoResultMixin, OrderingMixin):
 
     '''auto-balanced order queue'''
 
-orderq = aorderq
+    __slots__ = SLOTS
 
 
-class morderq(LookupsMixin, ManResultMixin, OrderingMixin):
+class morderq(ManResultMixin, OrderingMixin):
 
     '''manually balanced order queue'''
 
-
-###############################################################################
-## active combination queues #####EEE##########################################
-###############################################################################
+    __slots__ = SLOTS
 
 
-class acombineq(LookupsMixin, AutoResultMixin, CombineMixin):
+class combineq(AutoResultMixin, CombineMixin):
 
     '''auto-balanced combination queue'''
 
-combineq = acombineq
+    __slots__ = SLOTS
 
 
-class mcombineq(LookupsMixin, ManResultMixin, CombineMixin):
+class mcombineq(ManResultMixin, CombineMixin):
 
     '''manually balanced combination queue'''
+
+    __slots__ = SLOTS

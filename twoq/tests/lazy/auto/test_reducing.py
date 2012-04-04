@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
+from twoq.support import unittest
 #pylint: disable-msg=w0614,w0401
 from twoq.tests.auto.reducing import *  # @UnusedWildImport
 from twoq.tests.auto.queuing import AQMixin
@@ -13,22 +9,22 @@ from twoq.tests.auto.queuing import AQMixin
 class TestAutoReduceQ(unittest.TestCase, AQMixin, AReduceQMixin):
 
     def setUp(self):
-        from twoq.lazy.reducing import areduceq
-        self.qclass = areduceq
+        from twoq.lazy.reducing import reduceq
+        self.qclass = reduceq
 
 
 class TestAutoMathQ(unittest.TestCase, AQMixin, AMathQMixin):
 
     def setUp(self):
-        from twoq.lazy.reducing import amathq
-        self.qclass = amathq
+        from twoq.lazy.reducing import mathq
+        self.qclass = mathq
 
 
 class TestAutoTruthQ(unittest.TestCase, AQMixin, ATruthQMixin):
 
     def setUp(self):
-        from twoq.lazy.reducing import atruthq
-        self.qclass = atruthq
+        from twoq.lazy.reducing import truthq
+        self.qclass = truthq
 
 
 if __name__ == '__main__':

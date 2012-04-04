@@ -96,10 +96,12 @@ class MCollectQMixin(object):
             self.qclass(
                 stooges, stoog2, stoog3
             ).tap(
-                lambda x: not x.startswith('__')
+                lambda x: not x[0].startswith('__')
             ).alt(isclass).wrap(tuple).extract().detap().sync(),
             self.assertEqual,
-            (('age', 40), ('name', 'moe'), ('age', 50), ('name', 'larry'), ('age', 60), ('name', 'curly'), ('stoog4', (('age', 969), ('name', 'beastly')))),
+            (('age', 40), ('name', 'moe'), ('age', 50), ('name', 'larry'),
+            ('age', 60), ('name', 'curly'), ('stoog4', (('age', 969),
+            ('name', 'beastly')))),
         )
 
     def test_deepmembers(self):

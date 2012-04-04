@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 '''manq tests'''
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
+from twoq.support import unittest
 from twoq.tests.man.manning import Manning
 from twoq.tests.man.queuing import MQMixin
 from twoq.tests.man.mapping import MMapQMixin

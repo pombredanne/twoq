@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
-#pylint: disable-msg=w0614,w0401
+from twoq.support import unittest
 from twoq.tests.auto.filtering import *  # @UnusedWildImport
 from twoq.tests.auto.queuing import AQMixin
 
@@ -14,32 +9,30 @@ class TestAutoFilterQ(unittest.TestCase, AQMixin, AFilterQMixin):
 
     def setUp(self):
         self.maxDiff = None
-        from twoq.active.filtering import afilterq
-        self.qclass = afilterq
+        from twoq.active.filtering import filterq
+        self.qclass = filterq
 
 
 class TestAutoSliceQ(unittest.TestCase, AQMixin, ASliceQMixin):
 
     def setUp(self):
-        from twoq.active.filtering import asliceq
-        self.qclass = asliceq
+        from twoq.active.filtering import sliceq
+        self.qclass = sliceq
 
 
 class TestAutoCollectQ(unittest.TestCase, AQMixin, ACollectQMixin):
 
     def setUp(self):
         self.maxDiff = None
-        from twoq.active.filtering import acollectq
-        self.qclass = acollectq
+        from twoq.active.filtering import collectq
+        self.qclass = collectq
 
 
 class TestAutoSetQ(unittest.TestCase, AQMixin, ASetQMixin):
 
-    '''test automatically synchronized filtering'''
-
     def setUp(self):
-        from twoq.active.filtering import asetq
-        self.qclass = asetq
+        from twoq.active.filtering import setq
+        self.qclass = setq
 
 
 if __name__ == '__main__':

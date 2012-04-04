@@ -3,34 +3,21 @@
 
 from inspect import getmro
 from threading import local
+from functools import reduce
+from itertools import tee, islice
 from operator import attrgetter, itemgetter, truth
 
-from stuf.six import PY3
 from stuf.utils import getcls
+
+from twoq.support import ifilter, ichain, imap, filterfalse
 
 
 class CollectMixin(local):
 
     '''collecting mixin'''
 
-    @staticmethod
-    def _members(iterable):
-        '''
-        collect members of things
-
-        @param thing: an iterable
-        '''
-        getattr_, AttributeError_ = getattr, AttributeError
-        for key in dir(iterable):
-            try:
-                thing = getattr_(iterable, key)
-            except AttributeError_:
-                pass
-            else:
-                yield key, thing
-
     @classmethod
-    def _walk(cls, truth, subcall, transform, iterable):
+    def _extract(cls, truth, subcall, transform, iterable):
         '''
         collect members of things
 
@@ -38,19 +25,24 @@ class CollectMixin(local):
         @param truth: second "Truth" filter
         @param iterable: an iterable
         '''
-        getattr_, AttributeError_, walk_ = getattr, AttributeError, cls._walk
-        for key in cls._ifilter(truth, dir(iterable)):
-            try:
-                thing = getattr_(iterable, key)
-            except AttributeError_:
-                pass
-            else:
-                if subcall(thing):
-                    yield key, transform(
-                        walk_(truth, subcall, transform, thing)
-                    )
+        def members():
+            f, s, t, i = truth, subcall, transform, iterable
+            d, w, g, e = dir, cls._extract, getattr, AttributeError
+            test = lambda x: x.startswith('__') or x.startswith('mro')
+            for k in filterfalse(test, d(i)):
+                try:
+                    v = g(i, k)
+                except e:
+                    pass
                 else:
-                    yield key, thing
+                    if s(v):
+                        yield k, t(w(f, s, t, v))
+                    else:
+                        yield k, v
+        for member in ifilter(
+            truth, members(),
+        ):
+            yield member
 
     @classmethod
     def _mfilter(cls, call, iterable):
@@ -60,7 +52,17 @@ class CollectMixin(local):
         @param call: "Truth" filter
         @param iterable: an iterable
         '''
-        for i in cls._ifilter(call, cls._members(iterable)):
+        def members(): #@IgnorePep8
+            itrbl, get_, AttributeError_ = iterable, getattr, AttributeError
+            test = lambda x: x.startswith('__') or x.startswith('mro')
+            for key in filterfalse(test, dir(iterable)):
+                try:
+                    thing = get_(itrbl, key)
+                except AttributeError_:
+                    pass
+                else:
+                    yield key, thing
+        for i in ifilter(call, members()):
             yield i
 
     @staticmethod
@@ -96,35 +98,30 @@ class CollectMixin(local):
 
     def deepmembers(self):
         '''collect object members from incoming things and their bases'''
-        _mz = self._partial(self._mfilter, self._call)
-        if PY3:
-            def _memfilters(thing, mz=_mz, gc=getcls, ci=self._ichain):
-                t = lambda x: not x[0].startswith('mro')
-                return self._ifilter(
-                    t, ci(self._imap(mz, ci([getmro((gc(thing))), [thing]])))
-                )
-        else:
-            def _memfilters(thing, mz=_mz, gc=getcls, ci=self._ichain):
-                return ci(self._imap(mz, ci([getmro((gc(thing))), [thing]])))
+        _mf = self._mfilter
+        _mz = lambda x: _mf(self._call, x)
+        def _memfilters(thing, mz=_mz, gc=getcls, ci=ichain):
+            return ci(imap(mz, ci([getmro((gc(thing))), [thing]])))
         with self._context():
             return self._xtend(
-                self._ichain(self._imap(_memfilters, self._iterable))
+                ichain(imap(_memfilters, self._iterable))
             )
-
-    def members(self):
-        '''collect object members from incoming things'''
-        with self._context():
-            return self._xtend(self._ichain(self._imap(
-                self._partial(self._mfilter, self._call), self._iterable,
-            )))
             
     def extract(self):
         '''extract object members from incoming things'''
         with self._context():
-            walk_ = self._walk
-            call_, alt_, wrap_ = self._call, self._altcall, self._wrapper
-            return self._xtend(self._ichain(self._imap(
+            walk_ = self._extract
+            call_, alt_, wrap_ = self._call, self._alt, self._wrapper
+            return self._xtend(ichain(imap(
                 lambda x: walk_(call_, alt_, wrap_, x), self._iterable,
+            )))
+
+    def members(self):
+        '''collect object members from incoming things'''
+        with self._context():
+            mfilter, call = self._mfilter, self._call
+            return self._xtend(ichain(imap(
+                lambda x: mfilter(call, x), self._iterable,
             )))
 
     def pick(self, *names):
@@ -151,57 +148,53 @@ class SetMixin(local):
         @param key: determine uniqueness filter
         '''
         seen = set()
-        seen_add_, seen_contains_ = seen.add, seen.__contains__
-        if key is None:
-            for element in cls._filterfalse(seen_contains_, iterable):
-                seen_add_(element)
+        seen_add_ = seen.add
+        key_ = key
+        for element in iterable:
+            k = key_(element)
+            if k not in seen:
+                seen_add_(k)
                 yield element
-        else:
-            for element in iterable:
-                k = key(element)
-                if k not in seen:
-                    seen_add_(k)
-                    yield element
 
     def difference(self):
         '''difference between incoming things'''
         with self._context():
-            return self._xtend(self._ireduce(
+            return self._xtend(reduce(
                 lambda x, y: set(x).difference(y), self._iterable,
             ))
 
     def symmetric_difference(self):
         '''symmetric difference between incoming things'''
         with self._context():
-            return self._xtend(self._ireduce(
+            return self._xtend(reduce(
                 lambda x, y: set(x).symmetric_difference(y), self._iterable,
             ))
 
     def disjointed(self):
         '''disjoint between incoming things'''
         with self._context():
-            return self._append(self._ireduce(
+            return self._append(reduce(
                 lambda x, y: set(x).isdisjoint(y), self._iterable,
             ))
 
     def intersection(self):
         '''intersection between incoming things'''
         with self._context():
-            return self._xtend(self._ireduce(
+            return self._xtend(reduce(
                 lambda x, y: set(x).intersection(y), self._iterable,
             ))
 
     def subset(self):
         '''incoming things that are subsets of incoming things'''
         with self._context():
-            return self._append(self._ireduce(
+            return self._append(reduce(
                 lambda x, y: set(x).issubset(y), self._iterable,
             ))
 
     def superset(self):
         '''incoming things that are supersets of incoming things'''
         with self._context():
-            return self._append(self._ireduce(
+            return self._append(reduce(
                 lambda x, y: set(x).issubset(y), self._iterable
             ))
 
@@ -209,7 +202,7 @@ class SetMixin(local):
         '''union between incoming things'''
         with self._context():
             return self._xtend(
-                self._ireduce(lambda x, y: set(x).union(y), self._iterable)
+                reduce(lambda x, y: set(x).union(y), self._iterable)
             )
 
     def unique(self):
@@ -234,19 +227,19 @@ class SliceMixin(local):
         '''
         with self._context():
             return self._append(
-                self._next(self._islice(self._iterable, n, None), default)
+                next(islice(self._iterable, n, None), default)
             )
 
     def initial(self):
         '''all incoming things except the last thing'''
         with self._context():
-            i1, i2 = self._split(self._iterable)
-            return self._xtend(self._islice(i1, len(list(i2)) - 1))
+            i1, i2 = tee(self._iterable)
+            return self._xtend(islice(i1, len(list(i2)) - 1))
 
     def rest(self):
         '''all incoming things except the first thing'''
         with self._context():
-            return self._xtend(self._islice(self._iterable, 1, None))
+            return self._xtend(islice(self._iterable, 1, None))
 
     def snatch(self, n):
         '''
@@ -255,10 +248,8 @@ class SliceMixin(local):
         @param n: number of things
         '''
         with self._context():
-            i1, i2 = self._split(self._iterable)
-            return self._xtend(self._islice(
-                i1, self._len(self._list(i2)) - n, None
-            ))
+            i1, i2 = tee(self._iterable)
+            return self._xtend(islice(i1, len(list(i2)) - n, None))
 
     def take(self, n):
         '''
@@ -267,7 +258,7 @@ class SliceMixin(local):
         @param n: number of things
         '''
         with self._context():
-            return self._xtend(self._islice(self._iterable, n))
+            return self._xtend(islice(self._iterable, n))
 
 
 class FilterMixin(local):
@@ -277,18 +268,18 @@ class FilterMixin(local):
     def compact(self):
         '''strip "untrue" things from incoming things'''
         with self._context():
-            return self._iter(self._ifilter(truth, self._iterable))
+            return self._iter(ifilter(truth, self._iterable))
 
     def filter(self):
         '''incoming things for which call is `True`'''
         with self._context():
-            return self._xtend(self._ifilter(self._call, self._iterable))
+            return self._xtend(ifilter(self._call, self._iterable))
 
     def find(self):
         '''first incoming thing for which call is `True`'''
         with self._context():
             return self._append(
-                self._next(self._ifilter(self._call, self._iterable))
+                next(ifilter(self._call, self._iterable))
             )
 
     def partition(self):
@@ -296,24 +287,23 @@ class FilterMixin(local):
         split incoming things into `True` and `False` things based on results
         of call
         '''
-        list_, call_ = self._list, self._call
+        list_, call_ = list, self._call
         with self._context():
-            falsy, truey = self._split(self._iterable)
-            return self._xtend(self._iterz([
-                list_(self._filterfalse(call_, falsy)),
-                list_(self._ifilter(call_, truey)),
+            falsy, truey = tee(self._iterable)
+            return self._xtend(iter([
+                list_(filterfalse(call_, falsy)), list_(ifilter(call_, truey)),
             ]))
 
     def reject(self):
         '''incoming things for which call is `False`'''
         with self._context():
-            return self._xtend(self._filterfalse(self._call, self._iterable))
+            return self._xtend(filterfalse(self._call, self._iterable))
 
     def without(self, *things):
         '''strip things from incoming things'''
         with self._context():
             return self._xtend(
-                self._filterfalse(lambda y: y in things, self._iterable)
+                filterfalse(lambda y: y in things, self._iterable)
             )
 
 

@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 '''autoq tests'''
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
+from twoq.support import unittest
 from twoq.tests.auto.queuing import AQMixin
 from twoq.tests.auto.mapping import AMapQMixin
 from twoq.tests.auto.ordering import AOrderQMixin

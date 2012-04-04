@@ -1,55 +1,49 @@
 # -*- coding: utf-8 -*-
 '''twoq active reducing queues'''
 
-from twoq.imps import LookupsMixin
+from twoq.queuing import SLOTS
 from twoq.reducing import MathMixin, TruthMixin, ReducingMixin
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin
 
-###############################################################################
-## active math queues #########################################################
-###############################################################################
 
-
-class amathq(LookupsMixin, AutoResultMixin, MathMixin):
+class mathq(AutoResultMixin, MathMixin):
 
     '''auto-balancing math queue'''
 
-mathq = amathq
+    __slots__ = SLOTS
 
 
-class mmathq(LookupsMixin, ManResultMixin, MathMixin):
+class mmathq(ManResultMixin, MathMixin):
 
     '''manually balanced math queue'''
 
-###############################################################################
-## active truth queues ####E###################################################
-###############################################################################
+    __slots__ = SLOTS
 
 
-class atruthq(LookupsMixin, AutoResultMixin, TruthMixin):
+class truthq(AutoResultMixin, TruthMixin):
 
     '''auto-balancing truth queue'''
 
-truthq = atruthq
+    __slots__ = SLOTS
 
 
-class mtruthq(LookupsMixin, ManResultMixin, TruthMixin):
+class mtruthq(ManResultMixin, TruthMixin):
 
     '''manually balanced truth queue'''
 
-###############################################################################
-## reduce queues ##############################################################
-###############################################################################
+    __slots__ = SLOTS
 
 
-class areduceq(LookupsMixin, AutoResultMixin, ReducingMixin):
+class reduceq(AutoResultMixin, ReducingMixin):
 
     '''auto-balancing reduce queue'''
 
-reduceq = areduceq
+    __slots__ = SLOTS
 
 
-class mreduceq(LookupsMixin, ManResultMixin, ReducingMixin):
+class mreduceq(ManResultMixin, ReducingMixin):
 
     '''manually balanced reduce queue'''
+
+    __slots__ = SLOTS

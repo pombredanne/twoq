@@ -1,72 +1,64 @@
 # -*- coding: utf-8 -*-
 '''twoq active filtering queues'''
 
-from twoq.imps import LookupsMixin
+from twoq.queuing import SLOTS
 from twoq.filtering import (
     FilteringMixin, CollectMixin, SetMixin, SliceMixin)
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin
 
-###############################################################################
-## active collecting queues ###################################################
-###############################################################################
 
-
-class acollectq(LookupsMixin, AutoResultMixin, CollectMixin):
+class collectq(AutoResultMixin, CollectMixin):
 
     '''auto-balanced collecting queue'''
 
-collectq = acollectq
+    __slots__ = SLOTS
 
 
-class mcollectq(LookupsMixin, ManResultMixin, CollectMixin):
+class mcollectq(ManResultMixin, CollectMixin):
 
     '''manually balanced collecting queue'''
 
-###############################################################################
-## active set queues ##########################################################
-###############################################################################
+    __slots__ = SLOTS
 
 
-class asetq(LookupsMixin, AutoResultMixin, SetMixin):
+class setq(AutoResultMixin, SetMixin):
 
     '''auto-balanced set queue'''
 
-setq = asetq
+    __slots__ = SLOTS
 
 
-class msetq(LookupsMixin, ManResultMixin, SetMixin):
+class msetq(ManResultMixin, SetMixin):
 
     '''manually balanced set queue'''
 
-###############################################################################
-## active slice queues ########################################################
-###############################################################################
+    __slots__ = SLOTS
 
 
-class asliceq(LookupsMixin, AutoResultMixin, SliceMixin):
+class sliceq(AutoResultMixin, SliceMixin):
 
     '''auto-balanced slice queue'''
 
-sliceq = asliceq
+    __slots__ = SLOTS
 
 
-class msliceq(LookupsMixin, ManResultMixin, SliceMixin):
+class msliceq(ManResultMixin, SliceMixin):
 
     '''manually balanced slice queue'''
 
-###############################################################################
-## active filter queues #######################################################
-###############################################################################
+    __slots__ = SLOTS
 
 
-class afilterq(LookupsMixin, AutoResultMixin, FilteringMixin):
+class filterq(AutoResultMixin, FilteringMixin):
 
     '''auto-balanced filter queue'''
 
-filterq = afilterq
+    __slots__ = SLOTS
 
 
-class mfilterq(LookupsMixin, ManResultMixin, FilteringMixin):
+class mfilterq(ManResultMixin, FilteringMixin):
 
     '''manually balanced filtering queue'''
+
+    __slots__ = SLOTS
