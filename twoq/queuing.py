@@ -37,9 +37,9 @@ class ThingsMixin(local):
         # current callable
         self._call = lambda x: x
         # current alt callable
-        self._altcall = lambda x: x
+        self._alt = lambda x: x
         # clear wrapper
-        self._wrapper = self._list
+        self._wrapper = list
         # reset postitional arguments
         self._args = ()
         # reset keyword arguments
@@ -47,25 +47,15 @@ class ThingsMixin(local):
         # set defaults
         self.unswap()
 
-    ###########################################################################
-    ## iteration ##############################################################
-    ###########################################################################
-
     @property
     def balanced(self):
         '''if queues are balanced'''
         return self.outcount() == self.__len__()
 
-    ###########################################################################
-    ## things clearance #######################################################
-    ###########################################################################
-
     def clear(self):
         '''clear every thing'''
-        return (
-            self.detap().unwrap().dealt().outclear().inclear()._wclear()
-            ._uclear()
-        )
+        self.detap().unwrap().dealt()
+        return self.outclear().inclear()._wclear()._uclear()
 
     ###########################################################################
     ## context rotation #######################################################
@@ -139,7 +129,7 @@ class ThingsMixin(local):
 
         @param call: an alternative callable
         '''
-        self._altcall = call
+        self._alt = call
         return self
 
     def detap(self):
@@ -154,7 +144,7 @@ class ThingsMixin(local):
     
     def dealt(self):
         '''clear current alternative callable'''
-        self._altcall = lambda x: x
+        self._alt = lambda x: x
         return self
 
     def factory(self, call):
@@ -243,7 +233,7 @@ class ThingsMixin(local):
         with self.ctx1():
             return self._xtend(things)
 
-    def preextend(self, things):
+    def prextend(self, things):
         '''
         extend left side of incoming things with `things`
 
@@ -252,7 +242,7 @@ class ThingsMixin(local):
         with self.ctx1():
             return self._xtendleft(things)
         
-    extendleft = preextend
+    extendleft = prextend
 
     def outextend(self, things):
         '''
@@ -328,7 +318,7 @@ class ThingsMixin(local):
         next_ = self._next
         iterable = self._imap(call, iterable)
         try:
-            while True:
+            while 1:
                 next_(iterable)
         except exception:
             pass

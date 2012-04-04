@@ -68,7 +68,7 @@ class ACollectQMixin(object):
             class stoog4: #@IgnorePep8
                 name = 'beastly'
                 age = 969
-        test = lambda x: not x.startswith('__')
+        test = lambda x: not x[0].startswith('__')
         value = self.qclass(
             stooges, stoog2, stoog3
         ).tap(test).alt(isclass).wrap(tuple).extract().detap().end(),

@@ -13,24 +13,8 @@ class CollectMixin(local):
 
     '''collecting mixin'''
 
-    @staticmethod
-    def _members(iterable):
-        '''
-        collect members of things
-
-        @param thing: an iterable
-        '''
-        getattr_, AttributeError_ = getattr, AttributeError
-        for key in dir(iterable):
-            try:
-                thing = getattr_(iterable, key)
-            except AttributeError_:
-                pass
-            else:
-                yield key, thing
-
     @classmethod
-    def _walk(cls, truth, subcall, transform, iterable):
+    def _extract(cls, truth, subcall, transform, iterable):
         '''
         collect members of things
 
@@ -38,19 +22,23 @@ class CollectMixin(local):
         @param truth: second "Truth" filter
         @param iterable: an iterable
         '''
-        getattr_, AttributeError_, walk_ = getattr, AttributeError, cls._walk
-        for key in cls._ifilter(truth, dir(iterable)):
-            try:
-                thing = getattr_(iterable, key)
-            except AttributeError_:
-                pass
-            else:
-                if subcall(thing):
-                    yield key, transform(
-                        walk_(truth, subcall, transform, thing)
-                    )
+        def members(
+            f, s, t, i, d_=dir, w_=cls._extract, g=getattr, e=AttributeError,
+        ): #@IgnorePep8
+            for k in d_(i):
+                try:
+                    v = g(i, k)
+                except e:
+                    pass
                 else:
-                    yield key, thing
+                    if s(v):
+                        yield k, t(w_(f, s, t, v))
+                    else:
+                        yield k, v
+        for member in cls._ifilter(
+            truth, members(truth, subcall, transform, iterable),
+        ):
+            yield member
 
     @classmethod
     def _mfilter(cls, call, iterable):
@@ -60,7 +48,16 @@ class CollectMixin(local):
         @param call: "Truth" filter
         @param iterable: an iterable
         '''
-        for i in cls._ifilter(call, cls._members(iterable)):
+        def members(iterable):
+            getattr_, AttributeError_ = getattr, AttributeError
+            for key in dir(iterable):
+                try:
+                    thing = getattr_(iterable, key)
+                except AttributeError_:
+                    pass
+                else:
+                    yield key, thing
+        for i in cls._ifilter(call, members(iterable)):
             yield i
 
     @staticmethod
@@ -96,7 +93,8 @@ class CollectMixin(local):
 
     def deepmembers(self):
         '''collect object members from incoming things and their bases'''
-        _mz = self._partial(self._mfilter, self._call)
+        _mf = self._mfilter
+        _mz = lambda x: _mf(self._call, x)
         if PY3:
             def _memfilters(thing, mz=_mz, gc=getcls, ci=self._ichain):
                 t = lambda x: not x[0].startswith('mro')
@@ -110,21 +108,21 @@ class CollectMixin(local):
             return self._xtend(
                 self._ichain(self._imap(_memfilters, self._iterable))
             )
+            
+    def extract(self):
+        '''extract object members from incoming things'''
+        with self._context():
+            walk_ = self._extract
+            call_, alt_, wrap_ = self._call, self._alt, self._wrapper
+            return self._xtend(self._ichain(self._imap(
+                lambda x: walk_(call_, alt_, wrap_, x), self._iterable,
+            )))
 
     def members(self):
         '''collect object members from incoming things'''
         with self._context():
             return self._xtend(self._ichain(self._imap(
                 self._partial(self._mfilter, self._call), self._iterable,
-            )))
-            
-    def extract(self):
-        '''extract object members from incoming things'''
-        with self._context():
-            walk_ = self._walk
-            call_, alt_, wrap_ = self._call, self._altcall, self._wrapper
-            return self._xtend(self._ichain(self._imap(
-                lambda x: walk_(call_, alt_, wrap_, x), self._iterable,
             )))
 
     def pick(self, *names):
