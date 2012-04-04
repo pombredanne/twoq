@@ -53,6 +53,30 @@ class ACollectQMixin(object):
             [('age', 40), ('name', 'moe'), ('age', 50), ('name', 'larry'),
             ('age', 60), ('name', 'curly')],
         )
+        
+    def test_extract(self):
+        from inspect import isclass
+        class stooges:
+            name = 'moe'
+            age = 40
+        class stoog2: #@IgnorePep8
+            name = 'larry'
+            age = 50
+        class stoog3: #@IgnorePep8
+            name = 'curly'
+            age = 60
+            class stoog4: #@IgnorePep8
+                name = 'beastly'
+                age = 969
+        test = lambda x: not x.startswith('__')
+        value = self.qclass(
+            stooges, stoog2, stoog3
+        ).tap(test).alt(isclass).wrap(tuple).extract().detap().end(),
+        self.assertEqual(
+            value,
+            ((('age', 40), ('name', 'moe'), ('age', 50), ('name', 'larry'), ('age', 60), ('name', 'curly'), ('stoog4', (('age', 969), ('name', 'beastly')))),),
+            value,
+        )
 
     def test_deepmembers(self):
         class stooges:
