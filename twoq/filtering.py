@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 '''twoq filtering mixins'''
 
-from itertools import tee, islice
 from inspect import getmro
 from threading import local
 from functools import reduce
-
+from itertools import tee, islice
 from operator import attrgetter, itemgetter, truth
 
-from stuf.six import PY3
 from stuf.utils import getcls
 
 from twoq.support import ifilter, ichain, imap, filterfalse
@@ -27,21 +25,22 @@ class CollectMixin(local):
         @param truth: second "Truth" filter
         @param iterable: an iterable
         '''
-        def members(
-            f, s, t, i, d_=dir, w_=cls._extract, g=getattr, e=AttributeError,
-        ): #@IgnorePep8
-            for k in d_(i):
+        def members():
+            f, s, t, i = truth, subcall, transform, iterable
+            d, w, g, e = dir, cls._extract, getattr, AttributeError
+            test = lambda x: x.startswith('__') or x.startswith('mro')
+            for k in filterfalse(test, d(i)):
                 try:
                     v = g(i, k)
                 except e:
                     pass
                 else:
                     if s(v):
-                        yield k, t(w_(f, s, t, v))
+                        yield k, t(w(f, s, t, v))
                     else:
                         yield k, v
         for member in ifilter(
-            truth, members(truth, subcall, transform, iterable),
+            truth, members(),
         ):
             yield member
 
@@ -53,16 +52,17 @@ class CollectMixin(local):
         @param call: "Truth" filter
         @param iterable: an iterable
         '''
-        def members(iterable):
-            getattr_, AttributeError_ = getattr, AttributeError
-            for key in dir(iterable):
+        def members(): #@IgnorePep8
+            itrbl, get_, AttributeError_ = iterable, getattr, AttributeError
+            test = lambda x: x.startswith('__') or x.startswith('mro')
+            for key in filterfalse(test, dir(iterable)):
                 try:
-                    thing = getattr_(iterable, key)
+                    thing = get_(itrbl, key)
                 except AttributeError_:
                     pass
                 else:
                     yield key, thing
-        for i in ifilter(call, members(iterable)):
+        for i in ifilter(call, members()):
             yield i
 
     @staticmethod
@@ -100,15 +100,8 @@ class CollectMixin(local):
         '''collect object members from incoming things and their bases'''
         _mf = self._mfilter
         _mz = lambda x: _mf(self._call, x)
-        if PY3:
-            def _memfilters(thing, mz=_mz, gc=getcls, ci=ichain):
-                t = lambda x: not x[0].startswith('mro')
-                return self._ifilter(
-                    t, ci(imap(mz, ci([getmro((gc(thing))), [thing]])))
-                )
-        else:
-            def _memfilters(thing, mz=_mz, gc=getcls, ci=ichain):
-                return ci(imap(mz, ci([getmro((gc(thing))), [thing]])))
+        def _memfilters(thing, mz=_mz, gc=getcls, ci=ichain):
+            return ci(imap(mz, ci([getmro((gc(thing))), [thing]])))
         with self._context():
             return self._xtend(
                 ichain(imap(_memfilters, self._iterable))
@@ -126,9 +119,9 @@ class CollectMixin(local):
     def members(self):
         '''collect object members from incoming things'''
         with self._context():
-            mfilter = self._mfilter
+            mfilter, call = self._mfilter, self._call
             return self._xtend(ichain(imap(
-                lambda x: mfilter(self._call, x), self._iterable,
+                lambda x: mfilter(call, x), self._iterable,
             )))
 
     def pick(self, *names):
@@ -155,17 +148,13 @@ class SetMixin(local):
         @param key: determine uniqueness filter
         '''
         seen = set()
-        seen_add_, seen_contains_ = seen.add, seen.__contains__
-        if key is None:
-            for element in filterfalse(seen_contains_, iterable):
-                seen_add_(element)
+        seen_add_ = seen.add
+        key_ = key
+        for element in iterable:
+            k = key_(element)
+            if k not in seen:
+                seen_add_(k)
                 yield element
-        else:
-            for element in iterable:
-                k = key(element)
-                if k not in seen:
-                    seen_add_(k)
-                    yield element
 
     def difference(self):
         '''difference between incoming things'''

@@ -44,10 +44,6 @@ class OrderMixin(local):
         '''
         call_, list_ = self._call, list
         with self._context():
-            if call_ is None:
-                return self._xtend(imap(
-                    lambda x: [x[0], list_(x[1])], groupby(self._iterable),
-                ))
             return self._xtend(imap(
                 lambda x: [x[0], list_(x[1])], groupby(self._iterable, call_)
             ))
@@ -76,8 +72,6 @@ class OrderMixin(local):
         '''
         call_ = self._call
         with self._context():
-            if call_ is None:
-                return self._xtend(sorted(self._iterable))
             return self._xtend(sorted(self._iterable, key=call_))
 
 

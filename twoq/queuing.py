@@ -3,10 +3,8 @@
 
 from threading import local
 from collections import deque
-from itertools import tee, starmap, repeat
+from itertools import tee, repeat
 from contextlib import contextmanager
-
-from support import ifilter, items
 
 
 class ThingsMixin(local):
@@ -275,7 +273,7 @@ class ThingsMixin(local):
                 pass
 
     @staticmethod
-    def iterexcept(call, exception, start=None):
+    def iterexcept(call, exception):
         '''
         call a function repeatedly until an exception is raised
 
@@ -286,83 +284,15 @@ class ThingsMixin(local):
         Raymond Hettinger, Python Cookbook recipe # 577155
         '''
         try:
-            if start is not None:
-                yield start()
             while 1:
                 yield call()
         except exception:
             pass
 
-    ###########################################################################
-    ## exhaustion iterators ###################################################
-    ###########################################################################
-
-    def exhaust(self, iterable, exception=StopIteration):
-        '''
-        call next on an iterator until it's exhausted
-
-        @param iterable: iterable to exhaust
-        @param exception: exception marking end of iteration
-        '''
-        next_ = next
-        try:
-            while 1:
-                next_(iterable)
-        except exception:
-            pass
-
-    def exhaustcall(self, call, iterable, exception=StopIteration):
-        '''
-        call function on an iterator until it's exhausted
-
-        @param call: call that does the exhausting
-        @param iterable: iterable to exhaust
-        @param exception: exception marking end of iteration
-        '''
-        next_ = self._next
-        iterable = self._imap(call, iterable)
-        try:
-            while 1:
-                next_(iterable)
-        except exception:
-            pass
-        return self
-
-    def exhaustitems(self, maps, call, filter=False, exception=StopIteration):
-        '''
-        call `next` on an iterator until it's exhausted
-
-        @param mapping: a mapping to exhaust
-        @param call: call to handle what survives the filter
-        @param filter: a filter to apply to mapping (default: `None`)
-        @param exception: exception sentinel (default: `StopIteration`)
-        '''
-        next_ = next
-        iterable = starmap(
-            call, ifilter(filter, items(maps)) if filter else items(maps)
-        )
-        try:
-            while 1:
-                next_(iterable)
-        except exception:
-            pass
-        return self
-
 
 class ResultMixin(local):
 
     '''result things mixin'''
-
-    def end(self):
-        '''return outgoing things then clear out everything'''
-        # return to default context
-        self.unswap()
-        out, tell = tee(self.outgoing)
-        wrap = self._wrapper
-        out = next(out) if len(wrap(tell)) == 1 else wrap(out)
-        # clear every last thing
-        self.clear()
-        return out
 
     def first(self):
         '''first incoming thing'''
@@ -383,14 +313,3 @@ class ResultMixin(local):
     def results(self):
         '''yield outgoing things, clearing outgoing things as it iterates'''
         return self.__iter__()
-
-    def value(self):
-        '''return outgoing things and clear outgoing things'''
-        # return to default context
-        self.unswap()
-        out, tell = tee(self.outgoing)
-        wrap = self._wrapper
-        out = next(out) if len(wrap(tell)) == 1 else wrap(out)
-        # clear outgoing things
-        self.outclear()
-        return out

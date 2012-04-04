@@ -4,6 +4,8 @@
 from collections import deque
 from contextlib import contextmanager
 
+from stuf.utils import clsname
+
 from twoq.queuing import ThingsMixin, ResultMixin
 
 
@@ -32,7 +34,7 @@ class BaseQMixin(ThingsMixin):
             'OUT: {}: ({})]) at {}'
         ).format(
             self.__module__,
-            self._clsname(self),
+            clsname(self),
             self._INQ,
             list_(getr_(self._INQ)),
             self._WORKQ,

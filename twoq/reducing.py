@@ -4,8 +4,8 @@
 from math import fsum
 from heapq import merge
 from threading import local
-from functools import partial
 from collections import Iterable
+from functools import partial, reduce
 from operator import contains, truediv
 from itertools import cycle, tee, islice
 
@@ -45,11 +45,8 @@ class MathMixin(local):
         find maximum thing in incoming things, optionally using current
         call as key function
         '''
-        call = self._call
         with self._context():
-            if call is None:
-                return self._append(max(self._iterable))
-            return self._append(max(self._iterable, key=call))
+            return self._append(max(self._iterable, key=self._call))
 
     def median(self):
         '''median of all incoming things'''
@@ -58,11 +55,8 @@ class MathMixin(local):
 
     def min(self):
         '''find minimum thing in incoming things using call as key function'''
-        call = self._call
         with self._context():
-            if call is None:
-                return self._append(min(self._iterable))
-            return self._append(min(self._iterable, key=call))
+            return self._append(min(self._iterable, key=self._call))
 
     def minmax(self):
         '''minimum and maximum things among all incoming things'''

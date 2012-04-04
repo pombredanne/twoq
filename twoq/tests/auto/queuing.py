@@ -8,6 +8,12 @@ class AQMixin(object):
     ## queue manipulation #####################################################
     ###########################################################################
 
+    def test_repr(self):
+        from stuf.six import strings
+        self.assertTrue(isinstance(
+            self.qclass([1, 2, 3, 4, 5, 6]).__repr__(), strings,
+        ))
+
     def test_ro(self):
         self.assertListEqual(
             self.qclass([1, 2, 3, 4, 5, 6]).ro().peek(), [1, 2, 3, 4, 5, 6],

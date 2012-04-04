@@ -4,6 +4,8 @@
 from itertools import tee, chain
 from contextlib import contextmanager
 
+from stuf.utils import clsname
+
 from twoq.queuing import ResultMixin, ThingsMixin
 
 __all__ = ('AutoQMixin', 'ManQMixin', 'AutoResultMixin', 'ManResultMixin')
@@ -39,7 +41,7 @@ class BaseQMixin(ThingsMixin):
             'OUT: {}: ({})]) at {}>'
         ).format(
             self.__module__,
-            self._clsname(self),
+            clsname(self),
             self._INQ,
             list_(in2),
             self._WORKQ,
