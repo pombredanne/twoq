@@ -24,7 +24,8 @@ class Manning(unittest.TestCase):
         manq.sync()
         self.assertTrue(manq.balanced)
         if comp is not None:
-            expr(manq.value(), comp)
+            value = manq.value()
+            expr(value, comp, value)
         else:
             expr(manq.value())
         self.assertFalse(manq.balanced)

@@ -72,12 +72,12 @@ class ADelayQMixin(object):
 
 class AMapQMixin(ADelayQMixin, ARepeatQMixin):
 
-    def test_wrap(self):
+    def test_factory(self):
         from stuf import stuf
         self.assertDictEqual(
             self.qclass(
                 ('a', 1), ('b', 2), ('c', 3)
-            ).reup().wrap(stuf).map().end(),
+            ).reup().factory(stuf).map().end(),
             stuf(a=1, b=2, c=3),
         )
 

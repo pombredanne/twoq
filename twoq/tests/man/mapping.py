@@ -88,11 +88,11 @@ class MDelayQMixin(object):
 
 class MMapQMixin(MDelayQMixin, MRepeatQMixin):
 
-    def test_wrap(self):
+    def test_factory(self):
         from stuf import stuf
         thing = self.qclass(
             ('a', 1), ('b', 2), ('c', 3)
-        ).reup().wrap(stuf).map().shift().end()
+        ).reup().factory(stuf).map().shift().end()
         self.assertDictEqual(thing, stuf(a=1, b=2, c=3), thing)
 
     def test_each(self):

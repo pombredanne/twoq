@@ -35,7 +35,11 @@ class ThingsMixin(local):
         # outgoing things
         self.outgoing = outgoing
         # current callable
-        self._call = None
+        self._call = lambda x: x
+        # current alt callable
+        self._altcall = lambda x: x
+        # clear wrapper
+        self._wrapper = self._list
         # reset postitional arguments
         self._args = ()
         # reset keyword arguments
@@ -58,7 +62,10 @@ class ThingsMixin(local):
 
     def clear(self):
         '''clear every thing'''
-        return self.detap().outclear().inclear()._wclear()._uclear()
+        return (
+            self.detap().unwrap().dealt().outclear().inclear()._wclear()
+            ._uclear()
+        )
 
     ###########################################################################
     ## context rotation #######################################################
@@ -125,6 +132,15 @@ class ThingsMixin(local):
         # set current callable
         self._call = call
         return self
+    
+    def alt(self, call):
+        '''
+        set alternative current callable
+
+        @param call: an alternative callable
+        '''
+        self._altcall = call
+        return self
 
     def detap(self):
         '''clear current callable'''
@@ -132,21 +148,40 @@ class ThingsMixin(local):
         self._args = ()
         # reset keyword arguments
         self._kw = {}
-        # reset current callable
-        self._call = None
+        # reset current callable (default is identity)
+        self._call = lambda x: x
+        return self
+    
+    def dealt(self):
+        '''clear current alternative callable'''
+        self._altcall = lambda x: x
         return self
 
-    unwrap = detap
-
-    def wrap(self, call):
+    def factory(self, call):
         '''
         build current callable from factory
 
         @param call: a callable
         '''
-        def factory(*args, **kw):
+        def wrap(*args, **kw):
             return call(*args, **kw)
-        return self.tap(factory)
+        return self.tap(wrap)
+    
+    defactory = detap
+    
+    def wrap(self, wrapper):
+        '''
+        wrapper for outgoing things
+
+        @param wrapper: an iterator
+        '''
+        self._wrapper = wrapper
+        return self
+    
+    def unwrap(self):
+        '''clear current wrapper'''
+        self._wrapper = self._list
+        return self
 
     ###########################################################################
     ## things rotation ########################################################
@@ -184,7 +219,7 @@ class ThingsMixin(local):
         with self.ctx1():
             return self._append(thing)
 
-    def appendleft(self, thing):
+    def prepend(self, thing):
         '''
         append `thing` to left side of incoming things
 
@@ -192,6 +227,8 @@ class ThingsMixin(local):
         '''
         with self.ctx1():
             return self._appendleft(thing)
+        
+    appendleft = prepend
 
     ###########################################################################
     ## things extension #######################################################
@@ -206,7 +243,7 @@ class ThingsMixin(local):
         with self.ctx1():
             return self._xtend(things)
 
-    def extendleft(self, things):
+    def preextend(self, things):
         '''
         extend left side of incoming things with `things`
 
@@ -214,6 +251,8 @@ class ThingsMixin(local):
         '''
         with self.ctx1():
             return self._xtendleft(things)
+        
+    extendleft = preextend
 
     def outextend(self, things):
         '''
@@ -325,8 +364,8 @@ class ResultMixin(local):
         # return to default context
         self.unswap()
         out, tell = self._split(self.outgoing)
-        list_ = self._list
-        out = self._next(out) if self._len(list_(tell)) == 1 else list_(out)
+        wrap = self._wrapper
+        out = self._next(out) if self._len(wrap(tell)) == 1 else wrap(out)
         # clear every last thing
         self.clear()
         return out
@@ -344,7 +383,7 @@ class ResultMixin(local):
 
     def peek(self):
         '''results from read-only context'''
-        out = self._list(self._util)
+        out = self._wrapper(self._util)
         return out[0] if self._len(out) == 1 else out
 
     def results(self):
@@ -356,8 +395,8 @@ class ResultMixin(local):
         # return to default context
         self.unswap()
         out, tell = self._split(self.outgoing)
-        list_ = self._list
-        out = self._next(out) if self._len(list_(tell)) == 1 else list_(out)
+        wrap = self._wrapper
+        out = self._next(out) if self._len(wrap(tell)) == 1 else wrap(out)
         # clear outgoing things
         self.outclear()
         return out

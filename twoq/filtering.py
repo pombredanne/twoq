@@ -14,21 +14,6 @@ class CollectMixin(local):
     '''collecting mixin'''
 
     @staticmethod
-    def _pick(names, iterable):
-        '''
-        collect attributes of things in iterable
-
-        @param names: sequence of names
-        @param iterable: an iterable
-        '''
-        attrfind = attrgetter(*names)
-        for thing in iterable:
-            try:
-                yield attrfind(thing)
-            except AttributeError:
-                pass
-
-    @staticmethod
     def _members(iterable):
         '''
         collect members of things
@@ -45,6 +30,29 @@ class CollectMixin(local):
                 yield key, thing
 
     @classmethod
+    def _walk(cls, truth, subcall, transform, iterable):
+        '''
+        collect members of things
+
+        @param call: "Truth" filter
+        @param truth: second "Truth" filter
+        @param iterable: an iterable
+        '''
+        getattr_, AttributeError_, walk_ = getattr, AttributeError, cls._walk
+        for key in cls._ifilter(truth, dir(iterable)):
+            try:
+                thing = getattr_(iterable, key)
+            except AttributeError_:
+                pass
+            else:
+                if subcall(thing):
+                    yield key, transform(
+                        walk_(truth, subcall, transform, thing)
+                    )
+                else:
+                    yield key, thing
+
+    @classmethod
     def _mfilter(cls, call, iterable):
         '''
         filter members of things
@@ -54,6 +62,21 @@ class CollectMixin(local):
         '''
         for i in cls._ifilter(call, cls._members(iterable)):
             yield i
+
+    @staticmethod
+    def _pick(names, iterable):
+        '''
+        collect attributes of things in iterable
+
+        @param names: sequence of names
+        @param iterable: an iterable
+        '''
+        attrfind = attrgetter(*names)
+        for thing in iterable:
+            try:
+                yield attrfind(thing)
+            except AttributeError:
+                pass
 
     @staticmethod
     def _pluck(keys, iterable, _itemgetter=itemgetter):
@@ -93,6 +116,15 @@ class CollectMixin(local):
         with self._context():
             return self._xtend(self._ichain(self._imap(
                 self._partial(self._mfilter, self._call), self._iterable,
+            )))
+            
+    def extract(self):
+        '''extract object members from incoming things'''
+        with self._context():
+            walk_ = self._walk
+            call_, alt_, wrap_ = self._call, self._altcall, self._wrapper
+            return self._xtend(self._ichain(self._imap(
+                lambda x: walk_(call_, alt_, wrap_, x), self._iterable,
             )))
 
     def pick(self, *names):
