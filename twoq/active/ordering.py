@@ -1,55 +1,49 @@
 # -*- coding: utf-8 -*-
 '''twoq active ordering queues'''
 
+from twoq.queuing import SLOTS
 from twoq.ordering import RandomMixin, OrderingMixin, CombineMixin
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin
 
-###############################################################################
-## active random queues #######################################################
-###############################################################################
 
+class randomq(AutoResultMixin, RandomMixin):
 
-class arandomq(AutoResultMixin, RandomMixin):
+    '''auto-balanced randomizing queue'''
 
-    '''auto-balanced random queue'''
-
-randomq = arandomq
+    __slots__ = SLOTS
 
 
 class mrandomq(ManResultMixin, RandomMixin):
 
-    '''manually balanced random queue'''
+    '''manually balanced randomizing queue'''
 
-###############################################################################
-## active order queues #####EEE################################################
-###############################################################################
+    __slots__ = SLOTS
 
 
-class aorderq(AutoResultMixin, OrderingMixin):
+class orderq(AutoResultMixin, OrderingMixin):
 
-    '''auto-balanced order queue'''
+    '''auto-balanced ordering queue'''
 
-orderq = aorderq
+    __slots__ = SLOTS
 
 
 class morderq(ManResultMixin, OrderingMixin):
 
     '''manually balanced order queue'''
 
-
-###############################################################################
-## active combination queues #####EEE##########################################
-###############################################################################
+    __slots__ = SLOTS
 
 
-class acombineq(AutoResultMixin, CombineMixin):
+class combineq(AutoResultMixin, CombineMixin):
 
     '''auto-balanced combination queue'''
 
-combineq = acombineq
+    __slots__ = SLOTS
 
 
 class mcombineq(ManResultMixin, CombineMixin):
 
     '''manually balanced combination queue'''
+
+    __slots__ = SLOTS

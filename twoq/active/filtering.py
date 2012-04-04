@@ -1,71 +1,64 @@
 # -*- coding: utf-8 -*-
 '''twoq active filtering queues'''
 
+from twoq.queuing import SLOTS
 from twoq.filtering import (
     FilteringMixin, CollectMixin, SetMixin, SliceMixin)
 
 from twoq.active.mixins import AutoResultMixin, ManResultMixin
 
-###############################################################################
-## active collecting queues ###################################################
-###############################################################################
 
-
-class acollectq(AutoResultMixin, CollectMixin):
+class collectq(AutoResultMixin, CollectMixin):
 
     '''auto-balanced collecting queue'''
 
-collectq = acollectq
+    __slots__ = SLOTS
 
 
 class mcollectq(ManResultMixin, CollectMixin):
 
     '''manually balanced collecting queue'''
 
-###############################################################################
-## active set queues ##########################################################
-###############################################################################
+    __slots__ = SLOTS
 
 
-class asetq(AutoResultMixin, SetMixin):
+class setq(AutoResultMixin, SetMixin):
 
     '''auto-balanced set queue'''
 
-setq = asetq
+    __slots__ = SLOTS
 
 
 class msetq(ManResultMixin, SetMixin):
 
     '''manually balanced set queue'''
 
-###############################################################################
-## active slice queues ########################################################
-###############################################################################
+    __slots__ = SLOTS
 
 
-class asliceq(AutoResultMixin, SliceMixin):
+class sliceq(AutoResultMixin, SliceMixin):
 
     '''auto-balanced slice queue'''
 
-sliceq = asliceq
+    __slots__ = SLOTS
 
 
 class msliceq(ManResultMixin, SliceMixin):
 
     '''manually balanced slice queue'''
 
-###############################################################################
-## active filter queues #######################################################
-###############################################################################
+    __slots__ = SLOTS
 
 
-class afilterq(AutoResultMixin, FilteringMixin):
+class filterq(AutoResultMixin, FilteringMixin):
 
     '''auto-balanced filter queue'''
 
-filterq = afilterq
+    __slots__ = SLOTS
 
 
 class mfilterq(ManResultMixin, FilteringMixin):
 
     '''manually balanced filtering queue'''
+
+    __slots__ = SLOTS

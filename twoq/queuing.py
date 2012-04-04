@@ -6,6 +6,12 @@ from collections import deque
 from itertools import tee, repeat
 from contextlib import contextmanager
 
+SLOTS = [
+    '_work', 'outgoing', '_util', 'incoming', '_call', '_alt', '_wrapper',
+    '_args', '_kw', '_clearout', '_context', '_CONFIG', '_INQ', '_WORKQ',
+    '_UTILQ', '_OUTQ', '_iterator',
+]
+
 
 class ThingsMixin(local):
 
@@ -124,7 +130,7 @@ class ThingsMixin(local):
         # set current callable
         self._call = call
         return self
-    
+
     def alt(self, call):
         '''
         set alternative current callable
@@ -143,7 +149,7 @@ class ThingsMixin(local):
         # reset current callable (default is identity)
         self._call = lambda x: x
         return self
-    
+
     def dealt(self):
         '''clear current alternative callable'''
         self._alt = lambda x: x
@@ -158,9 +164,9 @@ class ThingsMixin(local):
         def wrap(*args, **kw):
             return call(*args, **kw)
         return self.tap(wrap)
-    
+
     defactory = detap
-    
+
     def wrap(self, wrapper):
         '''
         wrapper for outgoing things
@@ -169,7 +175,7 @@ class ThingsMixin(local):
         '''
         self._wrapper = wrapper
         return self
-    
+
     def unwrap(self):
         '''clear current wrapper'''
         self._wrapper = list
@@ -219,7 +225,7 @@ class ThingsMixin(local):
         '''
         with self.ctx1():
             return self._appendleft(thing)
-        
+
     appendleft = prepend
 
     ###########################################################################
@@ -243,7 +249,7 @@ class ThingsMixin(local):
         '''
         with self.ctx1():
             return self._xtendleft(things)
-        
+
     extendleft = prextend
 
     def outextend(self, things):
