@@ -74,7 +74,9 @@ class ACollectQMixin(object):
         ).tap(test).alt(isclass).wrap(tuple).extract().detap().end(),
         self.assertEqual(
             value,
-            ((('age', 40), ('name', 'moe'), ('age', 50), ('name', 'larry'), ('age', 60), ('name', 'curly'), ('stoog4', (('age', 969), ('name', 'beastly')))),),
+            ((('age', 40), ('name', 'moe'), ('age', 50), ('name', 'larry'),
+            ('age', 60), ('name', 'curly'), ('stoog4', (('age', 969),
+            ('name', 'beastly')))),),
             value,
         )
 

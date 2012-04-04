@@ -99,7 +99,9 @@ class MCollectQMixin(object):
                 lambda x: not x.startswith('__')
             ).alt(isclass).wrap(tuple).extract().detap().sync(),
             self.assertEqual,
-            (('age', 40), ('name', 'moe'), ('age', 50), ('name', 'larry'), ('age', 60), ('name', 'curly'), ('stoog4', (('age', 969), ('name', 'beastly')))),
+            (('age', 40), ('name', 'moe'), ('age', 50), ('name', 'larry'),
+            ('age', 60), ('name', 'curly'), ('stoog4', (('age', 969),
+            ('name', 'beastly')))),
         )
 
     def test_deepmembers(self):
