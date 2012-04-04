@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
+from twoq.support import unittest
 #pylint: disable-msg=w0614,w0401
 from twoq.tests.man.reducing import *  # @UnusedWildImport
 from twoq.tests.man.queuing import MQMixin

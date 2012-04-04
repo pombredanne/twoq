@@ -53,10 +53,10 @@ class ACollectQMixin(object):
             [('age', 40), ('name', 'moe'), ('age', 50), ('name', 'larry'),
             ('age', 60), ('name', 'curly')],
         )
-        
+
     def test_extract(self):
         from inspect import isclass
-        class stooges:
+        class stooges: #@IgnorePep8
             name = 'moe'
             age = 40
         class stoog2: #@IgnorePep8
